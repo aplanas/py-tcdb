@@ -2858,26 +2858,26 @@ is opened and should be set every time the database is being opened.
 """
 
 # FIX I think that it is not implementable. Test it.
-hdb_codecfunc = cfunc('tchdbcodecfunc', libtc, None,
-                      ('hdb', c_void_p, 1),
-                      ('ep', TCCODEC_P, 1),
-                      ('eop', c_void_p, 1),
-                      ('dp', TCCODEC_P, 1),
-                      ('dop', c_void_p, 1))
-hdb_codecfunc.__doc__ =\
-"""Get the custom codec functions of a hash database object.
+# hdb_codecfunc = cfunc('tchdbcodecfunc', libtc, None,
+#                       ('hdb', c_void_p, 1),
+#                       ('ep', TCCODEC_P, 1),
+#                       ('eop', c_void_p, 1),
+#                       ('dp', TCCODEC_P, 1),
+#                       ('dop', c_void_p, 1))
+# hdb_codecfunc.__doc__ =\
+# """Get the custom codec functions of a hash database object.
 
-hdb -- specifies the hash database object.
-ep  -- specifies the pointer to a variable into which the pointer to
-       the custom encoding function is assigned
-eop -- specifies the pointer to a variable into which the arbitrary
-       pointer to be given to the encoding function is assigned.
-dp  -- specifies the pointer to a variable into which the pointer to
-       the custom decoding function is assigned
-dop -- specifies the pointer to a variable into which the arbitrary
-       pointer to be given to the decoding function is assigned.
+# hdb -- specifies the hash database object.
+# ep  -- specifies the pointer to a variable into which the pointer to
+#        the custom encoding function is assigned
+# eop -- specifies the pointer to a variable into which the arbitrary
+#        pointer to be given to the encoding function is assigned.
+# dp  -- specifies the pointer to a variable into which the pointer to
+#        the custom decoding function is assigned
+# dop -- specifies the pointer to a variable into which the arbitrary
+#        pointer to be given to the decoding function is assigned.
 
-"""
+# """
 
 hdb_dfunit = cfunc('tchdbdfunit', libtc, c_uint32,
                    ('hdb', c_void_p, 1))

@@ -98,7 +98,7 @@ class hdb(object):
                                    ('fpow', fpow),
                                    ('opts', opts)) if x[1]])
         if kwargs:
-            if not tc.hdb_tune(self.db, *kwargs):
+            if not tc.hdb_tune(self.db, **kwargs):
                 raise tc.TCError(tc.hdb_errmsg(tc.hdb_ecode()))
 
         if not tc.hdb_open(self.db, path, omode):

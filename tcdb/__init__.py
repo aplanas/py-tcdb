@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # Tokyo Cabinet Python ctypes binding.
 
+import hdb
 from tc import __version__
+
 
 # enumeration for error codes
 ESUCCESS = 0                    # success
@@ -28,3 +30,10 @@ ERMDIR   = 20                   # rmdir error
 EKEEP    = 21                   # existing record
 ENOREC   = 22                   # no record found
 EMISC    = 9999                 # miscellaneous error
+
+
+def hdbopen(path, **kwargs):
+    """Simple hdb class constructor."""
+    db = hdb.hdb()
+    db.open(path, **kwargs)
+    return db
