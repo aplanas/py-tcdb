@@ -30,8 +30,7 @@ class tc_void_p(c_void_p):
 
 
 # Load Tokyo Cabinet library
-# libtc = CDLL(ctypes.util.find_library('tokyocabinet'))
-libtc = CDLL('libtokyocabinet.so')
+libtc = CDLL(ctypes.util.find_library('tokyocabinet'))
 
 __version__ = c_char_p.in_dll(libtc, 'tcversion').value
 
