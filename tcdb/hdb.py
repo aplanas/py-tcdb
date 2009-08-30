@@ -587,7 +587,7 @@ class hdb(object):
     def foreach(self, proc, op):
         """Process each record atomically of a hash database
         object."""
-        result = tc.hdb_foreach(TCITER(proc), op)
+        result = tc.hdb_foreach(self.db, tc.TCITER(proc), op)
         if not result:
             raise tc.TCError(tc.hdb_errmsg(tc.hdb_ecode()))
         return result

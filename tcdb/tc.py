@@ -233,7 +233,7 @@ is not modified.
 
 TCPDPROC_P = POINTER(TCPDPROC)
 
-TCITER = CFUNCTYPE(bool, c_void_p, c_int, c_void_p, c_int, c_void_p)
+TCITER = CFUNCTYPE(c_bool, c_void_p, c_int, c_void_p, c_int, c_void_p)
 TCITER.__doc__ =\
 """Type of the pointer to a iterator function.
 
