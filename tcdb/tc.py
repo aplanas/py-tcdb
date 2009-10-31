@@ -254,7 +254,7 @@ TCITER_P = POINTER(TCITER)
 
 class TCXSTR(Structure):
     """Type of structure for an extensible string object."""
-    _fields_ = [('ptr', c_char_p),         # pointer to the region
+    _fields_ = [('ptr', c_void_p),         # pointer to the region
                 ('size', c_int),           # size of the region
                 ('asize', c_int)]          # size of the allocated region
 
@@ -1313,7 +1313,6 @@ list -- specifies the list object.
 # """
 
 # # FIX params type
-
 # adb_fwmkeys = cfunc('tcadbfwmkeys', libtc, c_void_p,
 #                     ('adb', c_void_p, 1),
 #                     ('pbuf', c_void_p, 1),
@@ -1340,7 +1339,6 @@ list -- specifies the list object.
 # """
 
 # # FIX params type
-
 # adb_fwmkeys2 = cfunc('tcadbfwmkeys2', libtc, c_void_p,
 #                      ('adb', c_void_p, 1),
 #                      ('pstr', c_char_p, 1),
@@ -1552,7 +1550,6 @@ list -- specifies the list object.
 # """
 
 # # FIX params type
-
 # adb_misc = cfunc('tcadbmisc', libtc, c_void_p,
 #                  ('adb', c_void_p, 1),
 #                  ('name', c_char_p, 1),
@@ -1562,7 +1559,6 @@ list -- specifies the list object.
 # abstract database object.
 
 # adb  -- specifies the abstract database object.
-
 # name -- specifies the name of the function.  All databases support
 #         "put", "out", "get", "putlist", "outlist", and "getlist".
 #         "put" is to store a record.  It receives a key and a value,
@@ -1589,7 +1585,6 @@ list -- specifies the list object.
 # # features for experts
 
 # # FIX params type
-
 # adb_setskel = cfunc('tcadbsetskel', libtc, c_bool,
 #                     ('adb', c_void_p, 1),
 #                     ('skel', c_void_p, 1))
@@ -1598,6 +1593,19 @@ list -- specifies the list object.
 
 # adb  -- specifies the abstract database object.
 # skel -- specifies the extra database skeleton.
+
+# If successful, the return value is true, else, it is false.
+
+# """
+
+# adb_setskelmulti = cfunc('tcadbsetskelmulti', libtc, c_bool,
+#                          ('adb', c_void_p, 1),
+#                          ('num', c_int, 1))
+# adb_setskelmulti.__doc__ =\
+# """Set the multiple database skeleton to an abstract database object.
+
+# adb -- specifies the abstract database object.
+# num -- specifies the number of inner databases.
 
 # If successful, the return value is true, else, it is false.
 
@@ -1630,7 +1638,6 @@ list -- specifies the list object.
 # """
 
 # # FIX params type
-
 # adb_putproc = cfunc('tcadbputproc', libtc, c_bool,
 #                     ('adb', c_void_p, 1),
 #                     ('kbuf', c_void_p, 1),
@@ -1661,7 +1668,6 @@ list -- specifies the list object.
 # """
 
 # # FIX params type
-
 # adb_foreach = cfunc('tcadbforeach', libtc, c_bool,
 #                     ('adb', c_void_p, 1),
 #                     ('iter', c_void_p, 1),
@@ -1681,7 +1687,6 @@ list -- specifies the list object.
 # """
 
 # # FIX params type
-
 # adb_mapbdb = cfunc('tcadbmapbdb', libtc, c_bool,
 #                    ('adb', c_void_p, 1),
 #                    ('keys', c_void_p, 1),
@@ -1874,7 +1879,7 @@ opened.
 
 hdb_setxmsiz = cfunc('tchdbsetxmsiz', libtc, c_bool,
                      ('hdb', c_void_p, 1),
-                     ('xmsiz', c_int64, 1, 67108864))
+                     ('xmsiz', c_int64, 1, 0))
 hdb_setxmsiz.__doc__ =\
 """Set the size of the extra mapped memory of a hash database object.
 
@@ -2348,9 +2353,8 @@ max  -- specifies the maximum number of keys to be fetched.  If it is
         negative, no limit is specified.
 
 The return value is a list object of the corresponding keys.  This
-function does never fail.
-
-It returns an empty list even if no key corresponds.
+function does never fail.  It returns an empty list even if no key
+corresponds.
 
 Because the object of the return value is created with the function
 'tclistnew', it should be deleted with the function 'tclistdel' when
@@ -2372,9 +2376,8 @@ max  -- specifies the maximum number of keys to be fetched.  If it is
         negative, no limit is specified.
 
 The return value is a list object of the corresponding keys.  This
-function does never fail.
-
-It returns an empty list even if no key corresponds.
+function does never fail.  It returns an empty list even if no key
+corresponds.
 
 Because the object of the return value is created with the function
 'tclistnew', it should be deleted with the function 'tclistdel' when
@@ -2597,7 +2600,7 @@ hdb_setecode = cfunc('tchdbsetecode', libtc, None,
                      ('ecode', c_int, 1),
                      ('filename', c_char_p, 1),
                      ('line', c_int, 1),
-                     ('func', c_char_p,1))
+                     ('func', c_char_p, 1))
 hdb_setecode.__doc__ =\
 """Set the error code of a hash database object.
 
@@ -2906,7 +2909,7 @@ If successful, the return value is true, else, it is false.
 
 """
 
-hdb_putproc = cfunc('tchdbputproc', libtc, bool,
+hdb_putproc = cfunc('tchdbputproc', libtc, c_bool,
                     ('hdb', c_void_p, 1),
                     ('kbuf', c_void_p, 1),
                     ('ksiz', c_int, 1),
@@ -3025,7 +3028,7 @@ in use.
 
 # """
 
-hdb_iterinit2 = cfunc('tchdbiterinit2', libtc, bool,
+hdb_iterinit2 = cfunc('tchdbiterinit2', libtc, c_bool,
                       ('hdb', c_void_p, 1),
                       ('kbuf', c_void_p, 1),
                       ('ksiz', c_int, 1))
@@ -3042,7 +3045,7 @@ returned if there is no record corresponding the condition.
 
 """
 
-hdb_iterinit3 = cfunc('tchdbiterinit3', libtc, bool,
+hdb_iterinit3 = cfunc('tchdbiterinit3', libtc, c_bool,
                       ('hdb', c_void_p, 1),
                       ('kstr', c_char_p, 1))
 hdb_iterinit3.__doc__ =\
@@ -3057,7 +3060,7 @@ returned if there is no record corresponding the condition.
 
 """
 
-hdb_foreach = cfunc('tchdbforeach', libtc, bool,
+hdb_foreach = cfunc('tchdbforeach', libtc, c_bool,
                     ('hdb', c_void_p, 1),
                     ('iter', TCITER, 1),
                     ('op', c_char_p, 1))
@@ -3086,7 +3089,7 @@ same locks of database operations.
 
 """
 
-hdb_tranvoid = cfunc('tchdbtranvoid', libtc, bool,
+hdb_tranvoid = cfunc('tchdbtranvoid', libtc, c_bool,
                      ('hdb', c_void_p, 1))
 hdb_tranvoid.__doc__ =\
 """Void the transaction of a hash database object.
@@ -3096,5 +3099,1811 @@ hdb -- specifies the hash database object connected as a writer.
 If successful, the return value is true, else, it is false.
 
 This function should be called only when no update in the transaction.
+
+"""
+
+
+#
+# Functions from tcbdb.h
+#
+
+bdb_errmsg = cfunc('tcbdberrmsg', libtc, c_char_p,
+                   ('ecode', c_int, 1))
+bdb_errmsg.__doc__ =\
+"""Get the message string corresponding to an error code.
+
+ecode -- specifies the error code.
+
+The return value is the message string of the error code.
+
+"""
+
+bdb_new = cfunc('tcbdbnew', libtc, c_void_p)
+bdb_new.__doc__ =\
+"""Create a B+ tree database object.
+
+The return value is the new B+ tree database object.
+
+"""
+
+bdb_del = cfunc('tcbdbdel', libtc, None,
+                ('bdb', c_void_p, 1))
+bdb_del.__doc__ =\
+"""Delete a B+ tree database object.
+
+bdb -- specifies the B+ tree database object.
+
+If the database is not closed, it is closed implicitly.  Note that the
+deleted object and its derivatives can not be used anymore.
+
+"""
+
+bdb_ecode = cfunc('tcbdbecode', libtc, c_int,
+                  ('bdb', c_void_p, 1))
+bdb_ecode.__doc__ =\
+"""Get the last happened error code of a B+ tree database object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the last happened error code.
+
+The following error codes are defined:
+  'ESUCCESS' for success,
+  'ETHREAD' for threading error,
+  'EINVALID' for invalid operation,
+  'ENOFILE' for file not found,
+  'ENOPERM' for no permission,
+  'EMETA' for invalid meta data,
+  'ERHEAD' for invalid record header,
+  'EOPEN' for open error,
+  'ECLOSE' for close error,
+  'ETRUNC' for trunc error,
+  'ESYNC' for sync error,
+  'ESTAT' for stat error,
+  'ESEEK' for seek error,
+  'EREAD' for read error,
+  'EWRITE' for write error,
+  'EMMAP' for mmap error,
+  'ELOCK' for lock error,
+  'EUNLINK' for unlink error,
+  'ERENAME' for rename error,
+  'EMKDIR' for mkdir error,
+  'ERMDIR' for rmdir error,
+  'EKEEP' for existing record,
+  'ENOREC' for no record found, and
+  'EMISC' for miscellaneous error.
+
+"""
+
+bdb_setmutex = cfunc('tcbdbsetmutex', libtc, c_bool,
+                     ('bdb', c_void_p, 1))
+bdb_setmutex.__doc__ =\
+"""Set mutual exclusion control of a B+ tree database object for
+threading.
+
+hdb -- specifies the B+ tree database object which is not opened.
+
+If successful, the return value is true, else, it is false.
+
+Note that the mutual exclusion control is needed if the object is
+shared by plural threads and this function should be called before the
+database is opened.
+
+"""
+
+bdb_setcmpfunc = cfunc('tcbdbsetcmpfunc', libtc, c_bool,
+                       ('bdb', c_void_p, 1),
+                       ('cmp', TCCMP, 1),
+                       ('cmpop', c_void_p, 1))
+bdb_setcmpfunc.__doc__=\
+"""Set the custom comparison function of a B+ tree database object.
+
+bdb   -- specifies the B+ tree database object which is not opened.
+cmp   -- specifies the pointer to the custom comparison function.  It
+         receives five parameters.  The first parameter is the pointer
+         to the region of one key.  The second parameter is the size
+         of the region of one key.  The third parameter is the pointer
+         to the region of the other key.  The fourth parameter is the
+         size of the region of the other key.  The fifth parameter is
+         the pointer to the optional opaque object.  It returns
+         positive if the former is big, negative if the latter is big,
+         0 if both are equivalent.
+cmpop -- specifies an arbitrary pointer to be given as a parameter of
+         the comparison function.  If it is not needed, 'NULL' can be
+         specified.
+
+If successful, the return value is true, else, it is false.
+
+The default comparison function compares keys of two records by
+lexical order.  The functions 'tctccmplexical' (default),
+'tctccmpdecimal', 'tctccmpint32', and 'tctccmpint64' are built-in.
+Note that the comparison function should be set before the database is
+opened.  Moreover, user-defined comparison functions should be set
+every time the database is being opened.
+
+"""
+
+bdb_tune = cfunc('tcbdbtune', libtc, c_bool,
+                 ('bdb', c_void_p, 1),
+                 ('lmemb', c_int32, 1, 0),
+                 ('nmemb', c_int32, 1, 0),
+                 ('bnum', c_int64, 1, 0),
+                 ('apow', c_int8, 1, -1),
+                 ('fpow', c_int8, 1, -1),
+                 ('opts', c_uint8, 1))
+bdb_tune.__doc__ =\
+"""Set the tuning parameters of a B+ tree database object.
+
+bdb   -- specifies the B+ tree database object which is not opened.
+lmemb -- specifies the number of members in each leaf page.  If it is
+         not more than 0, the default value is specified.  The default
+         value is 128.
+nmemb -- specifies the number of members in each non-leaf page.  If it
+         is not more than 0, the default value is specified.  The
+         default value is 256.
+bnum  -- specifies the number of elements of the bucket array.  If it
+         is not more than 0, the default value is specified.  The
+         default value is 32749.  Suggested size of the bucket array
+         is about from 1 to 4 times of the number of all pages to be
+         stored.
+apow  -- specifies the size of record alignment by power of 2.  If it
+         is negative, the default value is specified.  The default
+         value is 8 standing for 2^8=256.
+fpow  -- specifies the maximum number of elements of the free block
+         pool by power of 2.  If it is negative, the default value is
+         specified.  The default value is 10 standing for 2^10=1024.
+opts  -- specifies options by bitwise-or:
+         'BDBTLARGE' specifies that the size of the database can be
+          larger than 2GB by using 64-bit bucket array,
+         'BDBTDEFLATE' specifies that each page is compressed with
+          Deflate encoding,
+         'BDBTBZIP' specifies that each page is compressed with BZIP2
+          encoding,
+         'BDBTTCBS' specifies that each page is compressed with TCBS
+          encoding.
+
+If successful, the return value is true, else, it is false.
+
+Note that the tuning parameters should be set before the database is
+opened.
+
+"""
+
+bdb_setcache = cfunc('tcbdbsetcache', libtc, c_bool,
+                     ('bdb', c_void_p, 1),
+                     ('lcnum', c_int32, 1, 0),
+                     ('ncnum', c_int32, 1, 0))
+bdb_setcache.__doc__ =\
+"""Set the caching parameters of a B+ tree database object.
+
+bdb   -- specifies the B+ tree database object which is not opened.
+lcnum -- specifies the maximum number of leaf nodes to be cached.  If
+         it is not more than 0, the default value is specified.  The
+         default value is 1024.
+ncnum -- specifies the maximum number of non-leaf nodes to be cached.
+         If it is not more than 0, the default value is specified.
+         The default value is 512.
+
+If successful, the return value is true, else, it is false.
+
+Note that the caching parameters should be set before the database is
+opened.
+
+"""
+
+bdb_setxmsiz = cfunc('tcbdbsetxmsiz', libtc, c_bool,
+                     ('bdb', c_void_p, 1),
+                     ('xmsiz', c_int64, 1, 0))
+bdb_setxmsiz.__doc__ =\
+"""Set the size of the extra mapped memory of a B+ tree database
+object.
+
+bdb   -- specifies the B+ tree database object which is not opened.
+xmsiz -- specifies the size of the extra mapped memory.  If it is not
+         more than 0, the extra mapped memory is disabled.  It is
+         disabled by default.
+
+If successful, the return value is true, else, it is false.
+
+Note that the mapping parameters should be set before the database is
+opened.
+
+"""
+
+bdb_setdfunit = cfunc('tcbdbsetdfunit', libtc, c_bool,
+                      ('bdb', c_void_p, 1),
+                      ('dfunit', c_int32, 1, 0))
+bdb_setdfunit.__doc__ =\
+"""Set the unit step number of auto defragmentation of a B+ tree
+database object.
+
+bdb    -- specifies the B+ tree database object which is not opened.
+dfunit -- specifie the unit step number. If it is not more than 0, the
+          auto defragmentation is disabled.  It is disabled by
+          default.
+
+If successful, the return value is true, else, it is false.
+
+Note that the defragmentation parameters should be set before the
+database is opened.
+
+"""
+
+bdb_open = cfunc('tcbdbopen', libtc, c_bool,
+                 ('bdb', c_void_p, 1),
+                 ('path', c_char_p, 1),
+                 ('omode', c_int, 1))
+bdb_open.__doc__ =\
+"""Open a database file and connect a B+ tree database object.
+
+bdb   -- specifies the B+ tree database object which is not opened.
+path  -- specifies the path of the database file.
+omode -- specifies the connection mode:
+         'BDBOWRITER' as a writer,
+         'BDBOREADER' as a reader.
+         If the mode is 'BDBOWRITER', the following may be added by
+         bitwise-or:
+         'BDBOCREAT', which means it creates a new database if not exist,
+         'BDBOTRUNC', which means it creates a new database regardless if one
+          exists,
+         'BDBOTSYNC', which means every transaction synchronizes
+          updated contents with the device.
+         Both of 'BDBOREADER' and 'BDBOWRITER' can be added to by
+         bitwise-or:
+         'BDBONOLCK', which means it opens the database file without
+          file locking, or
+         'BDBOLCKNB', which means locking is performed without
+          blocking.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+bdb_close = cfunc('tcbdbclose', libtc, c_bool,
+                  ('bdb', c_void_p, 1))
+bdb_close.__doc__ =\
+"""Close a B+ tree database object.
+
+bdb -- specifies the B+ tree database object.
+
+If successful, the return value is true, else, it is false.
+
+Update of a database is assured to be written when the database is
+closed.  If a writer opens a database but does not close it
+appropriately, the database will be broken.
+
+"""
+
+bdb_put = cfunc('tcbdbput', libtc, c_bool,
+                ('bdb', c_void_p, 1),
+                ('kbuf', c_void_p, 1),
+                ('ksiz', c_int, 1),
+                ('vbuf', c_void_p, 1),
+                ('vsiz', c_int, 1))
+bdb_put.__doc__ =\
+"""Store a record into a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, it is
+overwritten.
+
+"""
+
+bdb_put2 = cfunc('tcbdbput2', libtc, c_bool,
+                 ('bdb', c_void_p, 1),
+                 ('kstr', c_char_p, 1),
+                 ('vstr', c_char_p, 1))
+bdb_put2.__doc__ =\
+"""Store a string record into a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+kstr -- specifies the string of the key.
+vstr -- specifies the string of the value.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, it is
+overwritten.
+
+"""
+
+bdb_putkeep = cfunc('tcbdbputkeep', libtc, c_bool,
+                    ('bdb', c_void_p, 1),
+                    ('kbuf', c_void_p, 1),
+                    ('ksiz', c_int, 1),
+                    ('vbuf', c_void_p, 1),
+                    ('vsiz', c_int, 1))
+bdb_putkeep.__doc__ =\
+"""Store a new record into a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, this function
+has no effect.
+
+"""
+
+bdb_putkeep2 = cfunc('tcbdbputkeep2', libtc, c_bool,
+                     ('bdb', c_void_p, 1),
+                     ('kstr', c_char_p, 1),
+                     ('vstr', c_char_p, 1))
+bdb_putkeep2.__doc__ =\
+"""Store a new string record into a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+kstr -- specifies the string of the key.
+vstr -- specifies the string of the value.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, this function
+has no effect.
+
+"""
+
+bdb_putcat = cfunc('tcbdbputcat', libtc, c_bool,
+                   ('bdb', c_void_p, 1),
+                   ('kbuf', c_void_p, 1),
+                   ('ksiz', c_int, 1),
+                   ('vbuf', c_void_p, 1),
+                   ('vsiz', c_int, 1))
+bdb_putcat.__doc__ =\
+"""Concatenate a value at the end of the existing record in a B+ tree
+database object.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.
+
+If successful, the return value is true, else, it is false.
+
+If there is no corresponding record, a new record is created.
+
+"""
+
+bdb_putcat2 = cfunc('tcbdbputcat2', libtc, c_bool,
+                    ('bdb', c_void_p, 1),
+                    ('kstr', c_char_p, 1),
+                    ('vstr', c_char_p, 1))
+bdb_putcat2.__doc__ =\
+"""Concatenate a string value at the end of the existing record in a
+B+ tree database object.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+kstr -- specifies the string of the key.
+vstr -- specifies the string of the value.
+
+If successful, the return value is true, else, it is false.
+
+If there is no corresponding record, a new record is created.
+
+"""
+
+bdb_putdup = cfunc('tcbdbputdup', libtc, c_bool,
+                   ('bdb', c_void_p, 1),
+                   ('kbuf', c_void_p, 1),
+                   ('ksiz', c_int, 1),
+                   ('vbuf', c_void_p, 1),
+                   ('vsiz', c_int, 1))
+bdb_putdup.__doc__ =\
+"""Store a record into a B+ tree database object with allowing
+duplication of keys.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, the new record
+is placed after the existing one.
+
+"""
+
+bdb_putdup2 = cfunc('tcbdbputdup2', libtc, c_bool,
+                    ('bdb', c_void_p, 1),
+                    ('kstr', c_char_p, 1),
+                    ('vstr', c_char_p, 1))
+bdb_putdup2.__doc__ =\
+"""Store a string record into a B+ tree database object with allowing
+duplication of keys.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+kstr -- specifies the string of the key.
+vstr -- specifies the string of the value.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, the new record
+is placed after the existing one.
+
+"""
+
+bdb_putdup3 = cfunc('tcbdbputdup3', libtc, c_bool,
+                    ('bdb', c_void_p, 1),
+                    ('kbuf', c_void_p, 1),
+                    ('ksiz', c_int, 1),
+                    ('vals', TCLIST_P, 1))
+bdb_putdup3.__doc__ =\
+"""Store records into a B+ tree database object with allowing
+duplication of keys.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+kbuf -- specifies the pointer to the region of the common key.
+ksiz -- specifies the size of the region of the common key.
+vals -- specifies a list object containing values.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, the new records
+are placed after the existing one.
+
+"""
+
+bdb_out = cfunc('tcbdbout', libtc, c_bool,
+                ('bdb', c_void_p, 1),
+                ('kbuf', c_void_p, 1),
+                ('ksiz', c_int, 1))
+bdb_out.__doc__ =\
+"""Remove a record of a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+
+If successful, the return value is true, else, it is false.
+
+If the key of duplicated records is specified, the first one is
+selected.
+
+"""
+
+bdb_out2 = cfunc('tcbdbout2', libtc, c_bool,
+                 ('bdb', c_void_p, 1),
+                 ('kstr', c_char_p, 1))
+bdb_out2.__doc__ =\
+"""Remove a string record of a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+kstr -- specifies the string of the key.
+
+If successful, the return value is true, else, it is false.
+
+If the key of duplicated records is specified, the first one is
+selected.
+
+"""
+
+bdb_out3 = cfunc('tcbdbout3', libtc, c_bool,
+                 ('bdb', c_void_p, 1),
+                 ('kbuf', c_void_p, 1),
+                 ('ksiz', c_int, 1))
+bdb_out3.__doc__ =\
+"""Remove records of a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+
+If successful, the return value is true, else, it is false.
+
+If the key of duplicated records is specified, all of them are
+removed.
+
+"""
+
+bdb_get = cfunc('tcbdbget', libtc, tc_void_p,
+                ('bdb', c_void_p, 1),
+                ('kbuf', c_void_p, 1),
+                ('ksiz', c_int, 1),
+                ('sp', c_int_p, 2))
+bdb_get.errcheck = lambda result, func, arguments : (result, arguments[3])
+bdb_get.__doc__ =\
+"""Retrieve a record in a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+sp   -- specifies the pointer to the variable into which the size of
+        the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+value of the corresponding record.  'NULL' is returned if no record
+corresponds.
+
+If the key of duplicated records is specified, the first one is
+selected.  Because an additional zero code is appended at the end of
+the region of the return value, the return value can be treated as a
+character string.  Because the region of the return value is allocated
+with the 'malloc' call, it should be released with the 'free' call
+when it is no longer in use.
+
+"""
+
+bdb_get2 = cfunc('tcbdbget2', libtc, tc_char_p,
+                 ('bdb', c_void_p, 1),
+                 ('kstr', c_char_p, 1))
+bdb_get2.__doc__ =\
+"""Retrieve a string record in a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object.
+kstr -- specifies the string of the key.
+
+If successful, the return value is the string of the value of the
+corresponding record.  'NULL' is returned if no record corresponds.
+
+If the key of duplicated records is specified, the first one is
+selected.  Because the region of the return value is allocated with
+the 'malloc' call, it should be released with the 'free' call when it
+is no longer in use.
+
+"""
+
+bdb_get3 = cfunc('tcbdbget3', libtc, tc_void_p,
+                 ('bdb', c_void_p, 1),
+                 ('kbuf', c_void_p, 1),
+                 ('ksiz', c_int, 1),
+                 ('sp', c_int_p, 2))
+bdb_get3.errcheck = lambda result, func, arguments : (result, arguments[3])
+bdb_get3.__doc__ =\
+"""Retrieve a record in a B+ tree database object as a volatile
+buffer.
+
+bdb  -- specifies the B+ tree database object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+sp   -- specifies the pointer to the variable into which the size of
+        the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+value of the corresponding record.  'NULL' is returned if no record
+corresponds.
+
+If the key of duplicated records is specified, the first one is
+selected.  Because an additional zero code is appended at the end of
+the region of the return value, the return value can be treated as a
+character string.  Because the region of the return value is volatile
+and it may be spoiled by another operation of the database, the data
+should be copied into another involatile buffer immediately.
+
+"""
+
+bdb_get4 = cfunc('tcbdbget4', libtc, TCLIST_P,
+                 ('bdb', c_void_p, 1),
+                 ('kbuf', c_void_p, 1),
+                 ('ksiz', c_int, 1))
+bdb_get4.__doc__ =\
+"""Retrieve records in a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+
+If successful, the return value is a list object of the values of the
+corresponding records.  'NULL' is returned if no record corresponds.
+
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.
+
+"""
+
+bdb_vnum = cfunc('tcbdbvnum', libtc, int,
+                 ('bdb', c_void_p, 1),
+                 ('kbuf', c_void_p, 1),
+                 ('ksiz', c_int, 1))
+bdb_vnum.__doc__ =\
+"""Get the number of records corresponding a key in a B+ tree database
+object.
+
+bdb  -- specifies the B+ tree database object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+
+If successful, the return value is the number of the corresponding
+records, else, it is 0.
+
+"""
+
+bdb_vnum2 = cfunc('tcbdbvnum2', libtc, int,
+                  ('bdb', c_void_p, 1),
+                  ('kstr', c_char_p, 1))
+bdb_vnum2.__doc__ =\
+"""Get the number of records corresponding a string key in a B+ tree
+database object.
+
+bdb  -- specifies the B+ tree database object.
+kstr -- specifies the string of the key.
+
+If successful, the return value is the number of the corresponding
+records, else, it is 0.
+
+"""
+
+bdb_vsiz = cfunc('tcbdbvsiz', libtc, c_int,
+                 ('bdb', c_void_p, 1),
+                 ('kbuf', c_void_p, 1),
+                 ('ksiz', c_int, 1))
+bdb_vsiz.__doc__ =\
+"""Get the size of the value of a record in a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+
+If successful, the return value is the size of the value of the
+corresponding record, else, it is -1.
+
+If the key of duplicated records is specified, the first one is
+selected.
+
+"""
+
+bdb_vsiz2 = cfunc('tcbdbvsiz2', libtc, c_int,
+                  ('bdb', c_void_p, 1),
+                  ('kstr', c_char_p, 1))
+bdb_vsiz2.__doc__ =\
+"""Get the size of the value of a string record in a B+ tree database
+object.
+
+bdb  -- specifies the B+ tree database object.
+kstr -- specifies the string of the key.
+
+If successful, the return value is the size of the value of the
+corresponding record, else, it is -1.
+
+If the key of duplicated records is specified, the first one is
+selected.
+
+"""
+
+bdb_range = cfunc('tcbdbrange', libtc, TCLIST_P,
+                  ('bdb', c_void_p, 1),
+                  ('bkbuf', c_void_p, 1),
+                  ('bksiz', c_int, 1),
+                  ('binc', c_bool, 1),
+                  ('ekbuf', c_void_p, 1),
+                  ('eksiz', c_int, 1),
+                  ('einc', c_bool, 1),
+                  ('max', c_int, 1))
+bdb_range.__doc__ =\
+"""Get keys of ranged records in a B+ tree database object.
+
+bdb   -- specifies the B+ tree database object.
+bkbuf -- specifies the pointer to the region of the key of the
+         beginning border.  If it is 'NULL', the first record is
+         specified.
+bksiz -- specifies the size of the region of the beginning key.
+binc  -- specifies whether the beginning border is inclusive or not.
+ekbuf -- specifies the pointer to the region of the key of the ending
+         border.  If it is 'NULL', the last record is specified.
+eksiz -- specifies the size of the region of the ending key.
+einc  -- specifies whether the ending border is inclusive or not.
+max   -- specifies the maximum number of keys to be fetched.  If it is
+         negative, no limit is specified.
+
+The return value is a list object of the keys of the corresponding
+records.  This function does never fail.  It returns an empty list
+even if no record corresponds.
+
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.
+
+"""
+
+bdb_range2 = cfunc('tcbdbrange2', libtc, TCLIST_P,
+                   ('bdb', c_void_p, 1),
+                   ('bkstr', c_char_p, 1),
+                   ('binc', c_bool, 1),
+                   ('ekstr', c_char_p, 1),
+                   ('einc', c_bool, 1),
+                   ('max', c_int, 1))
+bdb_range2.__doc__ =\
+"""Get string keys of ranged records in a B+ tree database object.
+
+bdb   -- specifies the B+ tree database object.
+bkstr -- specifies the string of the key of the beginning border.  If
+         it is 'NULL', the first record is specified.
+binc  -- specifies whether the beginning border is inclusive or not.
+ekstr -- specifies the string of the key of the ending border.  If it
+         is 'NULL', the last record is specified.
+einc  -- specifies whether the ending border is inclusive or not.
+max   -- specifies the maximum number of keys to be fetched.  If it is
+         negative, no limit is specified.
+
+The return value is a list object of the keys of the corresponding
+records.  This function does never fail.  It returns an empty list
+even if no record corresponds.
+
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.
+
+"""
+
+bdb_fwmkeys = cfunc('tcbdbfwmkeys', libtc, TCLIST_P,
+                    ('bdb', c_void_p, 1),
+                    ('pbuf', c_void_p, 1),
+                    ('psiz', c_int, 1),
+                    ('max', c_int, 1))
+bdb_fwmkeys.__doc__ =\
+"""Get forward matching keys in a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object.
+pbuf -- specifies the pointer to the region of the prefix.
+psiz -- specifies the size of the region of the prefix.
+max  -- specifies the maximum number of keys to be fetched.  If it is
+        negative, no limit is specified.
+
+The return value is a list object of the corresponding keys.  This
+function does never fail.  It returns an empty list even if no key
+corresponds.
+
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.
+
+"""
+
+bdb_fwmkeys2 = cfunc('tcbdbfwmkeys2', libtc, TCLIST_P,
+                     ('bdb', c_void_p, 1),
+                     ('pstr', c_char_p, 1),
+                     ('max', c_int, 1))
+bdb_fwmkeys2.__doc__ =\
+"""Get forward matching string keys in a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object.
+pstr -- specifies the string of the prefix.
+max  -- specifies the maximum number of keys to be fetched.  If it is
+        negative, no limit is specified.
+
+The return value is a list object of the corresponding keys.  This
+function does never fail.  It returns an empty list even if no key
+corresponds.
+
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.
+
+"""
+
+bdb_addint = cfunc('tcbdbaddint', libtc, c_int,
+                   ('bdb', c_void_p, 1),
+                   ('kbuf', c_void_p, 1),
+                   ('ksiz', c_int, 1),
+                   ('num', c_int, 1))
+bdb_addint.__doc__ =\
+"""Add an integer to a record in a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+num  -- specifies the additional value.
+
+If successful, the return value is the summation value, else, it is
+'INT_MIN'.
+
+If the corresponding record exists, the value is treated as an integer
+and is added to.  If no record corresponds, a new record of the
+additional value is stored.
+
+"""
+
+bdb_adddouble = cfunc('tcbdbadddouble', libtc, c_double,
+                      ('bdb', c_void_p, 1),
+                      ('kbuf', c_void_p, 1),
+                      ('ksiz', c_int, 1),
+                      ('num', c_double, 1))
+bdb_adddouble.__doc__ =\
+"""Add a real number to a record in a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+num  -- specifies the additional value.
+
+If successful, the return value is the summation value, else, it is
+Not-a-Number.
+
+If the corresponding record exists, the value is treated as a real
+number and is added to.  If no record corresponds, a new record of the
+additional value is stored.
+
+"""
+
+bdb_sync = cfunc('tcbdbsync', libtc, c_bool,
+                 ('bdb', c_void_p, 1))
+bdb_sync.__doc__ =\
+"""Synchronize updated contents of a B+ tree database object with the
+file and the device.
+
+bdb -- specifies the B+ tree database object connected as a writer.
+
+If successful, the return value is true, else, it is false.
+
+This function is useful when another process connects to the same
+database file.
+
+"""
+
+bdb_optimize = cfunc('tcbdboptimize', libtc, c_bool,
+                     ('bdb', c_void_p, 1),
+                     ('lmemb', c_int32, 1, 0),
+                     ('nmemb', c_int32, 1, 0),
+                     ('bnum', c_int64, 1, 0),
+                     ('apow', c_int8, 1, -1),
+                     ('fpow', c_int8, 1, -1),
+                     ('opts', c_uint8, 1))
+bdb_optimize.__doc__ =\
+"""Optimize the file of a B+ tree database object.
+
+bdb   -- specifies the B+ tree database object connected as a writer.
+lmemb -- specifies the number of members in each leaf page.  If it is
+         not more than 0, the current setting is not changed.
+nmemb -- specifies the number of members in each non-leaf page.  If it
+         is not more than 0, the current setting is not changed.
+bnum  -- specifies the number of elements of the bucket array.  If it
+         is not more than 0, the default value is specified.  The
+         default value is two times of the number of pages.
+apow  -- specifies the size of record alignment by power of 2.  If it
+         is negative, the current setting is not changed.
+fpow  -- specifies the maximum number of elements of the free block
+         pool by power of 2.  If it is negative, the current setting
+         is not changed.
+opts  -- specifies options by bitwise-or:
+         'BDBTLARGE' specifies that the size of the database can be
+          larger than 2GB by using 64-bit bucket array,
+         'BDBTDEFLATE' specifies that each record is compressed with
+          Deflate encoding,
+         'BDBTBZIP' specifies that each page is compressed with BZIP2
+          encoding,
+         'BDBTTCBS' specifies that each page is compressed with TCBS
+          encoding.
+         If it is 'UINT8_MAX', the current setting is not changed.
+
+If successful, the return value is true, else, it is false.
+
+This function is useful to reduce the size of the database file with
+data fragmentation by successive updating.
+
+"""
+
+bdb_vanish = cfunc('tcbdbvanish', libtc, c_bool,
+                   ('bdb', c_void_p, 1))
+bdb_vanish.__doc__ =\
+"""Remove all records of a B+ tree database object.
+
+bdb -- specifies the B+ tree database object connected as a writer.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+bdb_copy = cfunc('tcbdbcopy', libtc, c_bool,
+                 ('bdb', c_void_p, 1),
+                 ('path', c_char_p, 1))
+bdb_copy.__doc__ =\
+"""Copy the database file of a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object.
+path -- specifies the path of the destination file.  If it begins with
+        '@', the trailing substring is executed as a command line.
+
+If successful, the return value is true, else, it is false.  False is
+returned if the executed command returns non-zero code.
+
+The database file is assured to be kept synchronized and not modified
+while the copying or executing operation is in progress.  So, this
+function is useful to create a backup file of the database file.
+
+"""
+
+bdb_tranbegin = cfunc('tcbdbtranbegin', libtc, c_bool,
+                      ('bdb', c_void_p, 1))
+bdb_tranbegin.__doc__ =\
+"""Begin the transaction of a B+ tree database object.
+
+bdb -- specifies the B+ tree database object connected as a writer.
+
+If successful, the return value is true, else, it is false.
+
+The database is locked by the thread while the transaction so that
+only one transaction can be activated with a database object at the
+same time.  Thus, the serializable isolation level is assumed if every
+database operation is performed in the transaction.  Because all pages
+are cached on memory while the transaction, the amount of referred
+records is limited by the memory capacity.  If the database is closed
+during transaction, the transaction is aborted implicitly.
+
+"""
+
+bdb_trancommit = cfunc('tcbdbtrancommit', libtc, c_bool,
+                       ('bdb', c_void_p, 1))
+bdb_trancommit.__doc__ =\
+"""Commit the transaction of a B+ tree database object.
+
+bdb -- specifies the B+ tree database object connected as a writer.
+
+If successful, the return value is true, else, it is false.
+
+Update in the transaction is fixed when it is committed successfully.
+
+"""
+
+bdb_tranabort = cfunc('tcbdbtranabort', libtc, c_bool,
+                      ('bdb', c_void_p, 1))
+bdb_tranabort.__doc__ =\
+"""Abort the transaction of a B+ tree database object.
+
+bdb -- specifies the B+ tree database object connected as a writer.
+
+If successful, the return value is true, else, it is false.
+
+Update in the transaction is discarded when it is aborted.  The state
+of the database is rollbacked to before transaction.
+
+"""
+
+bdb_path = cfunc('tcbdbpath', libtc, c_char_p,
+                 ('bdb', c_void_p, 1))
+bdb_path.__doc__ =\
+"""Get the file path of a B+ tree database object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the path of the database file or 'NULL' if the
+object does not connect to any database file.
+
+"""
+
+bdb_rnum = cfunc('tcbdbrnum', libtc, c_uint64,
+                 ('bdb', c_void_p, 1))
+bdb_rnum.__doc__ =\
+"""Get the number of records of a B+ tree database object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the number of records or 0 if the object does not
+connect to any database file.
+
+"""
+
+bdb_fsiz = cfunc('tcbdbfsiz', libtc, c_uint64,
+                 ('bdb', c_void_p, 1))
+bdb_fsiz.__doc__ =\
+"""Get the size of the database file of a B+ tree database object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the size of the database file or 0 if the object
+does not connect to any database file.
+
+"""
+
+bdb_curnew = cfunc('tcbdbcurnew', libtc, c_void_p,
+                   ('bdb', c_void_p, 1))
+bdb_curnew.__doc__ =\
+"""Create a cursor object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the new cursor object.
+
+Note that the cursor is available only after initialization with the
+'tcbdbcurfirst' or the `tcbdbcurjump' functions and so on.  Moreover,
+the position of the cursor will be indefinite when the database is
+updated after the initialization of the cursor.
+
+"""
+
+bdb_curdel = cfunc('tcbdbcurdel', libtc, None,
+                   ('cur', c_void_p, 1))
+bdb_curdel.__doc__ =\
+"""Delete a cursor object.
+
+cur -- specifies the cursor object.
+
+"""
+
+bdb_curfirst = cfunc('tcbdbcurfirst', libtc, c_bool,
+                     ('cur', c_void_p, 1))
+bdb_curfirst.__doc__ =\
+"""Move a cursor object to the first record.
+
+cur -- specifies the cursor object.
+
+If successful, the return value is true, else, it is false.  False is
+returned if there is no record in the database.
+
+"""
+
+bdb_curlast = cfunc('tcbdbcurlast', libtc, c_bool,
+                    ('cur', c_void_p, 1))
+bdb_curlast.__doc__ =\
+"""Move a cursor object to the last record.
+
+cur -- specifies the cursor object.
+
+If successful, the return value is true, else, it is false.  False is
+returned if there is no record in the database.
+
+"""
+
+bdb_curjump = cfunc('tcbdbcurjump', libtc, c_bool,
+                    ('cur', c_void_p, 1),
+                    ('kbuf', c_void_p, 1),
+                    ('ksiz', c_int, 1))
+bdb_curjump.__doc__ =\
+"""Move a cursor object to the front of records corresponding a key.
+
+cur  -- specifies the cursor object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+
+If successful, the return value is true, else, it is false.  False is
+returned if there is no record corresponding the condition.
+
+The cursor is set to the first record corresponding the key or the
+next substitute if completely matching record does not exist.
+
+"""
+
+bdb_curjump2 = cfunc('tcbdbcurjump2', libtc, c_bool,
+                     ('cur', c_void_p, 1),
+                     ('kstr', c_char_p, 1))
+bdb_curjump2.__doc__ =\
+"""Move a cursor object to the front of records corresponding a key
+string.
+
+cur  -- specifies the cursor object.
+kstr -- specifies the string of the key.
+
+If successful, the return value is true, else, it is false.  False is
+returned if there is no record corresponding the condition.
+
+The cursor is set to the first record corresponding the key or the
+next substitute if completely matching record does not exist.
+
+"""
+
+bdb_curprev = cfunc('tcbdbcurprev', libtc, c_bool,
+                    ('cur', c_void_p, 1))
+bdb_curprev.__doc__ =\
+"""Move a cursor object to the previous record.
+
+cur -- specifies the cursor object.
+
+If successful, the return value is true, else, it is false.  False is
+returned if there is no previous record.
+
+"""
+
+bdb_curnext = cfunc('tcbdbcurnext', libtc, c_bool,
+                    ('cur', c_void_p, 1))
+bdb_curnext.__doc__ =\
+"""Move a cursor object to the next record.
+
+cur -- specifies the cursor object.
+
+If successful, the return value is true, else, it is false.  False is
+returned if there is no next record.
+
+"""
+
+bdb_curput = cfunc('tcbdbcurput', libtc, c_bool,
+                   ('cur', c_void_p, 1),
+                   ('vbuf', c_void_p, 1),
+                   ('vsiz', c_int, 1),
+                   ('cpmode', c_int, 1))
+bdb_curput.__doc__ =\
+"""Insert a record around a cursor object.
+
+cur    -- pecifies the cursor object of writer connection.
+vbuf   -- specifies the pointer to the region of the value.
+vsiz   -- specifies the size of the region of the value.
+cpmode -- specifies detail adjustment:
+          'BDBCPCURRENT', which means that the value of the current
+           record is overwritten,
+          'BDBCPBEFORE', which means that the new record is inserted
+           before the current record,
+          'BDBCPAFTER', which means that the new record is inserted
+           after the current record.
+
+If successful, the return value is true, else, it is false.  False is
+returned when the cursor is at invalid position.
+
+After insertion, the cursor is moved to the inserted record.
+
+"""
+
+bdb_curput2 = cfunc('tcbdbcurput2', libtc, c_bool,
+                    ('cur', c_void_p, 1),
+                    ('vstr', c_char_p, 1),
+                    ('cpmode', c_int, 1))
+bdb_curput2.__doc__ =\
+"""Insert a string record around a cursor object.
+
+cur    -- specifies the cursor object of writer connection.
+vstr   -- specifies the string of the value.
+cpmode -- specifies detail adjustment:
+          'BDBCPCURRENT', which means that the value of the current
+           record is overwritten,
+          'BDBCPBEFORE', which means that the new record is inserted
+           before the current record,
+          'BDBCPAFTER', which means that the new record is inserted
+           after the current record.
+
+If successful, the return value is true, else, it is false.  False is
+returned when the cursor is at invalid position.
+
+After insertion, the cursor is moved to the inserted record.
+
+"""
+
+bdb_curout = cfunc('tcbdbcurout', libtc, c_bool,
+                   ('cur', c_void_p, 1))
+bdb_curout.__doc__ =\
+"""Remove the record where a cursor object is.
+
+cur -- specifies the cursor object of writer connection.
+
+If successful, the return value is true, else, it is false.  False is
+returned when the cursor is at invalid position.
+
+After deletion, the cursor is moved to the next record if possible.
+
+"""
+
+bdb_curkey = cfunc('tcbdbcurkey', libtc, c_void_p,
+                   ('cur', c_void_p, 1),
+                   ('sp', c_int_p, 2))
+bdb_curkey.errcheck = lambda result, func, arguments : (result, arguments[1])
+bdb_curkey.__doc__ =\
+"""Get the key of the record where the cursor object is.
+
+cur -- specifies the cursor object.
+sp  -- specifies the pointer to the variable into which the size of
+       the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+key, else, it is 'NULL'.  'NULL' is returned when the cursor is at
+invalid position.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.  Because the region of the return value is allocated with the
+'malloc' call, it should be released with the 'free' call when it is
+no longer in use.
+
+"""
+
+bdb_curkey2 = cfunc('tcbdbcurkey2', libtc, c_char_p,
+                    ('cur', c_void_p, 1))
+bdb_curkey2.__doc__ =\
+"""Get the key string of the record where the cursor object is.
+
+cur -- specifies the cursor object.
+
+If successful, the return value is the string of the key, else, it is
+'NULL'.  'NULL' is returned when the cursor is at invalid position.
+
+Because the region of the return value is allocated with the 'malloc'
+call, it should be released with the 'free' call when it is no longer
+in use.
+
+"""
+
+bdb_curkey3 = cfunc('tcbdbcurkey3', libtc, c_void_p,
+                    ('cur', c_void_p, 1),
+                    ('sp', c_int_p, 2))
+bdb_curkey3.errcheck = lambda result, func, arguments : (result, arguments[1])
+bdb_curkey3.__doc__ =\
+"""Get the key of the record where the cursor object is, as a volatile
+buffer.
+
+cur -- specifies the cursor object.
+sp  -- specifies the pointer to the variable into which the size of
+       the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+key, else, it is 'NULL'.  'NULL' is returned when the cursor is at
+invalid position.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.  Because the region of the return value is volatile and it may
+be spoiled by another operation of the database, the data should be
+copied into another involatile buffer immediately.
+
+"""
+
+bdb_curval = cfunc('tcbdbcurval', libtc, c_void_p,
+                   ('cur', c_void_p, 1),
+                   ('sp', c_int_p, 2))
+bdb_curval.errcheck = lambda result, func, arguments : (result, arguments[1])
+bdb_curval.__doc__ =\
+"""Get the value of the record where the cursor object is.
+
+cur -- specifies the cursor object.
+sp  -- specifies the pointer to the variable into which the size of
+       the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+value, else, it is 'NULL'.  'NULL' is returned when the cursor is at
+invalid position.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.  Because the region of the return value is allocated with the
+'malloc' call, it should be released with the 'free' call when it is
+no longer in use.
+
+"""
+
+bdb_curval2 = cfunc('tcbdbcurval2', libtc, c_char_p,
+                    ('cur', c_void_p, 1))
+bdb_curval2.__doc__ =\
+"""Get the value string of the record where the cursor object is.
+
+cur -- specifies the cursor object.
+
+If successful, the return value is the string of the value, else, it
+is 'NULL'.  'NULL' is returned when the cursor is at invalid position.
+
+Because the region of the return value is allocated with the 'malloc'
+call, it should be released with the 'free' call when it is no longer
+in use.
+
+"""
+
+bdb_curval3 = cfunc('tcbdbcurval3', libtc, c_void_p,
+                    ('cur', c_void_p, 1),
+                    ('sp', c_int_p, 2))
+bdb_curval3.errcheck = lambda result, func, arguments : (result, arguments[1])
+bdb_curval3.__doc__ =\
+"""Get the value of the record where the cursor object is, as a
+volatile buffer.
+
+cur -- specifies the cursor object.
+sp  -- specifies the pointer to the variable into which the size of
+       the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+value, else, it is 'NULL'.  'NULL' is returned when the cursor is at
+invalid position.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.  Because the region of the return value is volatile and it may
+be spoiled by another operation of the database, the data should be
+copied into another involatile buffer immediately.
+
+"""
+
+bdb_currec = cfunc('tcbdbcurrec', libtc, c_bool,
+                   ('cur', c_void_p, 1),
+                   ('kxstr', TCXSTR_P, 1),
+                   ('vxstr', TCXSTR_P, 1))
+bdb_currec.__doc__ =\
+"""Get the key and the value of the record where the cursor object is.
+
+cur   -- specifies the cursor object.
+kxstr -- specifies the object into which the key is wrote down.
+vxstr -- specifies the object into which the value is wrote down.
+
+If successful, the return value is true, else, it is false.  False is
+returned when the cursor is at invalid position.
+
+"""
+
+# features for experts
+
+bdb_setecode = cfunc('tcbdbsetecode', libtc, None,
+                     ('bdb', c_void_p, 1),
+                     ('ecode', c_int, 1),
+                     ('filename', c_char_p, 1),
+                     ('line', c_int, 1),
+                     ('func', c_char_p, 1))
+bdb_setecode.__doc__ =\
+"""Set the error code of a B+ tree database object.
+
+bdb   -- specifies the B+ tree database object.
+ecode -- specifies the error code.
+file  -- specifies the file name of the code.
+line  -- specifies the line number of the code.
+func  -- specifies the function name of the code.
+
+"""
+
+bdb_setdbgfd = cfunc('tcbdbsetdbgfd', libtc, None,
+                     ('bdb', c_void_p, 1),
+                     ('fd', c_int, 1))
+bdb_setdbgfd.__doc__ =\
+"""Set the file descriptor for debugging output.
+
+bdb -- specifies the B+ tree database object.
+fd  -- specifies the file descriptor for debugging output.
+
+"""
+
+bdb_dbgfd = cfunc('tcbdbdbgfd', libtc, c_int,
+                  ('bdb', c_void_p, 1))
+bdb_dbgfd.__doc__ =\
+"""Get the file descriptor for debugging output.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the file descriptor for debugging output.
+
+"""
+
+bdb_hasmutex = cfunc('tcbdbhasmutex', libtc, c_bool,
+                     ('bdb', c_void_p, 1))
+bdb_hasmutex.__doc__ =\
+"""Check whether mutual exclusion control is set to a B+ tree database
+object.
+
+bdb -- specifies the B+ tree database object.
+
+If mutual exclusion control is set, it is true, else it is false.
+
+"""
+
+bdb_memsync = cfunc('tcbdbmemsync', libtc, c_bool,
+                    ('bdb', c_void_p, 1),
+                    ('phys', c_bool, 1))
+bdb_memsync.__doc__ =\
+"""Synchronize updating contents on memory of a B+ tree database
+object.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+phys -- specifies whether to synchronize physically.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+bdb_cacheclear = cfunc('tcbdbcacheclear', libtc, c_bool,
+                       ('bdb', c_void_p, 1))
+bdb_cacheclear.__doc__ =\
+"""Clear the cache of a B+ tree database object.
+
+bdb -- specifies the B+ tree database object.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+bdb_cmpfunc = cfunc('tcbdbcmpfunc', libtc, TCCMP,
+                    ('bdb', c_void_p, 1))
+bdb_cmpfunc.__doc__ =\
+"""Get the comparison function of a B+ tree database object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the pointer to the comparison function.
+
+"""
+
+bdb_cmpop = cfunc('tcbdbcmpop', libtc, c_void_p,
+                  ('bdb', c_void_p, 1))
+bdb_cmpop.__doc__ =\
+"""Get the opaque object for the comparison function of a B+ tree
+database object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the opaque object for the comparison function.
+
+"""
+
+bdb_lmemb = cfunc('tcbdblmemb', libtc, c_uint32,
+                  ('bdb', c_void_p, 1))
+bdb_lmemb.__doc__ =\
+"""Get the maximum number of cached leaf nodes of a B+ tree database
+object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the maximum number of cached leaf nodes.
+
+"""
+
+bdb_lnum = cfunc('tcbdblnum', libtc, c_uint64,
+                 ('bdb', c_void_p, 1))
+bdb_lnum.__doc__ =\
+"""Get the number of the leaf nodes of B+ tree database object.
+
+bdb -- specifies the B+ tree database object.
+
+If successful, the return value is the number of the leaf nodes or 0
+if the object does not connect to any database file.
+
+"""
+
+bdb_nnum = cfunc('tcbdbnnum', libtc, c_uint64,
+                 ('bdb', c_void_p, 1))
+bdb_nnum.__doc__ =\
+"""Get the number of the non-leaf nodes of B+ tree database object.
+
+bdb -- specifies the B+ tree database object.
+
+If successful, the return value is the number of the non-leaf nodes or
+0 if the object does not connect to any database file.
+
+"""
+
+bdb_bnum = cfunc('tcbdbbnum', libtc, c_uint64,
+                 ('bdb', c_void_p, 1))
+bdb_bnum.__doc__ =\
+"""Get the number of elements of the bucket array of a B+ tree
+database object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the number of elements of the bucket array or 0 if
+the object does not connect to any database file.
+
+"""
+
+bdb_align = cfunc('tcbdbalign', libtc, c_uint32,
+                  ('bdb', c_void_p, 1))
+bdb_align.__doc__ =\
+"""Get the record alignment of a B+ tree database object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the record alignment or 0 if the object does not
+connect to any database file.
+
+"""
+
+bdb_fbpmax = cfunc('tcbdbfbpmax', libtc, c_uint32,
+                   ('bdb', c_void_p, 1))
+bdb_fbpmax.__doc__ =\
+"""Get the maximum number of the free block pool of a B+ tree database
+object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the maximum number of the free block pool or 0 if
+the object does not connect to any database file.
+
+"""
+
+bdb_inode = cfunc('tcbdbinode', libtc, c_uint64,
+                  ('bdb', c_void_p, 1))
+bdb_inode.__doc__ =\
+"""Get the inode number of the database file of a B+ tree database
+object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the inode number of the database file or 0 if the
+object does not connect to any database file.
+
+"""
+
+bdb_mtime = cfunc('tcbdbmtime', libtc, c_time_t,
+                  ('bdb', c_void_p, 1))
+bdb_mtime.__doc__ =\
+"""Get the modification time of the database file of a B+ tree
+database object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the inode number of the database file or 0 if the
+object does not connect to any database file.
+
+"""
+
+bdb_flags = cfunc('tcbdbflags', libtc, c_uint8,
+                  ('bdb', c_void_p, 1))
+bdb_flags.__doc__ =\
+"""Get the additional flags of a B+ tree database object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the additional flags.
+
+"""
+
+bdb_opts = cfunc('tcbdbopts', libtc, c_uint8,
+                 ('bdb', c_void_p, 1))
+bdb_opts.__doc__ =\
+"""Get the options of a B+ tree database object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the options.
+
+"""
+
+bdb_opaque = cfunc('tcbdbopaque', libtc, c_char_p,
+                   ('bdb', c_void_p, 1))
+bdb_opaque.__doc__ =\
+"""Get the pointer to the opaque field of a B+ tree database object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the pointer to the opaque field whose size is 128
+bytes.
+
+"""
+
+bdb_bnumused = cfunc('tcbdbbnumused', libtc, c_uint64,
+                     ('bdb', c_void_p, 1))
+bdb_bnumused.__doc__ =\
+"""Get the number of used elements of the bucket array of a B+ tree
+database object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the number of used elements of the bucket array or
+0 if the object does not connect to any database file.
+
+"""
+
+bdb_setlsmax = cfunc('tcbdbsetlsmax', libtc, c_bool,
+                     ('bdb', c_void_p, 1),
+                     ('lsmax', c_uint32, 1, 0))
+bdb_setlsmax.__doc__ =\
+"""Set the maximum size of each leaf node.
+
+bdb   -- specifies the B+ tree database object which is not opened.
+lsmax -- specifies the maximum size of each leaf node.  If it is not
+         more than 0, the default value is specified.  The default
+         value is 16386.
+
+If successful, the return value is true, else, it is false.
+
+Note that the tuning parameters of the database should be set before
+the database is opened.
+
+"""
+
+bdb_setcapnum = cfunc('tcbdbsetcapnum', libtc, c_bool,
+                      ('bdb', c_void_p, 1),
+                      ('capnum', c_uint64, 1))
+bdb_setcapnum.__doc__ =\
+"""Set the capacity number of records.
+
+bdb    -- specifies the B+ tree database object which is not opened.
+capnum -- specifies the capacity number of records.  If it is not more
+          than 0, the capacity is unlimited.
+
+If successful, the return value is true, else, it is false.
+
+When the number of records exceeds the capacity, forehand records are
+removed implicitly. Note that the tuning parameters of the database
+should be set before the database is opened.
+
+"""
+
+bdb_setcodecfunc = cfunc('tcbdbsetcodecfunc', libtc, c_bool,
+                         ('bdb', c_void_p, 1),
+                         ('enc', TCCODEC, 1),
+                         ('encop', c_void_p, 1),
+                         ('dec', TCCODEC, 1),
+                         ('decop', c_void_p, 1))
+bdb_setcodecfunc.__doc__ =\
+"""Set the custom codec functions of a B+ tree database object.
+
+bdb   -- specifies the B+ tree database object.
+enc   -- specifies the pointer to the custom encoding function.  It
+         receives four parameters. The first parameter is the pointer
+         to the region.  The second parameter is the size of the
+         region.  The third parameter is the pointer to the variable
+         into which the size of the region of the return value is
+         assigned.  The fourth parameter is the pointer to the
+         optional opaque object.  It returns the pointer to the result
+         object allocated with 'malloc' call if successful, else, it
+         returns 'NULL'.
+encop -- specifies an arbitrary pointer to be given as a parameter of
+         the encoding function.  If it is not needed, 'NULL' can be
+         specified.
+dec   -- specifies the pointer to the custom decoding function.
+decop -- specifies an arbitrary pointer to be given as a parameter of
+         the decoding function.  If it is not needed, 'NULL' can be
+         specified.
+
+If successful, the return value is true, else, it is false.
+
+Note that the custom codec functions should be set before the database
+is opened and should be set every time the database is being opened.
+
+"""
+
+bdb_dfunit = cfunc('tcbdbdfunit', libtc, c_uint32,
+                   ('bdb', c_void_p, 1))
+bdb_dfunit.__doc__ =\
+"""Get the unit step number of auto defragmentation of a B+ tree
+database object.
+
+bdb -- specifies the B+ tree database object.
+
+The return value is the unit step number of auto defragmentation.
+
+"""
+
+bdb_defrag = cfunc('tcbdbdefrag', libtc, c_bool,
+                   ('bdb', c_void_p, 1),
+                   ('step', c_int64, 1, 0))
+bdb_defrag.__doc__ =\
+"""Perform dynamic defragmentation of a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+step -- specifie the number of steps.  If it is not more than 0, the
+        whole file is defragmented gradually without keeping a
+        continuous lock.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+bdb_putdupback = cfunc('tcbdbputdupback', libtc, c_bool,
+                       ('bdb', c_void_p, 1),
+                       ('kbuf', c_void_p, 1),
+                       ('ksiz', c_int, 1),
+                       ('vbuf', c_void_p, 1),
+                       ('vsiz', c_int, 1))
+bdb_putdupback.__doc__ =\
+"""Store a new record into a B+ tree database object with backward
+duplication.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, the new record
+is placed after the existing one.
+
+"""
+
+bdb_putdupback2 = cfunc('tcbdbputdupback2', libtc, c_bool,
+                        ('bdb', c_void_p, 1),
+                        ('kstr', c_char_p, 1),
+                        ('vstr', c_char_p, 1))
+bdb_putdupback2.__doc__ =\
+"""Store a new string record into a B+ tree database object with
+backward duplication.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+kstr -- specifies the string of the key.
+vstr -- specifies the string of the value.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, the new record
+is placed after the existing one.
+
+"""
+
+bdb_putproc = cfunc('tcbdbputproc', libtc, c_bool,
+                    ('bdb', c_void_p, 1),
+                    ('kbuf', c_void_p, 1),
+                    ('ksiz', c_int, 1),
+                    ('vbuf', c_void_p, 1),
+                    ('vsiz', c_int, 1),
+                    ('proc', TCPDPROC, 1),
+                    ('op', c_void_p, 1))
+bdb_putproc.__doc__ =\
+"""Store a record into a B+ tree database object with a duplication
+handler.
+
+bdb  -- specifies the B+ tree database object connected as a writer.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.  'NULL'
+        means that record addition is ommited if there is no
+        corresponding record.
+vsiz -- specifies the size of the region of the value.
+proc -- specifies the pointer to the callback function to process
+        duplication.  It receives four parameters.  The first
+        parameter is the pointer to the region of the value.  The
+        second parameter is the size of the region of the value.  The
+        third parameter is the pointer to the variable into which the
+        size of the region of the return value is assigned.  The
+        fourth parameter is the pointer to the optional opaque object.
+        It returns the pointer to the result object allocated with
+        'malloc'.  It is released by the caller.  If it is 'NULL', the
+        record is not modified.  If it is '(void *)-1', the record is
+        removed.
+op   -- specifies an arbitrary pointer to be given as a parameter of
+        the callback function.  If it is not needed, 'NULL' can be
+        specified.
+
+If successful, the return value is true, else, it is false.
+
+Note that the callback function can not perform any database operation
+because the function is called in the critical section guarded by the
+same locks of database operations.
+
+"""
+
+bdb_curjumpback = cfunc('tcbdbcurjumpback', libtc, c_bool,
+                        ('cur', c_void_p, 1),
+                        ('kbuf', c_void_p, 1),
+                        ('ksiz', c_int, 1))
+bdb_curjumpback.__doc__ =\
+"""Move a cursor object to the rear of records corresponding a key.
+
+cur  -- specifies the cursor object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+
+If successful, the return value is true, else, it is false.  False is
+returned if there is no record corresponding the condition.
+
+The cursor is set to the last record corresponding the key or the
+previous substitute if completely matching record does not exist.
+
+"""
+
+bdb_curjumpback2 = cfunc('tcbdbcurjumpback2', libtc, c_bool,
+                         ('cur', c_void_p, 1),
+                         ('kstr', c_char_p, 1))
+bdb_curjumpback2.__doc__ =\
+"""Move a cursor object to the rear of records corresponding a key
+string.
+
+cur  -- specifies the cursor object.
+kstr -- specifies the string of the key.
+
+If successful, the return value is true, else, it is false.  False is
+returned if there is no record corresponding the condition.
+
+The cursor is set to the last record corresponding the key or the
+previous substitute if completely matching record does not exist.
+
+"""
+
+bdb_foreach = cfunc('tcbdbforeach', libtc, c_bool,
+                    ('bdb', c_void_p, 1),
+                    ('iter', TCITER, 1),
+                    ('op', c_char_p, 1))
+bdb_foreach.__doc__ =\
+"""Process each record atomically of a B+ tree database object.
+
+bdb  -- specifies the B+ tree database object.
+iter -- specifies the pointer to the iterator function called for each
+        record.  It receives five parameters.  The first parameter is
+        the pointer to the region of the key.  The second parameter is
+        the size of the region of the key.  The third parameter is the
+        pointer to the region of the value.  The fourth parameter is
+        the size of the region of the value.  The fifth parameter is
+        the pointer to the optional opaque object.  It returns true to
+        continue iteration or false to stop iteration.
+op   -- specifies an arbitrary pointer to be given as a parameter of
+        the iterator function.  If it is not needed, 'NULL' can be
+        specified.
+
+If successful, the return value is true, else, it is false.
+
+Note that the callback function can not perform any database operation
+because the function is called in the critical section guarded by the
+same locks of database operations.
 
 """
