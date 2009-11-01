@@ -34,8 +34,8 @@ import util
 
 
 # enumeration for additional flags
-FOPEN  = 1 << 0                 # whether opened
-FFATAL = 1 << 1                 # whether with fatal error
+FOPEN    = 1 << 0               # whether opened
+FFATAL   = 1 << 1               # whether with fatal error
 
 # enumeration for tuning options
 TLARGE   = 1 << 0               # use 64-bit bucket array
