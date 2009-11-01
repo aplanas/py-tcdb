@@ -35,7 +35,7 @@ import util
 
 # enumeration for additional flags
 FOPEN  = 1 << 0                 # whether opened
-FFATAL = 1 << 1                 # whetehr with fatal error
+FFATAL = 1 << 1                 # whether with fatal error
 
 # enumeration for tuning options
 TLARGE   = 1 << 0               # use 64-bit bucket array
@@ -67,7 +67,7 @@ class hdb(object):
         """Set mutual exclusion control of a hash database object for
         threading."""
         return tc.hdb_setmutex(self.db)
-        
+
     def tune(self, bnum, apow, fpow, opts):
         """Set the tuning parameters of a hash database object."""
         return tc.hdb_tume(self.db, bnum, apow, fpow, opts)
@@ -263,7 +263,7 @@ class hdb(object):
         """Retrieve an integer record in a hash database object."""
         (c_value, c_value_len) = self._get(key)
         return util.deserialize_int(c_value, c_value_len)
-        
+
     def get_float(self, key):
         """Retrieve a double precision record in a hash database
         object."""
