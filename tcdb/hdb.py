@@ -568,7 +568,14 @@ class hdb(object):
     def foreach(self, proc, op):
         """Process each record atomically of a hash database
         object."""
-        result = tc.hdb_foreach(self.db, tc.TCITER(proc), op)
+        def proc_wraper(c_key, c_key_len, c_value, c_value_len, op):
+            key = self._deserialize_obj(ctypes.cast(c_key, ctypes.c_void_p),
+                                        c_key_len)
+            value = self._deserialize_obj(ctypes.cast(c_value, ctypes.c_void_p),
+                                          c_value_len)
+            return proc(key, value, ctypes.cast(op, ctypes.c_char_p).value)
+
+        result = tc.hdb_foreach(self.db, tc.TCITER(proc_wraper), op)
         if not result:
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
         return result

@@ -197,6 +197,19 @@ class TestHdb(unittest.TestCase):
             pass
         self.assertEquals(len(self.hdb), 0)
 
+    def test_foreach(self):
+        objs = [1+1j, 'some text', 10, 10.0]
+
+        def proc(key, value, op):
+            self.assertEquals(key, value)
+            self.assert_(key in objs)
+            self.assertEquals(op, 'test')
+            return True
+
+        for obj in objs:
+            self.hdb.put(obj, obj)
+        self.hdb.foreach(proc, 'test')
+
 
 if __name__ == '__main__':
     unittest.main()
