@@ -1,7 +1,9 @@
+import datetime
 import os
 import unittest
 
 from tcdb import hdb
+from tcdb import tc
 
 
 class TestHdb(unittest.TestCase):
@@ -146,6 +148,55 @@ class TestHdb(unittest.TestCase):
             self.hdb.add_float(key, 2.0)
         for key in self.hdb:
             self.assertEqual(self.hdb.get_float(key), 12.0)
+
+    def test_admin_functions(self):
+        objs = [1+1j, 'some text', 10, 10.0]
+        for obj in objs:
+            self.hdb.put(obj, obj)
+
+        self.assertEquals(self.hdb.path(), 'test.hdb')
+
+        self.hdb.sync()
+        self.assertEquals(len(self.hdb), 4)
+        self.assertEquals(self.hdb.fsiz(), 528928)
+
+        self.hdb.vanish()
+        self.assertEquals(self.hdb.fsiz(), 528704)
+
+        self.assert_(self.hdb.memsync(True))
+        self.assert_(self.hdb.cacheclear())
+        self.assertEquals(self.hdb.bnum(), 131071)
+        self.assertEquals(self.hdb.align(), 16)
+        self.assertEquals(self.hdb.fbpmax(), 1024)
+        self.assertEquals(self.hdb.xmsiz(), 67108864)
+        self.assert_(self.hdb.inode())
+        self.assert_((datetime.datetime.now()-self.hdb.mtime()).seconds <= 1)
+        # Why OTRUNC?!?
+        self.assertEquals(self.hdb.omode(), hdb.OWRITER|hdb.OCREAT|hdb.OTRUNC)
+        self.assertEquals(self.hdb.type(), tc.THASH)
+        self.assertEquals(self.hdb.flags(), hdb.FOPEN)
+        self.assertEquals(self.hdb.opts(), 0)
+        self.assertEquals(self.hdb.opaque(), '')
+        self.assertEquals(self.hdb.bnumused(), 0)
+        self.assertEquals(self.hdb.dfunit(), 0)
+        self.assert_(self.hdb.defrag(5))
+
+    def test_transaction(self):
+        objs = [1+1j, 'some text', 10, 10.0]
+        with self.hdb as db:
+            for obj in objs:
+                db.put(obj, obj)
+        self.assertEquals(len(self.hdb), 4)
+        self.hdb.vanish()
+        try:
+            with self.hdb:
+                for obj in objs:
+                    self.hdb.put(obj, obj)
+                self.hdb.get('Not exist key')
+        except KeyError:
+            pass
+        self.assertEquals(len(self.hdb), 0)
+
 
 if __name__ == '__main__':
     unittest.main()

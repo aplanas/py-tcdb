@@ -28,9 +28,14 @@ True
 
 import cPickle
 import ctypes
+import datetime
 
 import tc
 
+
+# enumeration for additional flags
+FOPEN  = 1 << 0                 # whether opened
+FFATAL = 1 << 1                 # whetehr with fatal error
 
 # enumeration for tuning options
 TLARGE   = 1 << 0               # use 64-bit bucket array
@@ -415,6 +420,7 @@ class hdb(object):
     def __enter__(self):
         """Enter in the 'with' statement and begin the transaction."""
         self.tranbegin()
+        return self
 
     def __exit__(self, type, value, traceback):
         """Exit from 'with' statement and ends the transaction."""
@@ -481,7 +487,7 @@ class hdb(object):
         """Get the record alignment of a hash database object."""
         return tc.hdb_align(self.db)
 
-    def fbdmax(self):
+    def fbpmax(self):
         """Get the maximum number of the free block pool of a a hash
         database object."""
         return tc.hdb_fbpmax(self.db)
@@ -499,11 +505,11 @@ class hdb(object):
     def mtime(self):
         """Get the modification time of the database file of a hash
         database object."""
-        return tc.hdb_mtime(self.db)
+        return datetime.datetime.fromtimestamp(tc.hdb_mtime(self.db))
 
     def omode(self):
         """Get the connection mode of a hash database object."""
-        return tc.omode(self.db)
+        return tc.hdb_omode(self.db)
 
     def type(self):
         """Get the database type of a hash database object."""

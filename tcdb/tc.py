@@ -942,6 +942,12 @@ list -- specifies the list object.
 
 # """
 
+# enumeration for database type
+THASH  = 0                      # hash table
+TBTREE = 1                      # B+ tree
+TFIXED = 2                      # fixed-length 
+TTABLE = 3                      # table
+
 
 #
 # Functions from tcadb.h
