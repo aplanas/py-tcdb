@@ -134,6 +134,11 @@ class hdb(object):
         assert isinstance(value, str), 'Value is not a string'
         return self._put(key, value)
 
+    def put_unicode(self, key, value):
+        """Store an unicode string record into a hash database object."""
+        assert isinstance(value, unicode), 'Value is not an unicode string'
+        return self._put(key, value)
+
     def put_int(self, key, value):
         """Store an integer record into a hash database object."""
         assert isinstance(value, int), 'Value is not an integer'
@@ -166,6 +171,12 @@ class hdb(object):
         assert isinstance(value, str), 'Value is not a string'
         return self._putkeep(key, value)
 
+    def putkeep_unicode(self, key, value):
+        """Store a new unicode string record into a hash database
+        object."""
+        assert isinstance(value, unicode), 'Value is not an unicode string'
+        return self._putkeep(key, value)
+
     def putkeep_int(self, key, value):
         """Store a new integer record into a hash database object."""
         assert isinstance(value, int), 'Value is not an integer'
@@ -188,6 +199,17 @@ class hdb(object):
         """Concatenate a string value at the end of the existing
         record in a hash database object."""
         assert isinstance(value, str), 'Value is not a string'
+        return self._putcat(key, value)
+
+    def putcat_unicode(self, key, value):
+        """Concatenate an unicode string value at the end of the
+        existing record in a hash database object."""
+        assert isinstance(value, unicode), 'Value is not an unicode string'
+        return self._putcat(key, value)
+
+    def _putcat(self, key, value):
+        """Concatenate an object value at the end of the existing
+        record in a hash database object."""
         (c_key, c_key_len) = util.serialize_obj(key)
         (c_value, c_value_len) = util.serialize_value(value)
         result = tc.hdb_putcat(self.db, c_key, c_key_len, c_value, c_value_len)
@@ -209,6 +231,12 @@ class hdb(object):
         """Store a string record into a hash database object in
         asynchronous fashion."""
         assert isinstance(value, str), 'Value is not a string'
+        return self._putasync(key, value)
+
+    def putasync_unicode(self, key, value):
+        """Store an unicode string record into a hash database object
+        in asynchronous fashion."""
+        assert isinstance(value, unicode), 'Value is not an unicode string'
         return self._putasync(key, value)
 
     def putasync_int(self, key, value):
@@ -258,6 +286,12 @@ class hdb(object):
         """Retrieve a string record in a hash database object."""
         (c_value, c_value_len) = self._get(key)
         return util.deserialize_str(c_value, c_value_len)
+
+    def get_unicode(self, key):
+        """Retrieve an unicode string record in a hash database
+        object."""
+        (c_value, c_value_len) = self._get(key)
+        return util.deserialize_unicode(c_value, c_value_len)
 
     def get_int(self, key):
         """Retrieve an integer record in a hash database object."""

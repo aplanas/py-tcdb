@@ -43,6 +43,14 @@ class TestHdb(unittest.TestCase):
             unicode2 = unicode(self.hdb.get_str(obj), 'utf8')
             self.assertEqual(unicode1, unicode2)
 
+    def test_put_unicode(self):
+        unicode1 = u'unicode text [áéíóú]'
+        objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
+        for obj in objs:
+            self.hdb.put_unicode(obj, unicode1)
+            unicode2 = self.hdb.get_unicode(obj)
+            self.assertEqual(unicode1, unicode2)
+
     def test_put_int(self):
         int1 = 10
         objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
@@ -75,6 +83,24 @@ class TestHdb(unittest.TestCase):
             self.hdb.putkeep(obj1, 'Never stored')
             obj2 = self.hdb.get(obj1)
             self.assertEqual(obj1, obj2)
+
+    def test_putcat_str(self):
+        objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
+        for obj in objs:
+            self.hdb.putcat_str(obj, 'some')
+        for obj in objs:
+            self.hdb.putcat_str(obj, ' text')
+        for obj in objs:
+            self.assertEquals(self.hdb.get_str(obj), 'some text')
+
+    def test_putcat_unicode(self):
+        objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
+        for obj in objs:
+            self.hdb.putcat_unicode(obj, u'some')
+        for obj in objs:
+            self.hdb.putcat_unicode(obj, u' text')
+        for obj in objs:
+            self.assertEquals(self.hdb.get_unicode(obj), u'some text')
 
     def test_putasync(self):
         objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]

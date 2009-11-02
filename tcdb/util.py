@@ -42,9 +42,37 @@ def deserialize_obj(c_obj, c_obj_len):
     return obj
 
 
+def serialize_value(obj):
+    """Serialize an object, ready to be used as a value in put_xxx /
+    get_xxx."""
+    if isinstance(obj, int):
+        c_obj = tc.c_int_p(ctypes.c_int(obj))
+        c_obj_len = ctypes.sizeof(ctypes.c_int(obj))
+    elif isinstance(obj, float):
+        c_obj = tc.c_double_p(ctypes.c_double(obj))
+        c_obj_len = ctypes.sizeof(ctypes.c_double(obj))
+    elif isinstance(obj, str):
+        c_obj = ctypes.c_char_p(obj)
+        c_obj_len = len(obj)       # We don't need to store the last \x00
+    elif isinstance(obj, unicode):
+        c_obj = ctypes.c_wchar_p(obj)
+        c_obj_len = len(obj) << 2  # We don't need to store the last \x00
+    else:
+        obj = cPickle.dumps(obj, cPickle.HIGHEST_PROTOCOL)
+        c_obj = ctypes.c_char_p(obj)
+        c_obj_len = len(obj)       # We don't need to store the last \x00
+    return (c_obj, c_obj_len)
+
+
 def deserialize_str(c_str, c_str_len):
     """Deserialize a string used in put_str / get_str."""
     return ctypes.string_at(c_str.value, c_str_len)
+
+
+def deserialize_unicode(c_unicode, c_unicode_len):
+    """Deserialize an unicode string used in put_unicode /
+    get_unicode."""
+    return ctypes.wstring_at(c_unicode.value, c_unicode_len.value >> 2)
 
 
 def deserialize_int(c_int, c_int_len):
@@ -65,22 +93,3 @@ def deserialize_xstr_obj(xstr):
     except cPickle.UnpicklingError:
         pass
     return obj
-
-
-def serialize_value(obj):
-    """Serialize an object, ready to be used as a value in put_xxx /
-    get_xxx."""
-    if isinstance(obj, int):
-        c_obj = tc.c_int_p(ctypes.c_int(obj))
-        c_obj_len = ctypes.sizeof(ctypes.c_int(obj))
-    elif isinstance(obj, float):
-        c_obj = tc.c_double_p(ctypes.c_double(obj))
-        c_obj_len = ctypes.sizeof(ctypes.c_double(obj))
-    elif isinstance(obj, str):
-        c_obj = ctypes.c_char_p(obj)
-        c_obj_len = len(obj)    # We don't need to store the last \x00
-    else:
-        obj = cPickle.dumps(obj, cPickle.HIGHEST_PROTOCOL)
-        c_obj = ctypes.c_char_p(obj)
-        c_obj_len = len(obj)    # We don't need to store the last \x00
-    return (c_obj, c_obj_len)
