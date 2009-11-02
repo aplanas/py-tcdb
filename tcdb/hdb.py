@@ -131,18 +131,18 @@ class hdb(object):
 
     def put_str(self, key, value):
         """Store a string record into a hash database object."""
-        assert type(value) == str, 'Value is not a string'
+        assert isinstance(value, str), 'Value is not a string'
         return self._put(key, value)
 
     def put_int(self, key, value):
         """Store an integer record into a hash database object."""
-        assert type(value) == int, 'Value is not an integer'
+        assert isinstance(value, int), 'Value is not an integer'
         return self._put(key, value)
 
     def put_float(self, key, value):
         """Store a double precision record into a hash database
         object."""
-        assert type(value) == float, 'Value is not a float'
+        assert isinstance(value, float), 'Value is not a float'
         return self._put(key, value)
 
     def _put(self, key, value):
@@ -163,18 +163,18 @@ class hdb(object):
 
     def putkeep_str(self, key, value):
         """Store a new string record into a hash database object."""
-        assert type(value) == str, 'Value is not a string'
+        assert isinstance(value, str), 'Value is not a string'
         return self._putkeep(key, value)
 
     def putkeep_int(self, key, value):
         """Store a new integer record into a hash database object."""
-        assert type(value) == int, 'Value is not an integer'
+        assert isinstance(value, int), 'Value is not an integer'
         return self._putkeep(key, value)
 
     def putkeep_float(self, key, value):
         """Store a new double precision record into a hash database
         object."""
-        assert type(value) == float, 'Value is not a float'
+        assert isinstance(value, float), 'Value is not a float'
         return self._putkeep(key, value)
 
     def _putkeep(self, key, value):
@@ -187,7 +187,7 @@ class hdb(object):
     def putcat_str(self, key, value):
         """Concatenate a string value at the end of the existing
         record in a hash database object."""
-        assert type(value) == str, 'Value is not a string'
+        assert isinstance(value, str), 'Value is not a string'
         (c_key, c_key_len) = util.serialize_obj(key)
         (c_value, c_value_len) = util.serialize_value(value)
         result = tc.hdb_putcat(self.db, c_key, c_key_len, c_value, c_value_len)
@@ -208,19 +208,19 @@ class hdb(object):
     def putasync_str(self, key, value):
         """Store a string record into a hash database object in
         asynchronous fashion."""
-        assert type(value) == str, 'Value is not a string'
+        assert isinstance(value, str), 'Value is not a string'
         return self._putasync(key, value)
 
     def putasync_int(self, key, value):
         """Store an integer record into a hash database object in
         asynchronous fashion."""
-        assert type(value) == int, 'Value is not an integer'
+        assert isinstance(value, int), 'Value is not an integer'
         return self._putasync(key, value)
 
     def putasync_float(self, key, value):
         """Store a double precision record into a hash database object
         in asynchronous fashion."""
-        assert type(value) == float, 'Value is not a float'
+        assert isinstance(value, float), 'Value is not a float'
         return self._putasync(key, value)
 
     def _putasync(self, key, value):
@@ -348,7 +348,7 @@ class hdb(object):
 
     def add_int(self, key, num):
         """Add an integer to a record in a hash database object."""
-        assert type(num) == int, 'Value is not an integer'
+        assert isinstance(num, int), 'Value is not an integer'
         (c_key, c_key_len) = util.serialize_obj(key)
         result = tc.hdb_addint(self.db, c_key, c_key_len, num)
         if not result:
@@ -357,7 +357,7 @@ class hdb(object):
 
     def add_float(self, key, num):
         """Add a real number to a record in a hash database object."""
-        assert type(num) == float, 'Value is not a float'
+        assert isinstance(num, float), 'Value is not a float'
         (c_key, c_key_len) = util.serialize_obj(key)
         result = tc.hdb_adddouble(self.db, c_key, c_key_len, num)
         if not result:

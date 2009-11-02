@@ -22,7 +22,7 @@ def serialize_obj(obj):
     # put /get, but we need a different serializer because of add_xxx
     # functions, that works on native integer and double C datatype.
 
-    if type(obj) == str:
+    if isinstance(obj, str):
         c_obj = ctypes.c_char_p(obj)
         c_obj_len = len(obj)    # We don't need to store the last \x00
     else:
@@ -70,13 +70,13 @@ def deserialize_xstr_obj(xstr):
 def serialize_value(obj):
     """Serialize an object, ready to be used as a value in put_xxx /
     get_xxx."""
-    if type(obj) == int:
+    if isinstance(obj, int):
         c_obj = tc.c_int_p(ctypes.c_int(obj))
         c_obj_len = ctypes.sizeof(ctypes.c_int(obj))
-    elif type(obj) == float:
+    elif isinstance(obj, float):
         c_obj = tc.c_double_p(ctypes.c_double(obj))
         c_obj_len = ctypes.sizeof(ctypes.c_double(obj))
-    elif type(obj) == str:
+    elif isinstance(obj, str):
         c_obj = ctypes.c_char_p(obj)
         c_obj_len = len(obj)    # We don't need to store the last \x00
     else:
