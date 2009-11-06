@@ -318,7 +318,7 @@ class hdb(object):
         (c_key, c_key_len) = util.serialize_obj(key)
         result = tc.hdb_vsiz(self.db, c_key, c_key_len)
         if result == -1:
-            raise KeyError(key)
+            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
         return result
 
     def keys(self):
