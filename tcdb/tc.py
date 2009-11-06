@@ -458,19 +458,18 @@ The return value is the new list object.
 
 """
 
-# XXX Fix params type
-# tclistnew3 = cfunc('tclistnew3', libtc, TCLIST_P,
-#                    ('str', c_char_p, 1))
-# tclistnew3.__doc__ =\
-# """Create a list object with initial string elements.
+tclistnew3 = cfunc('tclistnew3', libtc, TCLIST_P,
+                   ('str', c_char_p, 1))
+tclistnew3.__doc__ =\
+"""Create a list object with initial string elements.
 
-# str -- specifies the string of the first element.
+str -- specifies the string of the first element.
 
-# The other arguments are other elements.  They should be trailed by a
-# 'NULL' argument.
+The other arguments are other elements.  They should be trailed by a
+'NULL' argument.
 
-# The return value is the new list object.
-# """
+The return value is the new list object.
+"""
 
 tclistdup = cfunc('tclistdup', libtc, TCLIST_P,
                   ('list', TCLIST_P, 1))
@@ -947,6 +946,86 @@ THASH  = 0                      # hash table
 TBTREE = 1                      # B+ tree
 TFIXED = 2                      # fixed-length 
 TTABLE = 3                      # table
+
+tccmplexical = cfunc('tccmplexical', libtc, c_int,
+                     ('aptr', c_char_p, 1),
+                     ('asiz', c_int, 1),
+                     ('bptr', c_char_p, 1),
+                     ('bsiz', c_int, 1),
+                     ('op', c_void_p, 1))
+tccmplexical.__doc__ =\
+"""Compare two keys by lexical order.
+
+aptr -- specifies the pointer to the region of one key.
+asiz -- specifies the size of the region of one key.
+bptr -- specifies the pointer to the region of the other key.
+bsiz -- specifies the size of the region of the other key.
+op   -- is ignored.
+
+The return value is positive if the former is big, negative if the
+latter is big, 0 if both are equivalent.
+
+"""
+
+tccmpdecimal = cfunc('tccmpdecimal', libtc, c_int,
+                     ('aptr', c_char_p, 1),
+                     ('asiz', c_int, 1),
+                     ('bptr', c_char_p, 1),
+                     ('bsiz', c_int, 1),
+                     ('op', c_void_p, 1))
+tccmpdecimal.__doc__ =\
+"""Compare two keys as decimal strings of real numbers.
+
+aptr -- specifies the pointer to the region of one key.
+asiz -- specifies the size of the region of one key.
+bptr -- specifies the pointer to the region of the other key.
+bsiz -- specifies the size of the region of the other key.
+op   -- is ignored.
+
+The return value is positive if the former is big, negative if the
+latter is big, 0 if both are equivalent.
+
+"""
+
+tccmpint32 = cfunc('tccmpint32', libtc, c_int,
+                   ('aptr', c_char_p, 1),
+                   ('asiz', c_int, 1),
+                   ('bptr', c_char_p, 1),
+                   ('bsiz', c_int, 1),
+                   ('op', c_void_p, 1))
+tccmpint32.__doc__ =\
+"""Compare two keys as 32-bit integers in the native byte order.
+
+aptr -- specifies the pointer to the region of one key.
+asiz -- specifies the size of the region of one key.
+bptr -- specifies the pointer to the region of the other key.
+bsiz -- specifies the size of the region of the other key.
+op   -- is ignored.
+
+The return value is positive if the former is big, negative if the
+latter is big, 0 if both are equivalent.
+
+"""
+
+tccmpint64 = cfunc('tccmpint64', libtc, c_int,
+                   ('aptr', c_char_p, 1),
+                   ('asiz', c_int, 1),
+                   ('bptr', c_char_p, 1),
+                   ('bsiz', c_int, 1),
+                   ('op', c_void_p, 1))
+tccmpint64.__doc__ =\
+"""Compare two keys as 64-bit integers in the native byte order.
+
+aptr -- specifies the pointer to the region of one key.
+asiz -- specifies the size of the region of one key.
+bptr -- specifies the pointer to the region of the other key.
+bsiz -- specifies the size of the region of the other key.
+op   -- is ignored.
+
+The return value is positive if the former is big, negative if the
+latter is big, 0 if both are equivalent.
+
+"""
 
 
 #
