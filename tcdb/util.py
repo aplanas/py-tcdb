@@ -22,10 +22,12 @@ def serialize_obj(obj):
     # put /get, but we need a different serializer because of add_xxx
     # functions, that works on native integer and double C datatype.
 
+    c_obj = None
+    c_obj_len = 0
     if isinstance(obj, str):
         c_obj = ctypes.c_char_p(obj)
         c_obj_len = len(obj)    # We don't need to store the last \x00
-    else:
+    elif obj:
         obj = cPickle.dumps(obj, cPickle.HIGHEST_PROTOCOL)
         c_obj = ctypes.c_char_p(obj)
         c_obj_len = len(obj)    # We don't need to store the last \x00
@@ -45,6 +47,8 @@ def deserialize_obj(c_obj, c_obj_len):
 def serialize_value(obj):
     """Serialize an object, ready to be used as a value in put_xxx /
     get_xxx."""
+    c_obj = None
+    c_obj_len = 0
     if isinstance(obj, int):
         c_obj = tc.c_int_p(ctypes.c_int(obj))
         c_obj_len = ctypes.sizeof(ctypes.c_int(obj))
@@ -57,7 +61,7 @@ def serialize_value(obj):
     elif isinstance(obj, unicode):
         c_obj = ctypes.c_wchar_p(obj)
         c_obj_len = len(obj) << 2  # We don't need to store the last \x00
-    else:
+    elif obj:
         obj = cPickle.dumps(obj, cPickle.HIGHEST_PROTOCOL)
         c_obj = ctypes.c_char_p(obj)
         c_obj_len = len(obj)       # We don't need to store the last \x00
@@ -93,3 +97,69 @@ def deserialize_xstr_obj(xstr):
     except cPickle.UnpicklingError:
         pass
     return obj
+
+
+def serialize_objs(objs):
+    """Serialize an array of objects, ready to be used in putdup_iter."""
+    tclist_vals = tc.tclistnew2(len(objs))
+    for obj in objs:
+        (c_obj, c_obj_len) = serialize_obj(obj)
+        tc.tclistpush(tclist_vals, c_obj, c_obj_len)
+    return tclist_vals
+
+
+def deserialize_objs(tclist_objs):
+    """Deserialize an array of objects used in putdup_iter."""
+    objs = []
+    for index in range(tc.tclistnum(tclist_objs)):
+        (c_obj, c_obj_len) = tc.tclistval(tclist_objs, index)
+        objs.append(deserialize_obj(c_obj, c_obj_len))
+    return objs
+
+
+def serialize_values(objs):
+    """Serialize an array of objects, ready to be used in
+    putdup_iter_xxx."""
+    tclist_vals = tc.tclistnew2(len(objs))
+    for obj in objs:
+        (c_obj, c_obj_len) = serialize_value(obj)
+        tc.tclistpush(tclist_vals, c_obj, c_obj_len)
+    return tclist_vals
+
+
+# TODO - Fix the docstring.
+def deserialize_strs(tclist_strs):
+    """Deserialize an array of strings used in getdup_iter_str."""
+    objs = []
+    for index in range(tc.tclistnum(tclist_strs)):
+        (c_str, c_str_len) = tc.tclistval(tclist_strs, index)
+        objs.append(deserialize_str(c_str, c_str_len))
+    return objs
+
+
+def deserialize_unicodes(tclist_unicodes):
+    """Deserialize an array of unicode strings used in
+    gettdup_iter_unicode."""
+    objs = []
+    for index in range(tc.tclistnum(tclist_unicodes)):
+        (c_unicode, c_unicode_len) = tc.tclistval(tclist_unicodes, index)
+        objs.append(deserialize_unicode(c_unicode, c_unicode_len))
+    return objs
+
+
+def deserialize_ints(tclist_ints):
+    """Deserialize an array of integers used in getdup_iter_int."""
+    objs = []
+    for index in range(tc.tclistnum(tclist_ints)):
+        (c_int, c_int_len) = tc.tclistval(tclist_ints, index)
+        objs.append(deserialize_int(c_int, c_int_len))
+    return objs
+
+
+def deserialize_floats(tclist_floats):
+    """Deserialize an array of floats used in getdup_iter_float."""
+    objs = []
+    for index in range(tc.tclistnum(tclist_floats)):
+        (c_float, c_float_len) = tc.tclistval(tclist_floats, index)
+        objs.append(deserialize_float(c_float, c_float_len))
+    return objs
