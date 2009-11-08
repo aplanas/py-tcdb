@@ -29,6 +29,7 @@ class TestHdb(unittest.TestCase):
             self.hdb.put(obj1, obj1)
             obj2 = self.hdb.get(obj1)
             self.assertEqual(obj1, obj2)
+        self.assertRaises(KeyError, self.hdb.get, 'nonexistent key')
 
     def test_put_str(self):
         str1 = 'some text [áéíóú]'
@@ -42,6 +43,7 @@ class TestHdb(unittest.TestCase):
             self.hdb.put_str(obj, unicode1.encode('utf8'))
             unicode2 = unicode(self.hdb.get_str(obj), 'utf8')
             self.assertEqual(unicode1, unicode2)
+        self.assertRaises(KeyError, self.hdb.get_str, 'nonexistent key')
 
     def test_put_unicode(self):
         unicode1 = u'unicode text [áéíóú]'
@@ -50,6 +52,7 @@ class TestHdb(unittest.TestCase):
             self.hdb.put_unicode(obj, unicode1)
             unicode2 = self.hdb.get_unicode(obj)
             self.assertEqual(unicode1, unicode2)
+        self.assertRaises(KeyError, self.hdb.get_unicode, 'nonexistent key')
 
     def test_put_int(self):
         int1 = 10
@@ -58,6 +61,7 @@ class TestHdb(unittest.TestCase):
             self.hdb.put_int(obj, int1)
             int2 = self.hdb.get_int(obj)
             self.assertEqual(int1, int2)
+        self.assertRaises(KeyError, self.hdb.get_int, 'nonexistent key')
 
     def test_put_float(self):
         float1 = 10.10
@@ -66,6 +70,7 @@ class TestHdb(unittest.TestCase):
             self.hdb.put_float(obj, float1)
             float2 = self.hdb.get_float(obj)
             self.assertEqual(float1, float2)
+        self.assertRaises(KeyError, self.hdb.get_float, 'nonexistent key')
 
     def test_putkeep(self):
         objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
@@ -169,6 +174,7 @@ class TestHdb(unittest.TestCase):
             self.hdb.put(obj, 'same value')
         self.assertEqual(self.hdb.fwmkeys('a'), ['aa', 'ab', 'ac', 'ad'])
         self.assertEqual(self.hdb.fwmkeys('x'), ['xx'])
+        self.assertEqual(self.hdb.fwmkeys('nonexistent key'), [])
 
     def test_add_int(self):
         objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
