@@ -37,7 +37,7 @@ def serialize_obj(obj):
 def deserialize_obj(c_obj, c_obj_len):
     """Deserialize an object used in put / get."""
     try:
-        obj = ctypes.string_at(c_obj.value, c_obj_len)
+        obj = ctypes.string_at(c_obj, c_obj_len)
         obj = cPickle.loads(obj)
     except cPickle.UnpicklingError:
         pass
@@ -70,13 +70,13 @@ def serialize_value(obj):
 
 def deserialize_str(c_str, c_str_len):
     """Deserialize a string used in put_str / get_str."""
-    return ctypes.string_at(c_str.value, c_str_len)
+    return ctypes.string_at(c_str, c_str_len)
 
 
 def deserialize_unicode(c_unicode, c_unicode_len):
     """Deserialize an unicode string used in put_unicode /
     get_unicode."""
-    return ctypes.wstring_at(c_unicode.value, c_unicode_len.value >> 2)
+    return ctypes.wstring_at(c_unicode, c_unicode_len.value >> 2)
 
 
 def deserialize_int(c_int, c_int_len):
@@ -127,9 +127,8 @@ def serialize_values(objs):
     return tclist_vals
 
 
-# TODO - Fix the docstring.
 def deserialize_strs(tclist_strs):
-    """Deserialize an array of strings used in getdup_iter_str."""
+    """Deserialize an array of strings used in getdup_str."""
     objs = []
     for index in range(tc.tclistnum(tclist_strs)):
         (c_str, c_str_len) = tc.tclistval(tclist_strs, index)
@@ -139,7 +138,7 @@ def deserialize_strs(tclist_strs):
 
 def deserialize_unicodes(tclist_unicodes):
     """Deserialize an array of unicode strings used in
-    gettdup_iter_unicode."""
+    getdup_unicode."""
     objs = []
     for index in range(tc.tclistnum(tclist_unicodes)):
         (c_unicode, c_unicode_len) = tc.tclistval(tclist_unicodes, index)
@@ -148,7 +147,7 @@ def deserialize_unicodes(tclist_unicodes):
 
 
 def deserialize_ints(tclist_ints):
-    """Deserialize an array of integers used in getdup_iter_int."""
+    """Deserialize an array of integers used in getdup_int."""
     objs = []
     for index in range(tc.tclistnum(tclist_ints)):
         (c_int, c_int_len) = tc.tclistval(tclist_ints, index)
@@ -157,7 +156,7 @@ def deserialize_ints(tclist_ints):
 
 
 def deserialize_floats(tclist_floats):
-    """Deserialize an array of floats used in getdup_iter_float."""
+    """Deserialize an array of floats used in getdup_float."""
     objs = []
     for index in range(tc.tclistnum(tclist_floats)):
         (c_float, c_float_len) = tc.tclistval(tclist_floats, index)
