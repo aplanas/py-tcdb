@@ -308,7 +308,7 @@ class hdb(object):
         """Retrieve a Python object in a hash database object."""
         (c_key, c_key_len) = util.serialize_obj(key)
         (c_value, c_value_len) = tc.hdb_get(self.db, c_key, c_key_len)
-        if not c_value.value:
+        if not c_value:
             raise KeyError(key)
         return (c_value, c_value_len)
 
@@ -331,7 +331,7 @@ class hdb(object):
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
         while True:
             c_key, c_key_len = tc.hdb_iternext(self.db)
-            if not c_key.value:
+            if not c_key:
                 break
             key = util.deserialize_obj(c_key, c_key_len)
             yield key
@@ -346,7 +346,7 @@ class hdb(object):
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
         while True:
             c_key, c_key_len = tc.hdb_iternext(self.db)
-            if not c_key.value:
+            if not c_key:
                 break
             (c_value, c_value_len) = tc.hdb_get(self.db, c_key, c_key_len)
             value = util.deserialize_obj(c_value, c_value_len)
@@ -371,14 +371,12 @@ class hdb(object):
         return self.iterkeys()
 
     def fwmkeys(self, prefix):
-        """Get forward matching string keys in a hash database
-        object."""
-        tclist = tc.hdb_fwmkeys2(self.db, prefix)
-        start = tclist.contents.start
-        num = tclist.contents.num
-        array = tclist.contents.array
-        result = [d.ptr for d in array[start:start+num]]
-        return result
+        """Get forward matching string keys in a hash database object."""
+        (c_prefix, c_prefix_len) = util.serialize_obj(prefix)
+        tclist_objs = tc.hdb_fwmkeys(self.db, c_prefix, c_prefix_len)
+        if not tclist_objs:
+            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        return util.deserialize_objs(tclist_objs)
 
     def add_int(self, key, num):
         """Add an integer to a record in a hash database object."""
@@ -415,6 +413,7 @@ class hdb(object):
         result = tc.hdb_optimize(self.db, *kwargs)
         if not result:
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        return result
 
     def vanish(self):
         """Remove all records of a hash database object."""
@@ -465,7 +464,10 @@ class hdb(object):
 
     def path(self):
         """Get the file path of a hash database object."""
-        return tc.hdb_path(self.db)
+        result = tc.hdb_path(self.db)
+        if not result:
+            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        return result
 
     def __len__(self):
         """Get the number of records of a hash database object."""
@@ -474,7 +476,10 @@ class hdb(object):
     def fsiz(self):
         """Get the size of the database file of a hash database
         object."""
-        return tc.hdb_fsiz(self.db)
+        result = tc.hdb_fsiz(self.db)
+        if not result:
+            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        return result
 
     def setecode(self, ecode, filename, line, func):
         """Set the error code of a hash database object."""
