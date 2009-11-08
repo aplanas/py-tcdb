@@ -19,13 +19,13 @@ c_time_t = c_uint64              # This is valid in 64 bit architecture.
 class tc_char_p(c_char_p):
     """Automatic garbage collectable ctypes.c_char_p type."""
     def __del__(self):
-        if self.value:
+        if self:
             libtc.tcfree(self)
 
 class tc_void_p(c_void_p):
     """Automatic garbage collectable ctypes.c_void_p type."""
     def __del__(self):
-        if self.value:
+        if self:
             libtc.tcfree(self)
 
 
