@@ -1,0 +1,4 @@
+# Ignore some patterns files
+
+^.*\.py~$
+^.*\.pyc$
