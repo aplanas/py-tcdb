@@ -357,6 +357,10 @@ class HDB(object):
             value = util.deserialize_obj(c_value, c_value_len)
             yield value
 
+    def items(self):
+        """Get all the items of a hash database object."""
+        return list(self.iteritems())
+
     def iteritems(self):
         """Iterate for every key / value in a hash database object."""
         if not tc.hdb_iterinit(self.db):
@@ -415,7 +419,7 @@ class HDB(object):
                                    ('apow', apow),
                                    ('fpow', fpow),
                                    ('opts', opts)) if x[1]])
-        result = tc.hdb_optimize(self.db, *kwargs)
+        result = tc.hdb_optimize(self.db, **kwargs)
         if not result:
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
         return result
