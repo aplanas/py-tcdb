@@ -14,7 +14,7 @@ c_int_p  = POINTER(c_int)
 
 c_double_p = POINTER(c_double)
 
-c_time_t = c_uint64              # This is valid in 64 bit architecture.
+c_time_t = c_uint64              # FIX: This is valid in 64 bit architecture.
 
 class tc_char_p(c_char_p):
     """Automatic garbage collectable ctypes.c_char_p type."""
@@ -1032,642 +1032,643 @@ latter is big, 0 if both are equivalent.
 # Functions from tcadb.h
 #
 
-# adb_new = cfunc('tcadbnew', libtc, c_void_p)
-# adb_new.__doc__ =\
-# """Create an abstract database object.
-
-# The return value is the new abstract database object.
-
-# """
-
-# adb_del = cfunc('tcadbdel', libtc, None,
-#                 ('adb', c_void_p, 1))
-# adb_del.__doc__ =\
-# """Delete an abstract database object.
-
-# adb -- specifies the abstract database object.
-
-# """
-
-# adb_open = cfunc('tcadbopen', libtc, c_bool,
-#                  ('adb', c_void_p, 1),
-#                  ('name', c_char_p, 1))
-# adb_open.__doc__ =\
-# """Open an abstract database.
-
-# adb  -- specifies the abstract database object.
-# name -- specifies the name of the database.  If it is "*", the
-#         database will be an on-memory hash database.  If it is "+",
-#         the database will be an on-memory tree database.  If its
-#         suffix is ".tch", the database will be a hash database.  If
-#         its suffix is ".tcb", the database will be a B+ tree database.
-#         If its suffix is ".tcf", the database will be a fixed-length
-#         database. If its suffix is ".tct", the database will be a
-#         table database.  Otherwise, this function fails.  Tuning
-#         parameters can trail the name, separated by "#".  Each
-#         parameter is composed of the name and the value, separated by
-#         "=".  On-memory hash database supports "bnum", "capnum", and
-#         "capsiz".  On-memory tree database supports "capnum" and
-#         "capsiz".  Hash database supports "mode", "bnum", "apow",
-#         "fpow", "opts", "rcnum", "xmsiz", and "dfunit".  B+ tree
-#         database supports "mode", "lmemb", "nmemb", "bnum", "apow",
-#         "fpow", "opts", "lcnum", "ncnum", "xmsiz", and "dfunit".
-#         Fixed-length database supports "mode", "width", and "limsiz".
-#         Table database supports "mode", "bnum", "apow", "fpow",
-#         "opts", "rcnum", "lcnum", "ncnum", "xmsiz", "dfunit", and
-#         "idx".
-
-# If successful, the return value is true, else, it is false.
-
-# The tuning parameter "capnum" specifies the capacity number of
-# records.  "capsiz" specifies the capacity size of using memory.
-# Records spilled the capacity are removed by the storing order.  "mode"
-# can contain "w" of writer, "r" of reader, "c" of creating, "t" of
-# truncating, "e" of no locking, and "f" of non-blocking lock.  The
-# default mode is relevant to "wc".  "opts" can contains "l" of large
-# option, "d" of Deflate option, "b" of BZIP2 option, and "t" of TCBS
-# option.  "idx" specifies the column name of an index and its type
-# separated by ":".
-
-# For example, "casket.tch#bnum=1000000#opts=ld" means that the name of
-# the database file is "casket.tch", and the bucket number is 1000000,
-# and the options are large and Deflate.
-
-# """
-
-# adb_close = cfunc('tcadbclose', libtc, c_bool,
-#                   ('adb', c_void_p, 1))
-# adb_close.__doc__ =\
-# """Close an abstract database object.
-
-# adb -- specifies the abstract database object.
-
-# If successful, the return value is true, else, it is false.
-
-# Update of a database is assured to be written when the database is
-# closed.  If a writer opens a database but does not close it
-# appropriately, the database will be broken.
-
-# """
-
-# adb_put = cfunc('tcadbput', libtc, c_bool,
-#                 ('adb', c_void_p, 1),
-#                 ('kbuf', c_void_p, 1),
-#                 ('ksiz', c_int, 1),
-#                 ('vbuf', c_void_p, 1),
-#                 ('vsiz', c_int, 1))
-# adb_put.__doc__ =\
-# """Store a record into an abstract database object.
-
-# adb  -- specifies the abstract database object.
-# kbuf -- specifies the pointer to the region of the key.
-# ksiz -- specifies the size of the region of the key.
-# vbuf -- specifies the pointer to the region of the value.
-# vsiz -- specifies the size of the region of the value.
-
-# If successful, the return value is true, else, it is false.
-
-# If a record with the same key exists in the database, it is
-# overwritten.
-
-# """
-
-# adb_put2 = cfunc('tcadbput2', libtc, c_bool,
-#                  ('adb', c_void_p, 1),
-#                  ('kstr', c_char_p, 1),
-#                  ('vstr', c_char_p, 1))
-# adb_put2.__doc__ =\
-# """Store a string record into an abstract object.
-
-# adb  -- specifies the abstract database object.
-# kstr -- specifies the string of the key.
-# vstr -- specifies the string of the value.
-
-# If successful, the return value is true, else, it is false.
+adb_new = cfunc('tcadbnew', libtc, c_void_p)
+adb_new.__doc__ =\
+"""Create an abstract database object.
+
+The return value is the new abstract database object.
+
+"""
+
+adb_del = cfunc('tcadbdel', libtc, None,
+                ('adb', c_void_p, 1))
+adb_del.__doc__ =\
+"""Delete an abstract database object.
+
+adb -- specifies the abstract database object.
+
+"""
+
+adb_open = cfunc('tcadbopen', libtc, c_bool,
+                 ('adb', c_void_p, 1),
+                 ('name', c_char_p, 1))
+adb_open.__doc__ =\
+"""Open an abstract database.
+
+adb  -- specifies the abstract database object.
+name -- specifies the name of the database.  If it is "*", the
+        database will be an on-memory hash database.  If it is "+",
+        the database will be an on-memory tree database.  If its
+        suffix is ".tch", the database will be a hash database.  If
+        its suffix is ".tcb", the database will be a B+ tree database.
+        If its suffix is ".tcf", the database will be a fixed-length
+        database. If its suffix is ".tct", the database will be a
+        table database.  Otherwise, this function fails.  Tuning
+        parameters can trail the name, separated by "#".  Each
+        parameter is composed of the name and the value, separated by
+        "=".  On-memory hash database supports "bnum", "capnum", and
+        "capsiz".  On-memory tree database supports "capnum" and
+        "capsiz".  Hash database supports "mode", "bnum", "apow",
+        "fpow", "opts", "rcnum", "xmsiz", and "dfunit".  B+ tree
+        database supports "mode", "lmemb", "nmemb", "bnum", "apow",
+        "fpow", "opts", "lcnum", "ncnum", "xmsiz", and "dfunit".
+        Fixed-length database supports "mode", "width", and "limsiz".
+        Table database supports "mode", "bnum", "apow", "fpow",
+        "opts", "rcnum", "lcnum", "ncnum", "xmsiz", "dfunit", and
+        "idx".
+
+If successful, the return value is true, else, it is false.
+
+The tuning parameter "capnum" specifies the capacity number of
+records.  "capsiz" specifies the capacity size of using memory.
+Records spilled the capacity are removed by the storing order.  "mode"
+can contain "w" of writer, "r" of reader, "c" of creating, "t" of
+truncating, "e" of no locking, and "f" of non-blocking lock.  The
+default mode is relevant to "wc".  "opts" can contains "l" of large
+option, "d" of Deflate option, "b" of BZIP2 option, and "t" of TCBS
+option.  "idx" specifies the column name of an index and its type
+separated by ":".
+
+For example, "casket.tch#bnum=1000000#opts=ld" means that the name of
+the database file is "casket.tch", and the bucket number is 1000000,
+and the options are large and Deflate.
+
+"""
+
+adb_close = cfunc('tcadbclose', libtc, c_bool,
+                  ('adb', c_void_p, 1))
+adb_close.__doc__ =\
+"""Close an abstract database object.
+
+adb -- specifies the abstract database object.
+
+If successful, the return value is true, else, it is false.
+
+Update of a database is assured to be written when the database is
+closed.  If a writer opens a database but does not close it
+appropriately, the database will be broken.
+
+"""
+
+adb_put = cfunc('tcadbput', libtc, c_bool,
+                ('adb', c_void_p, 1),
+                ('kbuf', c_void_p, 1),
+                ('ksiz', c_int, 1),
+                ('vbuf', c_void_p, 1),
+                ('vsiz', c_int, 1))
+adb_put.__doc__ =\
+"""Store a record into an abstract database object.
+
+adb  -- specifies the abstract database object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, it is
+overwritten.
+
+"""
+
+adb_put2 = cfunc('tcadbput2', libtc, c_bool,
+                 ('adb', c_void_p, 1),
+                 ('kstr', c_char_p, 1),
+                 ('vstr', c_char_p, 1))
+adb_put2.__doc__ =\
+"""Store a string record into an abstract object.
+
+adb  -- specifies the abstract database object.
+kstr -- specifies the string of the key.
+vstr -- specifies the string of the value.
+
+If successful, the return value is true, else, it is false.
 
-# If a record with the same key exists in the database, it is
-# overwritten.
+If a record with the same key exists in the database, it is
+overwritten.
 
-# """
-
-# adb_putkeep = cfunc('tcadbputkeep', libtc, c_bool,
-#                     ('adb', c_void_p, 1),
-#                     ('kbuf', c_void_p, 1),
-#                     ('ksiz', c_int, 1),
-#                     ('vbuf', c_void_p, 1),
-#                     ('vsiz', c_int, 1))
-# adb_putkeep.__doc__ =\
-# """Store a new record into an abstract database object.
+"""
+
+adb_putkeep = cfunc('tcadbputkeep', libtc, c_bool,
+                    ('adb', c_void_p, 1),
+                    ('kbuf', c_void_p, 1),
+                    ('ksiz', c_int, 1),
+                    ('vbuf', c_void_p, 1),
+                    ('vsiz', c_int, 1))
+adb_putkeep.__doc__ =\
+"""Store a new record into an abstract database object.
 
-# adb  -- specifies the abstract database object.
-# kbuf -- specifies the pointer to the region of the key.
-# ksiz -- specifies the size of the region of the key.
-# vbuf -- specifies the pointer to the region of the value.
-# vsiz -- specifies the size of the region of the value.
+adb  -- specifies the abstract database object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.
 
-# If successful, the return value is true, else, it is false.
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, this function
+has no effect.
+
+"""
+
+adb_putkeep2 = cfunc('tcadbputkeep2', libtc, c_bool,
+                     ('adb', c_void_p, 1),
+                     ('kstr', c_char_p, 1),
+                     ('vstr', c_char_p, 1))
+adb_putkeep2.__doc__ =\
+"""Store a new string record into an abstract database object.
+
+adb  -- specifies the abstract database object.
+kstr -- specifies the string of the key.
+vstr -- specifies the string of the value.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, this function
+has no effect.
+
+"""
+
+adb_putcat = cfunc('tcadbputcat', libtc, c_bool,
+                   ('adb', c_void_p, 1),
+                   ('kbuf', c_void_p, 1),
+                   ('ksiz', c_int, 1),
+                   ('vbuf', c_void_p, 1),
+                   ('vsiz', c_int, 1))
+adb_putcat.__doc__ =\
+"""Concatenate a value at the end of the existing record in an
+abstract database object.
+
+adb  -- specifies the abstract database object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.
+
+If successful, the return value is true, else, it is false.
+
+If there is no corresponding record, a new record is created.
+
+"""
+
+adb_putcat2 = cfunc('tcadbputcat2', libtc, c_bool,
+                    ('adb', c_void_p, 1),
+                    ('kstr', c_char_p, 1),
+                    ('vstr', c_char_p, 1))
+adb_putcat2.__doc__ =\
+"""Concatenate a string value at the end of the existing record in an
+abstract database object.
+
+adb  -- specifies the abstract database object.
+kstr -- specifies the string of the key.
+vstr -- specifies the string of the value.
+
+If successful, the return value is true, else, it is false.
+
+If there is no corresponding record, a new record is created.
+
+"""
+
+adb_out = cfunc('tcadbout', libtc, c_bool,
+                ('adb', c_void_p, 1),
+                ('kbuf', c_void_p, 1),
+                ('ksiz', c_int, 1))
+adb_out.__doc__ =\
+"""Remove a record of an abstract database object.
 
-# If a record with the same key exists in the database, this function
-# has no effect.
-
-# """
-
-# adb_putkeep2 = cfunc('tcadbputkeep2', libtc, c_bool,
-#                      ('adb', c_void_p, 1),
-#                      ('kstr', c_char_p, 1),
-#                      ('vstr', c_char_p, 1))
-# adb_putkeep2.__doc__ =\
-# """Store a new string record into an abstract database object.
-
-# adb  -- specifies the abstract database object.
-# kstr -- specifies the string of the key.
-# vstr -- specifies the string of the value.
-
-# If successful, the return value is true, else, it is false.
+adb  -- specifies the abstract database object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
 
-# If a record with the same key exists in the database, this function
-# has no effect.
-
-# """
-
-# adb_putcat = cfunc('tcadbputcat', libtc, c_bool,
-#                    ('adb', c_void_p, 1),
-#                    ('kbuf', c_void_p, 1),
-#                    ('ksiz', c_int, 1),
-#                    ('vbuf', c_void_p, 1),
-#                    ('vsiz', c_int, 1))
-# adb_putcat.__doc__ =\
-# """Concatenate a value at the end of the existing record in an
-# abstract database object.
-
-# adb  -- specifies the abstract database object.
-# kbuf -- specifies the pointer to the region of the key.
-# ksiz -- specifies the size of the region of the key.
-# vbuf -- specifies the pointer to the region of the value.
-# vsiz -- specifies the size of the region of the value.
-
-# If successful, the return value is true, else, it is false.
-
-# If there is no corresponding record, a new record is created.
-
-# """
-
-# adb_putcat2 = cfunc('tcadbputcat2', libtc, c_bool,
-#                     ('adb', c_void_p, 1),
-#                     ('kstr', c_char_p, 1),
-#                     ('vstr', c_char_p, 1))
-# adb_putcat2.__doc__ =\
-# """Concatenate a string value at the end of the existing record in an
-# abstract database object.
+If successful, the return value is true, else, it is false.
 
-# adb  -- specifies the abstract database object.
-# kstr -- specifies the string of the key.
-# vstr -- specifies the string of the value.
-
-# If successful, the return value is true, else, it is false.
-
-# If there is no corresponding record, a new record is created.
-
-# """
-
-# adb_out = cfunc('tcadbout', libtc, c_bool,
-#                 ('adb', c_void_p, 1),
-#                 ('kbuf', c_void_p, 1),
-#                 ('ksiz', c_int, 1))
-# adb_out.__doc__ =\
-# """Remove a record of an abstract database object.
+"""
 
-# adb  -- specifies the abstract database object.
-# kbuf -- specifies the pointer to the region of the key.
-# ksiz -- specifies the size of the region of the key.
+adb_out2 = cfunc('tcadbput2', libtc, c_bool,
+                 ('adb', c_void_p, 1),
+                 ('kstr', c_char_p, 1))
+adb_out2.__doc__ =\
+"""Remove a string record of an abstract database object.
 
-# If successful, the return value is true, else, it is false.
+adb  -- specifies the abstract database object.
+kstr -- specifies the string of the key.
 
-# """
+If successful, the return value is true, else, it is false.
 
-# adb_out2 = cfunc('tcadbput2', libtc, c_bool,
-#                  ('adb', c_void_p, 1),
-#                  ('kstr', c_char_p, 1))
-# adb_out2.__doc__ =\
-# """Remove a string record of an abstract database object.
+"""
 
-# adb  -- specifies the abstract database object.
-# kstr -- specifies the string of the key.
+adb_get = cfunc('tcadbget', libtc, tc_void_p,
+                ('adb', c_void_p, 1),
+                ('kbuf', c_void_p, 1),
+                ('ksiz', c_int, 1),
+                ('sp', c_int_p, 2))
+adb_get.errcheck = lambda result, func, arguments: (result, arguments[3])
+adb_get.__doc__ =\
+"""Retrieve a record in an abstract database object.
 
-# If successful, the return value is true, else, it is false.
+adb  -- specifies the abstract database object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+sp   -- specifies the pointer to the variable into which the size of
+        the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+value of the corresponding record.  'NULL' is returned if no record
+corresponds.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.  Because the region of the return value is allocated with the
+'malloc' call, it should be released with the 'free' call when it is
+no longer in use.
+
+"""
+
+adb_get2 = cfunc('tcadbget2', libtc, tc_char_p,
+                 ('adb', c_void_p, 1),
+                 ('kstr', c_char_p, 1))
+adb_get2.__doc__ =\
+"""Retrieve a string record in an abstract database object.
+
+adb  -- specifies the abstract database object.
+kstr -- specifies the string of the key.
+
+If successful, the return value is the string of the value of the
+corresponding record. 'NULL' is returned if no record corresponds.
+
+Because the region of the return value is allocated with the 'malloc'
+call, it should be released with the 'free' call when it is no longer
+in use.
+
+"""
+
+adb_vsiz = cfunc('tcadbvsiz', libtc, c_int,
+                 ('adb', c_void_p, 1),
+                 ('kbuf', c_void_p, 1),
+                 ('ksiz', c_int, 1))
+adb_vsiz.__doc__ =\
+"""Get the size of the value of a record in an abstract database
+object.
+
+adb  -- specifies the abstract database object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+
+If successful, the return value is the size of the value of the
+corresponding record, else, it is -1.
+
+"""
+
+adb_vsiz2 = cfunc('tcadbvsiz2', libtc, c_int,
+                  ('adb', c_void_p, 1),
+                  ('kstr', c_char_p, 1))
+adb_vsiz2.__doc__ =\
+"""Get the size of the value of a string record in an abstract
+database object.
+
+adb  -- specifies the abstract database object.
+kstr -- specifies the string of the key.
+
+If successful, the return value is the size of the value of the
+corresponding record, else, it is -1.
+
+"""
+
+adb_iterinit = cfunc('tcadbiterinit', libtc, c_bool,
+                     ('adb', c_void_p, 1))
+adb_iterinit.__doc__ =\
+"""Initialize the iterator of an abstract database object.
+
+adb -- specifies the abstract database object.
+
+If successful, the return value is true, else, it is false.
+
+The iterator is used in order to access the key of every record stored
+in a database.
+
+"""
+
+adb_iternext = cfunc('tcadbiternext', libtc, tc_void_p,
+                     ('adb', c_void_p, 1),
+                     ('sp', c_int_p, 2))
+adb_iternext.errcheck = lambda result, func, arguments : (result, arguments[1])
+adb_iternext.__doc__ =\
+"""Get the next key of the iterator of an abstract database object.
+
+adb -- specifies the abstract database object.
+sp  -- specifies the pointer to the variable into which the size of
+       the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+next key, else, it is 'NULL'.  'NULL' is returned when no record is to
+be get out of the iterator.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.  Because the region of the return value is allocated with the
+'malloc' call, it should be released with the 'free' call when it is
+no longer in use.  It is possible to access every record by iteration
+of calling this function. It is allowed to update or remove records
+whose keys are fetched while the iteration. However, it is not assured
+if updating the database is occurred while the iteration.  Besides,
+the order of this traversal access method is arbitrary, so it is not
+assured that the order of storing matches the one of the traversal
+access.
+
+"""
+
+adb_iternext2 = cfunc('tcadbiternext2', libtc, tc_char_p,
+                      ('adb', c_void_p, 1))
+adb_iternext2.__doc__ =\
+"""Get the next key string of the iterator of an abstract database object.
+
+adb -- specifies the abstract database object.
+
+If successful, the return value is the string of the next key, else,
+it is 'NULL'.  'NULL' is returned when no record is to be get out of
+the iterator.
+
+Because the region of the return value is allocated with the 'malloc'
+call, it should be released with the 'free' call when it is no longer
+in use.  It is possible to access every record by iteration of calling
+this function.  However, it is not assured if updating the database is
+occurred while the iteration.  Besides, the order of this traversal
+access method is arbitrary, so it is not assured that the order of
+storing matches the one of the traversal access.
+
+"""
+
+adb_fwmkeys = cfunc('tcadbfwmkeys', libtc, TCLIST_P,
+                    ('adb', c_void_p, 1),
+                    ('pbuf', c_void_p, 1),
+                    ('psiz', c_int, 1),
+                    ('max', c_int, 1, -1))
+adb_fwmkeys.__doc__ =\
+"""Get forward matching keys in an abstract database object.
+
+adb  -- specifies the abstract database object.
+pbuf -- specifies the pointer to the region of the prefix.
+psiz -- specifies the size of the region of the prefix.
+max  -- specifies the maximum number of keys to be fetched.  If it is
+        negative, no limit is specified.
+
+The return value is a list object of the corresponding keys.  This
+function does never fail. It returns an empty list even if no key
+corresponds.
+
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.  Note that this function may be very slow
+because every key in the database is scanned.
+
+"""
+
+adb_fwmkeys2 = cfunc('tcadbfwmkeys2', libtc, TCLIST_P,
+                     ('adb', c_void_p, 1),
+                     ('pstr', c_char_p, 1),
+                     ('max', c_int, 1, -1))
+adb_fwmkeys2.__doc__ =\
+"""Get forward matching string keys in an abstract database object.
+
+adb  -- specifies the abstract database object.
+pstr -- specifies the string of the prefix.
+max  -- specifies the maximum number of keys to be fetched.  If it is
+        negative, no limit is specified.
+
+The return value is a list object of the corresponding keys.  This
+function does never fail. It returns an empty list even if no key
+corresponds.
+
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.  Note that this function may be very slow
+because every key in the database is scanned.
+
+"""
+
+adb_addint = cfunc('tcadbaddint', libtc, c_int,
+                   ('adb', c_void_p, 1),
+                   ('kbuf', c_void_p, 1),
+                   ('ksiz', c_int, 1),
+                   ('num', c_int, 1))
+adb_addint.__doc__ =\
+"""Add an integer to a record in an abstract database object.
+
+adb  -- specifies the abstract database object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+num  -- specifies the additional value.
+
+If successful, the return value is the summation value, else, it is
+'INT_MIN'.
+
+If the corresponding record exists, the value is treated as an integer
+and is added to.  If no record corresponds, a new record of the
+additional value is stored.
+
+"""
+
+adb_adddouble = cfunc('tcadbadddouble', libtc, c_double,
+                      ('adb', c_void_p, 1),
+                      ('kbuf', c_void_p, 1),
+                      ('ksiz', c_int, 1),
+                      ('num', c_double, 1))
+adb_adddouble.__doc__ =\
+"""Add a real number to a record in an abstract database object.
+
+adb  -- specifies the abstract database object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+num  -- specifies the additional value.
 
-# """
+If successful, the return value is the summation value, else, it is
+Not-a-Number.
 
-# adb_get = cfunc('tcadbget', libtc, c_void_p,
-#                 ('adb', c_void_p, 1),
-#                 ('kbuf', c_void_p, 1),
-#                 ('ksiz', c_int, 1),
-#                 ('sp', c_int_p, 2))
-# adb_get.__doc__ =\
-# """Retrieve a record in an abstract database object.
+If the corresponding record exists, the value is treated as a real
+number and is added to.  If no record corresponds, a new record of the
+additional value is stored.
 
-# adb  -- specifies the abstract database object.
-# kbuf -- specifies the pointer to the region of the key.
-# ksiz -- specifies the size of the region of the key.
-# sp   -- specifies the pointer to the variable into which the size of
-#         the region of the return value is assigned.
-
-# If successful, the return value is the pointer to the region of the
-# value of the corresponding record.  'NULL' is returned if no record
-# corresponds.
-
-# Because an additional zero code is appended at the end of the region
-# of the return value, the return value can be treated as a character
-# string.  Because the region of the return value is allocated with the
-# 'malloc' call, it should be released with the 'free' call when it is
-# no longer in use.
-
-# """
+"""
 
-# adb_get2 = cfunc('tcadbget2', libtc, tc_char_p,
-#                  ('adb', c_void_p, 1),
-#                  ('kstr', c_char_p, 1))
-# adb_get2.__doc__ =\
-# """Retrieve a string record in an abstract database object.
-
-# adb  -- specifies the abstract database object.
-# kstr -- specifies the string of the key.
-
-# If successful, the return value is the string of the value of the
-# corresponding record. 'NULL' is returned if no record corresponds.
-
-# Because the region of the return value is allocated with the 'malloc'
-# call, it should be released with the 'free' call when it is no longer
-# in use.
-
-# """
-
-# adb_vsiz = cfunc('tcadbvsiz', libtc, c_int,
-#                  ('adb', c_void_p, 1),
-#                  ('kbuf', c_void_p, 1),
-#                  ('ksiz', c_int, 1))
-# adb_vsiz.__doc__ =\
-# """Get the size of the value of a record in an abstract database
-# object.
-
-# adb  -- specifies the abstract database object.
-# kbuf -- specifies the pointer to the region of the key.
-# ksiz -- specifies the size of the region of the key.
-
-# If successful, the return value is the size of the value of the
-# corresponding record, else, it is -1.
-
-# """
-
-# adb_vsiz2 = cfunc('tcadbvsiz2', libtc, c_int,
-#                   ('adb', c_void_p, 1),
-#                   ('kstr', c_char_p, 1))
-# adb_vsiz2.__doc__ =\
-# """Get the size of the value of a string record in an abstract
-# database object.
-
-# adb  -- specifies the abstract database object.
-# kstr -- specifies the string of the key.
-
-# If successful, the return value is the size of the value of the
-# corresponding record, else, it is -1.
-
-# """
-
-# adb_iterinit = cfunc('tcadbiterinit', libtc, c_bool,
-#                      ('adb', c_void_p, 1))
-# adb_iterinit.__doc__ =\
-# """Initialize the iterator of an abstract database object.
-
-# adb -- specifies the abstract database object.
-
-# If successful, the return value is true, else, it is false.
-
-# The iterator is used in order to access the key of every record stored
-# in a database.
-
-# """
-
-# adb_iternext = cfunc('tcadbiternext', libtc, c_void_p,
-#                      ('adb', c_void_p, 1),
-#                      ('sp', c_int_p, 2))
-# adb_iternext.__doc__ =\
-# """Get the next key of the iterator of an abstract database object.
-
-# adb -- specifies the abstract database object.
-# sp  -- specifies the pointer to the variable into which the size of
-#        the region of the return value is assigned.
-
-# If successful, the return value is the pointer to the region of the
-# next key, else, it is 'NULL'.  'NULL' is returned when no record is to
-# be get out of the iterator.
-
-# Because an additional zero code is appended at the end of the region
-# of the return value, the return value can be treated as a character
-# string.  Because the region of the return value is allocated with the
-# 'malloc' call, it should be released with the 'free' call when it is
-# no longer in use.  It is possible to access every record by iteration
-# of calling this function. It is allowed to update or remove records
-# whose keys are fetched while the iteration. However, it is not assured
-# if updating the database is occurred while the iteration.  Besides,
-# the order of this traversal access method is arbitrary, so it is not
-# assured that the order of storing matches the one of the traversal
-# access.
-
-# """
-
-# adb_iternext2 = cfunc('tcadbiternext2', libtc, tc_char_p,
-#                       ('adb', c_void_p, 1))
-# adb_iternext2.__doc__ =\
-# """Get the next key string of the iterator of an abstract database object.
-
-# adb -- specifies the abstract database object.
-
-# If successful, the return value is the string of the next key, else,
-# it is 'NULL'.  'NULL' is returned when no record is to be get out of
-# the iterator.
-
-# Because the region of the return value is allocated with the 'malloc'
-# call, it should be released with the 'free' call when it is no longer
-# in use.  It is possible to access every record by iteration of calling
-# this function.  However, it is not assured if updating the database is
-# occurred while the iteration.  Besides, the order of this traversal
-# access method is arbitrary, so it is not assured that the order of
-# storing matches the one of the traversal access.
-
-# """
-
-# # FIX params type
-# adb_fwmkeys = cfunc('tcadbfwmkeys', libtc, c_void_p,
-#                     ('adb', c_void_p, 1),
-#                     ('pbuf', c_void_p, 1),
-#                     ('psiz', c_int, 1),
-#                     ('max', c_int, 1))
-# adb_fwmkeys.__doc__ =\
-# """Get forward matching keys in an abstract database object.
-
-# adb  -- specifies the abstract database object.
-# pbuf -- specifies the pointer to the region of the prefix.
-# psiz -- specifies the size of the region of the prefix.
-# max  -- specifies the maximum number of keys to be fetched.  If it is
-#         negative, no limit is specified.
-
-# The return value is a list object of the corresponding keys.  This
-# function does never fail. It returns an empty list even if no key
-# corresponds.
-
-# Because the object of the return value is created with the function
-# 'tclistnew', it should be deleted with the function 'tclistdel' when
-# it is no longer in use.  Note that this function may be very slow
-# because every key in the database is scanned.
-
-# """
-
-# # FIX params type
-# adb_fwmkeys2 = cfunc('tcadbfwmkeys2', libtc, c_void_p,
-#                      ('adb', c_void_p, 1),
-#                      ('pstr', c_char_p, 1),
-#                     ('max', c_int, 1))
-# adb_fwmkeys2.__doc__ =\
-# """Get forward matching string keys in an abstract database object.
-
-# adb  -- specifies the abstract database object.
-# pstr -- specifies the string of the prefix.
-# max  -- specifies the maximum number of keys to be fetched.  If it is
-#         negative, no limit is specified.
-
-# The return value is a list object of the corresponding keys.  This
-# function does never fail. It returns an empty list even if no key
-# corresponds.
-
-# Because the object of the return value is created with the function
-# 'tclistnew', it should be deleted with the function 'tclistdel' when
-# it is no longer in use.  Note that this function may be very slow
-# because every key in the database is scanned.
-
-# """
-
-# adb_addint = cfunc('tcadbaddint', libtc, c_int,
-#                    ('adb', c_void_p, 1),
-#                    ('kbuf', c_void_p, 1),
-#                    ('ksiz', c_int, 1),
-#                    ('num', c_int, 1))
-# adb_addint.__doc__ =\
-# """Add an integer to a record in an abstract database object.
-
-# adb  -- specifies the abstract database object.
-# kbuf -- specifies the pointer to the region of the key.
-# ksiz -- specifies the size of the region of the key.
-# num  -- specifies the additional value.
-
-# If successful, the return value is the summation value, else, it is
-# 'INT_MIN'.
-
-# If the corresponding record exists, the value is treated as an integer
-# and is added to.  If no record corresponds, a new record of the
-# additional value is stored.
-
-# """
-
-# adb_adddouble = cfunc('tcadbadddouble', libtc, c_double,
-#                       ('adb', c_void_p, 1),
-#                       ('kbuf', c_void_p, 1),
-#                       ('ksiz', c_int, 1),
-#                       ('num', c_double, 1))
-# adb_adddouble.__doc__ =\
-# """Add a real number to a record in an abstract database object.
-
-# adb  -- specifies the abstract database object.
-# kbuf -- specifies the pointer to the region of the key.
-# ksiz -- specifies the size of the region of the key.
-# num  -- specifies the additional value.
+adb_sync = cfunc('tcadbsync', libtc, c_bool,
+                 ('adb', c_void_p, 1))
+adb_sync.__doc__ =\
+"""Synchronize updated contents of an abstract database object with
+the file and the device.
 
-# If successful, the return value is the summation value, else, it is
-# Not-a-Number.
+adb -- specifies the abstract database object.
 
-# If the corresponding record exists, the value is treated as a real
-# number and is added to.  If no record corresponds, a new record of the
-# additional value is stored.
+If successful, the return value is true, else, it is false.
 
-# """
+"""
 
-# adb_sync = cfunc('tcadbsync', libtc, c_bool,
-#                  ('adb', c_void_p, 1))
-# adb_sync.__doc__ =\
-# """Synchronize updated contents of an abstract database object with
-# the file and the device.
+adb_optimize = cfunc('tcadboptimize', libtc, c_bool,
+                     ('adb', c_void_p, 1),
+                     ('params', c_char_p, 1))
+adb_optimize.__doc__ =\
+"""Optimize the storage of an abstract database object.
 
-# adb -- specifies the abstract database object.
+adb    -- specifies the abstract database object.
+params -- specifies the string of the tuning parameters, which works
+          as with the tuning of parameters the function 'tcadbopen'.
+          If it is 'NULL', it is not used.
 
-# If successful, the return value is true, else, it is false.
+If successful, the return value is true, else, it is false.
 
-# """
+This function is useful to reduce the size of the database storage
+with data fragmentation by successive updating.
 
-# adb_optimize = cfunc('tcadboptimize', libtc, c_bool,
-#                      ('adb', c_void_p, 1),
-#                      ('params', c_char_p, 1))
-# adb_optimize.__doc__ =\
-# """Optimize the storage of an abstract database object.
+"""
 
-# adb    -- specifies the abstract database object.
-# params -- specifies the string of the tuning parameters, which works
-# as with the tuning of parameters the function 'tcadbopen'.  If it is
-# 'NULL', it is not used.
+adb_vanish = cfunc('tcadbvanish', libtc, c_bool,
+                   ('adb', c_void_p, 1))
+adb_vanish.__doc__ =\
+"""Remove all records of an abstract database object.
 
-# If successful, the return value is true, else, it is false.
+adb -- specifies the abstract database object.
 
-# This function is useful to reduce the size of the database storage
-# with data fragmentation by successive updating.
+If successful, the return value is true, else, it is false.
 
-# """
+"""
 
-# adb_vanish = cfunc('tcadbvanish', libtc, c_bool,
-#                    ('adb', c_void_p, 1))
-# adb_vanish.__doc__ =\
-# """Remove all records of an abstract database object.
+adb_copy = cfunc('tcadbcopy', libtc, c_bool,
+                 ('adb', c_void_p, 1),
+                 ('path', c_char_p, 1))
+adb_copy.__doc__ =\
+"""Copy the database file of an abstract database object.
 
-# adb -- specifies the abstract database object.
+adb  -- specifies the abstract database object.
+path -- specifies the path of the destination file.  If it begins with
+        '@', the trailing substring is executed as a command line.
 
-# If successful, the return value is true, else, it is false.
+If successful, the return value is true, else, it is false.  False is
+returned if the executed command returns non-zero code.
 
-# """
+The database file is assured to be kept synchronized and not modified
+while the copying or executing operation is in progress.  So, this
+function is useful to create a backup file of the database file.
 
-# adb_copy = cfunc('tcadbcopy', libtc, c_bool,
-#                  ('adb', c_void_p, 1),
-#                  ('path', c_char_p, 1))
-# adb_copy.__doc__ =\
-# """Copy the database file of an abstract database object.
+"""
 
-# adb  -- specifies the abstract database object.
-# path -- specifies the path of the destination file.  If it begins with
-# '@', the trailing substring is executed as a command line.
+adb_tranbegin = cfunc('tcadbtranbegin', libtc, c_bool,
+                      ('adb', c_void_p, 1))
+adb_tranbegin.__doc__ =\
+"""Begin the transaction of an abstract database object.
 
-# If successful, the return value is true, else, it is false.  False is
-# returned if the executed command returns non-zero code.
+adb -- specifies the abstract database object.
 
-# The database file is assured to be kept synchronized and not modified
-# while the copying or executing operation is in progress.  So, this
-# function is useful to create a backup file of the database file.
+If successful, the return value is true, else, it is false.
 
-# """
+The database is locked by the thread while the transaction so that
+only one transaction can be activated with a database object at the
+same time.  Thus, the serializable isolation level is assumed if every
+database operation is performed in the transaction.  All updated
+regions are kept track of by write ahead logging while the
+transaction.  If the database is closed during transaction, the
+transaction is aborted implicitly.
 
-# adb_tranbegin = cfunc('tcadbtranbegin', libtc, c_bool,
-#                       ('adb', c_void_p, 1))
-# adb_tranbegin.__doc__ =\
-# """Begin the transaction of an abstract database object.
+"""
 
-# adb -- specifies the abstract database object.
+adb_trancommit = cfunc('tcadbtrancommit', libtc, c_bool,
+                       ('adb', c_void_p, 1))
+adb_trancommit.__doc__ =\
+"""Commit the transaction of an abstract database object.
 
-# If successful, the return value is true, else, it is false.
+adb -- specifies the abstract database object.
 
-# The database is locked by the thread while the transaction so that
-# only one transaction can be activated with a database object at the
-# same time.  Thus, the serializable isolation level is assumed if every
-# database operation is performed in the transaction.  All updated
-# regions are kept track of by write ahead logging while the
-# transaction.  If the database is closed during transaction, the
-# transaction is aborted implicitly.
+If successful, the return value is true, else, it is false.
 
-# """
+Update in the transaction is fixed when it is committed successfully.
 
-# adb_trancommit = cfunc('tcadbtrancommit', libtc, c_bool,
-#                        ('adb', c_void_p, 1))
-# adb_trancommit.__doc__ =\
-# """Commit the transaction of an abstract database object.
+"""
 
-# adb -- specifies the abstract database object.
+adb_tranabort = cfunc('tcadbtranabort', libtc, c_bool,
+                      ('adb', c_void_p, 1))
+adb_tranabort.__doc__ =\
+"""Abort the transaction of an abstract database object.
 
-# If successful, the return value is true, else, it is false.
+adb -- specifies the abstract database object.
 
-# Update in the transaction is fixed when it is committed successfully.
+If successful, the return value is true, else, it is false.
 
-# """
+Update in the transaction is discarded when it is aborted.  The state
+of the database is rollbacked to before transaction.
 
-# adb_tranabort = cfunc('tcadbtranabort', libtc, c_bool,
-#                       ('adb', c_void_p, 1))
-# adb_tranabort.__doc__ =\
-# """Abort the transaction of an abstract database object.
+"""
 
-# adb -- specifies the abstract database object.
+adb_path = cfunc('tcadbpath', libtc, c_char_p,
+                 ('adb', c_void_p, 1))
+adb_path.__doc__ =\
+"""Get the file path of an abstract database object.
 
-# If successful, the return value is true, else, it is false.
+adb -- specifies the abstract database object.
 
-# Update in the transaction is discarded when it is aborted.  The state
-# of the database is rollbacked to before transaction.
+The return value is the path of the database file or 'NULL' if the
+object does not connect to any database.  "*" stands for on-memory
+hash database.  "+" stands for on-memory tree database.
 
-# """
+"""
 
-# adb_path = cfunc('tcadbpath', libtc, c_char_p,
-#                  ('adb', c_void_p, 1))
-# adb_path.__doc__ =\
-# """Get the file path of an abstract database object.
+adb_rnum = cfunc('tcadbrnum', libtc, c_uint64,
+                 ('adb', c_void_p, 1))
+adb_rnum.__doc__ =\
+"""Get the number of records of an abstract database object.
 
-# adb -- specifies the abstract database object.
+adb -- specifies the abstract database object.
 
-# The return value is the path of the database file or 'NULL' if the
-# object does not connect to any database.  "*" stands for on-memory
-# hash database.  "+" stands for on-memory tree database.
+The return value is the number of records or 0 if the object does not
+connect to any database instance.
 
-# """
+"""
 
-# adb_rnum = cfunc('tcadbrnum', libtc, c_uint64,
-#                  ('adb', c_void_p, 1))
-# adb_rnum.__doc__ =\
-# """Get the number of records of an abstract database object.
+adb_size = cfunc('tcadbsize', libtc, c_uint64,
+                 ('adb', c_void_p, 1))
+adb_size.__doc__ =\
+"""Get the size of the database of an abstract database object.
 
-# adb -- specifies the abstract database object.
+adb -- specifies the abstract database object.
 
-# The return value is the number of records or 0 if the object does not
-# connect to any database instance.
+The return value is the size of the database or 0 if the object does
+not connect to any database instance.
 
-# """
+"""
 
-# adb_size = cfunc('tcadbsize', libtc, c_uint64,
-#                  ('adb', c_void_p, 1))
-# adb_size.__doc__ =\
-# """Get the size of the database of an abstract database object.
+adb_misc = cfunc('tcadbmisc', libtc, TCLIST_P,
+                 ('adb', c_void_p, 1),
+                 ('name', c_char_p, 1),
+                 ('args', c_void_p, 1))
+adb_misc.__doc__ =\
+"""Call a versatile function for miscellaneous operations of an
+abstract database object.
 
-# adb -- specifies the abstract database object.
+adb  -- specifies the abstract database object.
+name -- specifies the name of the function.  All databases support
+        "put", "out", "get", "putlist", "outlist", "getlist", and
+        "getpart".  "put" is to store a record.  It receives a key and
+        a value, and returns an empty list.  "out" is to remove a
+        record.  It receives a key, and returns an empty list.  "get"
+        is to retrieve a record.  It receives a key, and returns a
+        list of the values.  "putlist" is to store records.  It
+        receives keys and values one after the other, and returns an
+        empty list.  "outlist" is to remove records.  It receives
+        keys, and returns an empty list.  "getlist" is to retrieve
+        records.  It receives keys, and returns keys and values of
+        corresponding records one after the other.  "getpart" is to
+        retrieve the partial value of a record.  It receives a key,
+        the offset of the region, and the length of the region.
+args -- specifies a list object containing arguments.
 
-# The return value is the size of the database or 0 if the object does
-# not connect to any database instance.
+If successful, the return value is a list object of the result.
+'NULL' is returned on failure.
 
-# """
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.
 
-# # FIX params type
-# adb_misc = cfunc('tcadbmisc', libtc, c_void_p,
-#                  ('adb', c_void_p, 1),
-#                  ('name', c_char_p, 1),
-#                  ('args', c_void_p, 1))
-# adb_misc.__doc__ =\
-# """Call a versatile function for miscellaneous operations of an
-# abstract database object.
+"""
 
-# adb  -- specifies the abstract database object.
-# name -- specifies the name of the function.  All databases support
-#         "put", "out", "get", "putlist", "outlist", and "getlist".
-#         "put" is to store a record.  It receives a key and a value,
-#         and returns an empty list.  "out" is to remove a record.  It
-#         receives a key, and returns an empty list.  "get" is to
-#         retrieve a record.  It receives a key, and returns a list of
-#         the values.  "putlist" is to store records.  It receives keys
-#         and values one after the other, and returns an empty list.
-#         "outlist" is to remove records.  It receives keys, and returns
-#         an empty list.  "getlist" is to retrieve records.  It receives
-#         keys, and returns keys and values of corresponding records one
-#         after the other.
-# args -- specifies a list object containing arguments.
-
-# If successful, the return value is a list object of the result.
-# 'NULL' is returned on failure.
-
-# Because the object of the return value is created with the function
-# 'tclistnew', it should be deleted with the function 'tclistdel' when
-# it is no longer in use.
-
-# """
-
-# # features for experts
+# features for experts
 
 # # FIX params type
 # adb_setskel = cfunc('tcadbsetskel', libtc, c_bool,
@@ -1696,85 +1697,82 @@ latter is big, 0 if both are equivalent.
 
 # """
 
-# adb_omode = cfunc('tcadbomode', libtc, c_int,
-#                   ('adb', c_void_p, 1))
-# adb_omode.__doc__ =\
-# """Get the open mode of an abstract database object.
+adb_omode = cfunc('tcadbomode', libtc, c_int,
+                  ('adb', c_void_p, 1))
+adb_omode.__doc__ =\
+"""Get the open mode of an abstract database object.
 
-# adb -- specifies the abstract database object.
+adb -- specifies the abstract database object.
 
-# The return value is 'ADBOVOID' for not opened database, 'ADBOMDB' for
-# on-memory hash database, 'ADBONDB' for on-memory tree database,
-# 'ADBOHDB' for hash database, 'ADBOBDB' for B+ tree database, 'ADBOFDB'
-# for fixed-length database, 'ADBOTDB' for table database.
+The return value is 'ADBOVOID' for not opened database, 'ADBOMDB' for
+on-memory hash database, 'ADBONDB' for on-memory tree database,
+'ADBOHDB' for hash database, 'ADBOBDB' for B+ tree database, 'ADBOFDB'
+for fixed-length database, 'ADBOTDB' for table database.
 
-# """
+"""
 
-# adb_reveal = cfunc('tcadbreveal', libtc, c_void_p,
-#                    ('adb', c_void_p, 1))
-# adb_reveal.__doc__ =\
-# """Get the concrete database object of an abstract database object.
+adb_reveal = cfunc('tcadbreveal', libtc, c_void_p,
+                   ('adb', c_void_p, 1))
+adb_reveal.__doc__ =\
+"""Get the concrete database object of an abstract database object.
 
-# adb -- specifies the abstract database object.
+adb -- specifies the abstract database object.
 
-# The return value is the concrete database object depend on the open
-# mode or 0 if the object does not connect to any database instance.
+The return value is the concrete database object depend on the open
+mode or 0 if the object does not connect to any database instance.
 
-# """
+"""
 
-# # FIX params type
-# adb_putproc = cfunc('tcadbputproc', libtc, c_bool,
-#                     ('adb', c_void_p, 1),
-#                     ('kbuf', c_void_p, 1),
-#                     ('ksiz', c_int, 1),
-#                     ('vbuf', c_void_p, 1),
-#                     ('vsiz', c_int, 1),
-#                     ('proc', c_void_p, 1),
-#                     ('op', c_void_p, 1)
-# adb_putproc.__doc__ =\
-# """Store a record into an abstract database object with a duplication
-# handler.
+adb_putproc = cfunc('tcadbputproc', libtc, c_bool,
+                    ('adb', c_void_p, 1),
+                    ('kbuf', c_void_p, 1),
+                    ('ksiz', c_int, 1),
+                    ('vbuf', c_void_p, 1),
+                    ('vsiz', c_int, 1),
+                    ('proc', TCPDPROC, 1),
+                    ('op', c_void_p, 1))
+adb_putproc.__doc__ =\
+"""Store a record into an abstract database object with a duplication
+handler.
 
-# adb  -- specifies the abstract database object.
-# kbuf -- specifies the pointer to the region of the key.
-# ksiz -- specifies the size of the region of the key.
-# vbuf -- specifies the pointer to the region of the value.
-# vsiz -- specifies the size of the region of the value.
-# proc -- specifies the pointer to the callback function to process
-#         duplication.
-# opXX -- specifies an arbitrary pointer to be given as a parameter of
-#         the callback function.  If it is not needed, 'NULL' can be
-#         specified.
+adb  -- specifies the abstract database object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.
+proc -- specifies the pointer to the callback function to process
+        duplication.
+op   -- specifies an arbitrary pointer to be given as a parameter of
+        the callback function.  If it is not needed, 'NULL' can be
+        specified.
 
-# If successful, the return value is true, else, it is false.
+If successful, the return value is true, else, it is false.
 
-# This function does not work for the table database.
+This function does not work for the table database.
 
-# """
+"""
 
-# # FIX params type
-# adb_foreach = cfunc('tcadbforeach', libtc, c_bool,
-#                     ('adb', c_void_p, 1),
-#                     ('iter', c_void_p, 1),
-#                     ('op', c_void_p, 1))
-# adb_foreach.__doc__ =\
-# """Process each record atomically of an abstract database object.
+adb_foreach = cfunc('tcadbforeach', libtc, c_bool,
+                    ('adb', c_void_p, 1),
+                    ('iter', TCITER, 1),
+                    ('op', c_char_p, 1))
+adb_foreach.__doc__ =\
+"""Process each record atomically of an abstract database object.
 
-# adb  -- specifies the abstract database object.
-# iter -- specifies the pointer to the iterator function called for each
-#         record.
-# opxx -- specifies an arbitrary pointer to be given as a parameter of
-#         the iterator function.  If it is not needed, 'NULL' can be
-#         specified.
+adb  -- specifies the abstract database object.
+iter -- specifies the pointer to the iterator function called for each
+        record.
+op   -- specifies an arbitrary pointer to be given as a parameter of
+        the iterator function.  If it is not needed, 'NULL' can be
+        specified.
 
-# If successful, the return value is true, else, it is false.
+If successful, the return value is true, else, it is false.
 
-# """
+"""
 
-# # FIX params type
 # adb_mapbdb = cfunc('tcadbmapbdb', libtc, c_bool,
 #                    ('adb', c_void_p, 1),
-#                    ('keys', c_void_p, 1),
+#                    ('keys', TCLIST_P, 1),
 #                    ('bdb', c_void_p, 1),
 #                    ('op', c_void_p, 1),
 #                    ('csiz', c_int64, 1, -1))
@@ -1804,7 +1802,6 @@ latter is big, 0 if both are equivalent.
 #                        ('ksiz', c_int, 1),
 #                        ('vbuf', c_void_p, 1),
 #                        ('vsiz', c_int, 1))
-
 # adb_mapbdbemit.__doc__ =\
 # """Emit records generated by the mapping function into the result map.
 
@@ -2755,17 +2752,6 @@ If successful, the return value is true, else, it is false.
 
 """
 
-hdb_cacheclear = cfunc('tchdbcacheclear', libtc, c_bool,
-                       ('hdb', c_void_p, 1))
-hdb_cacheclear.__doc__ =\
-"""Clear the cache of a hash tree database object.
-
-hdb -- specifies the hash tree database object.
-
-If successful, the return value is true, else, it is false.
-
-"""
-
 hdb_bnum = cfunc('tchdbbnum', libtc, c_uint64,
                  ('hdb', c_void_p, 1))
 hdb_bnum.__doc__ =\
@@ -2989,6 +2975,17 @@ hdb  -- specifies the hash database object connected as a writer.
 step -- specifie the number of steps.  If it is not more than 0, the
         whole file is defragmented gradually without keeping a
         continuous lock.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+hdb_cacheclear = cfunc('tchdbcacheclear', libtc, c_bool,
+                       ('hdb', c_void_p, 1))
+hdb_cacheclear.__doc__ =\
+"""Clear the cache of a hash tree database object.
+
+hdb -- specifies the hash tree database object.
 
 If successful, the return value is true, else, it is false.
 
@@ -3741,7 +3738,7 @@ is no longer in use.
 
 """
 
-bdb_get3 = cfunc('tcbdbget3', libtc, tc_void_p,
+bdb_get3 = cfunc('tcbdbget3', libtc, c_void_p,
                  ('bdb', c_void_p, 1),
                  ('kbuf', c_void_p, 1),
                  ('ksiz', c_int, 1),
@@ -4357,7 +4354,7 @@ After deletion, the cursor is moved to the next record if possible.
 
 """
 
-bdb_curkey = cfunc('tcbdbcurkey', libtc, c_void_p,
+bdb_curkey = cfunc('tcbdbcurkey', libtc, tc_void_p,
                    ('cur', c_void_p, 1),
                    ('sp', c_int_p, 2))
 bdb_curkey.errcheck = lambda result, func, arguments : (result, arguments[1])
@@ -4380,7 +4377,7 @@ no longer in use.
 
 """
 
-bdb_curkey2 = cfunc('tcbdbcurkey2', libtc, c_char_p,
+bdb_curkey2 = cfunc('tcbdbcurkey2', libtc, tc_char_p,
                     ('cur', c_void_p, 1))
 bdb_curkey2.__doc__ =\
 """Get the key string of the record where the cursor object is.
@@ -4420,7 +4417,7 @@ copied into another involatile buffer immediately.
 
 """
 
-bdb_curval = cfunc('tcbdbcurval', libtc, c_void_p,
+bdb_curval = cfunc('tcbdbcurval', libtc, tc_void_p,
                    ('cur', c_void_p, 1),
                    ('sp', c_int_p, 2))
 bdb_curval.errcheck = lambda result, func, arguments : (result, arguments[1])
@@ -4443,7 +4440,7 @@ no longer in use.
 
 """
 
-bdb_curval2 = cfunc('tcbdbcurval2', libtc, c_char_p,
+bdb_curval2 = cfunc('tcbdbcurval2', libtc, tc_char_p,
                     ('cur', c_void_p, 1))
 bdb_curval2.__doc__ =\
 """Get the value string of the record where the cursor object is.
@@ -4561,17 +4558,6 @@ object.
 
 bdb  -- specifies the B+ tree database object connected as a writer.
 phys -- specifies whether to synchronize physically.
-
-If successful, the return value is true, else, it is false.
-
-"""
-
-bdb_cacheclear = cfunc('tcbdbcacheclear', libtc, c_bool,
-                       ('bdb', c_void_p, 1))
-bdb_cacheclear.__doc__ =\
-"""Clear the cache of a B+ tree database object.
-
-bdb -- specifies the B+ tree database object.
 
 If successful, the return value is true, else, it is false.
 
@@ -4839,6 +4825,17 @@ bdb  -- specifies the B+ tree database object connected as a writer.
 step -- specifie the number of steps.  If it is not more than 0, the
         whole file is defragmented gradually without keeping a
         continuous lock.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+bdb_cacheclear = cfunc('tcbdbcacheclear', libtc, c_bool,
+                       ('bdb', c_void_p, 1))
+bdb_cacheclear.__doc__ =\
+"""Clear the cache of a B+ tree database object.
+
+bdb -- specifies the B+ tree database object.
 
 If successful, the return value is true, else, it is false.
 
