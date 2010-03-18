@@ -1,15 +1,20 @@
 # -*- coding: utf-8 -*-
 # Tokyo Cabinet Python ctypes binding.
 
+# TODO
+#   Go to http://docs.python.org/reference/datamodel.html
+#   chapter 3.4.6 additional-methods-for-emulation-of-sequence-types
+#   and implement slice methods.
+
 """
 HDB is an implementation of bsddb-like API for Tokyo Cabinet hash
 database.
 
-We need to import 'hdb' class, and use like that:
+We need to import 'HDB' class, and use it like that:
 
->>> from tcdb.hdb import hdb
+>>> from tcdb.hdb import HDB
 
->>> db = hdb()             # Create a new database object
+>>> db = HDB()             # Create a new database object
 >>> db.open('casket.tch')  # By default create it if don't exist
 
 >>> db.put("foo", "hop")
@@ -54,7 +59,7 @@ OLCKNB   = 1 << 5               # lock without blocking
 OTSYNC   = 1 << 6               # synchronize every transaction
 
 
-class hdb(object):
+class HDB(object):
     def __init__(self):
         """Create a hash database object."""
         self.db = tc.hdb_new()
@@ -483,19 +488,19 @@ class hdb(object):
 
     def setecode(self, ecode, filename, line, func):
         """Set the error code of a hash database object."""
-        tc.setecode(self.db, ecode, filename, line, func)
+        tc.hdb_setecode(self.db, ecode, filename, line, func)
 
     def settype(self, type_):
         """Set the type of a hash database object."""
-        tc.settype(self.db, type_)
+        tc.hdb_settype(self.db, type_)
 
     def setdbgfd(self, fd):
         """Set the file descriptor for debugging output."""
-        tc.setdbgfd(self.db, fd)
+        tc.hdb_setdbgfd(self.db, fd)
 
     def dbgfd(self):
         """Get the file descriptor for debugging output."""
-        return tc.dbgfd(self.db)
+        return tc.hdb_dbgfd(self.db)
 
     def hasmutex(self):
         """Check whether mutual exclusion control is set to a hash
@@ -627,6 +632,6 @@ class hdb(object):
         return result
 
     def __contains__(self, key):
-        """Return True in hash database object has the key."""
+        """Return True if hash database object has the key."""
         (c_key, c_key_len) = util.serialize_obj(key)
         return tc.hdb_iterinit2(self.db, c_key, c_key_len)
