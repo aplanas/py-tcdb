@@ -11,7 +11,7 @@ from tcdb import tc
 
 class TestHdb(unittest.TestCase):
     def setUp(self):
-        self.hdb = hdb.hdb()
+        self.hdb = hdb.HDB()
         self.hdb.open('test.hdb')
 
     def tearDown(self):
