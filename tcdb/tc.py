@@ -1908,7 +1908,7 @@ hdb_tune = cfunc('tchdbtune', libtc, c_bool,
                  ('bnum', c_int64, 1, 0),
                  ('apow', c_int8, 1, -1),
                  ('fpow', c_int8, 1, -1),
-                 ('opts', c_uint8, 1))
+                 ('opts', c_uint8, 1, 0))
 hdb_tune.__doc__ =\
 """Set the tuning parameters of a hash database object.
 
@@ -1921,7 +1921,7 @@ bnum -- specifies the number of elements of the bucket array.  If it
 apow -- specifies the size of record alignment by power of 2.  If it
         is negative, the default value is specified.  The default
         value is 4 standing for 2^4=16.
-pow  -- specifies the maximum number of elements of the free block pool
+fpow -- specifies the maximum number of elements of the free block pool
         by power of 2. If it is negative, the default value is
         specified.  The default value is 10 standing for 2^10=1024.
 opts -- specifies options by bitwise-or:
@@ -2532,7 +2532,7 @@ hdb_optimize = cfunc('tchdboptimize', libtc, c_bool,
                      ('bnum', c_int64, 1, 0),
                      ('apow', c_int8, 1, -1),
                      ('fpow', c_int8, 1, -1),
-                     ('opts', c_uint8, 1,))
+                     ('opts', c_uint8, 1, 0))
 hdb_optimize.__doc__ =\
 """Optimize the file of a hash database object.
 
@@ -3312,7 +3312,7 @@ bdb_tune = cfunc('tcbdbtune', libtc, c_bool,
                  ('bnum', c_int64, 1, 0),
                  ('apow', c_int8, 1, -1),
                  ('fpow', c_int8, 1, -1),
-                 ('opts', c_uint8, 1))
+                 ('opts', c_uint8, 1, 0))
 bdb_tune.__doc__ =\
 """Set the tuning parameters of a B+ tree database object.
 
@@ -4033,7 +4033,7 @@ bdb_optimize = cfunc('tcbdboptimize', libtc, c_bool,
                      ('bnum', c_int64, 1, 0),
                      ('apow', c_int8, 1, -1),
                      ('fpow', c_int8, 1, -1),
-                     ('opts', c_uint8, 1))
+                     ('opts', c_uint8, 1, 0))
 bdb_optimize.__doc__ =\
 """Optimize the file of a B+ tree database object.
 
