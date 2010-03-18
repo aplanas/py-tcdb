@@ -9,15 +9,27 @@ from tcdb import hdb
 from tcdb import tc
 
 
-class TestHdb(unittest.TestCase):
+class TestHDB(unittest.TestCase):
     def setUp(self):
         self.hdb = hdb.HDB()
-        self.hdb.open('test.hdb')
+        self.hdb.open('test.hdb', bnum=131071, rcnum=1024, xmsiz=67108864)
 
     def tearDown(self):
         self.hdb.close()
         self.hdb = None
         os.remove('test.hdb')
+
+    def test_setgetitem(self):
+        objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
+        for obj1 in objs:
+            self.hdb['obj'] = obj1
+            obj2 = self.hdb['obj']
+            self.assertEqual(obj1, obj2)
+
+            self.hdb[obj1] = obj1
+            obj2 = self.hdb[obj1]
+            self.assertEqual(obj1, obj2)
+        self.assertRaises(KeyError, self.hdb.__getitem__, 'nonexistent key')
 
     def test_put(self):
         objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
@@ -43,6 +55,7 @@ class TestHdb(unittest.TestCase):
             self.hdb.put_str(obj, unicode1.encode('utf8'))
             unicode2 = unicode(self.hdb.get_str(obj), 'utf8')
             self.assertEqual(unicode1, unicode2)
+        self.assertRaises(AssertionError, self.hdb.put_str, 'key', 10)
         self.assertRaises(KeyError, self.hdb.get_str, 'nonexistent key')
 
     def test_put_unicode(self):
@@ -52,6 +65,7 @@ class TestHdb(unittest.TestCase):
             self.hdb.put_unicode(obj, unicode1)
             unicode2 = self.hdb.get_unicode(obj)
             self.assertEqual(unicode1, unicode2)
+        self.assertRaises(AssertionError, self.hdb.put_unicode, 'key', 10)
         self.assertRaises(KeyError, self.hdb.get_unicode, 'nonexistent key')
 
     def test_put_int(self):
@@ -61,6 +75,7 @@ class TestHdb(unittest.TestCase):
             self.hdb.put_int(obj, int1)
             int2 = self.hdb.get_int(obj)
             self.assertEqual(int1, int2)
+        self.assertRaises(AssertionError, self.hdb.put_int, 'key', '10')
         self.assertRaises(KeyError, self.hdb.get_int, 'nonexistent key')
 
     def test_put_float(self):
@@ -70,6 +85,7 @@ class TestHdb(unittest.TestCase):
             self.hdb.put_float(obj, float1)
             float2 = self.hdb.get_float(obj)
             self.assertEqual(float1, float2)
+        self.assertRaises(AssertionError, self.hdb.put_float, 'key', 10)
         self.assertRaises(KeyError, self.hdb.get_float, 'nonexistent key')
 
     def test_putkeep(self):
@@ -88,6 +104,54 @@ class TestHdb(unittest.TestCase):
             self.hdb.putkeep(obj1, 'Never stored')
             obj2 = self.hdb.get(obj1)
             self.assertEqual(obj1, obj2)
+
+    def test_putkeep_str(self):
+        str1 = 'some text [áéíóú]'
+        objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
+        for obj in objs:
+            self.hdb.putkeep_str(obj, str1)
+            str2 = self.hdb.get(obj)
+            self.assertEqual(str1, str2)
+            self.hdb.putkeep_str(obj, 'Never stored')
+            str2 = self.hdb.get(obj)
+            self.assertEqual(str1, str2)
+        self.assertRaises(AssertionError, self.hdb.putkeep_str, 'key', 10)
+
+    def test_putkeep_unicode(self):
+        unicode1 = u'unicode text [áéíóú]'
+        objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
+        for obj in objs:
+            self.hdb.putkeep_unicode(obj, unicode1)
+            unicode2 = self.hdb.get_unicode(obj)
+            self.assertEqual(unicode1, unicode2)
+            self.hdb.putkeep_unicode(obj, u'Never stored')
+            unicode2 = self.hdb.get_unicode(obj)
+            self.assertEqual(unicode1, unicode2)
+        self.assertRaises(AssertionError, self.hdb.putkeep_unicode, 'key', 10)
+
+    def test_putkeep_int(self):
+        int1 = 10
+        objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
+        for obj in objs:
+            self.hdb.putkeep_int(obj, int1)
+            int2 = self.hdb.get_int(obj)
+            self.assertEqual(int1, int2)
+            self.hdb.putkeep_int(obj, int1*10)
+            int2 = self.hdb.get_int(obj)
+            self.assertEqual(int1, int2)
+        self.assertRaises(AssertionError, self.hdb.putkeep_int, 'key', '10')
+
+    def test_putkeep_float(self):
+        float1 = 10.10
+        objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
+        for obj in objs:
+            self.hdb.putkeep_float(obj, float1)
+            float2 = self.hdb.get_float(obj)
+            self.assertEqual(float1, float2)
+            self.hdb.putkeep_float(obj, float1*10)
+            float2 = self.hdb.get_float(obj)
+            self.assertEqual(float1, float2)
+        self.assertRaises(AssertionError, self.hdb.put_float, 'key', 10)
 
     def test_putcat_str(self):
         objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
@@ -118,12 +182,59 @@ class TestHdb(unittest.TestCase):
             obj2 = self.hdb.get(obj1)
             self.assertEqual(obj1, obj2)
 
+    def test_putasync_str(self):
+        str1 = 'some text [áéíóú]'
+        objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
+        for obj in objs:
+            self.hdb.putasync_str(obj, str1)
+            str2 = self.hdb.get_str(obj)
+            self.assertEqual(str1, str2)
+        unicode1 = u'unicode text [áéíóú]'
+        for obj in objs:
+            self.hdb.putasync_str(obj, unicode1.encode('utf8'))
+            unicode2 = unicode(self.hdb.get_str(obj), 'utf8')
+            self.assertEqual(unicode1, unicode2)
+        self.assertRaises(AssertionError, self.hdb.putasync_str, 'key', 10)
+
+    def test_putasync_unicode(self):
+        unicode1 = u'unicode text [áéíóú]'
+        objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
+        for obj in objs:
+            self.hdb.putasync_unicode(obj, unicode1)
+            unicode2 = self.hdb.get_unicode(obj)
+            self.assertEqual(unicode1, unicode2)
+        self.assertRaises(AssertionError, self.hdb.putasync_unicode, 'key', 10)
+
+    def test_putasync_int(self):
+        int1 = 10
+        objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
+        for obj in objs:
+            self.hdb.putasync_int(obj, int1)
+            int2 = self.hdb.get_int(obj)
+            self.assertEqual(int1, int2)
+        self.assertRaises(AssertionError, self.hdb.putasync_int, 'key', '10')
+
+    def test_putasync_float(self):
+        float1 = 10.10
+        objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
+        for obj in objs:
+            self.hdb.putasync_float(obj, float1)
+            float2 = self.hdb.get_float(obj)
+            self.assertEqual(float1, float2)
+        self.assertRaises(AssertionError, self.hdb.putasync_float, 'key', 10)
+
     def test_out_and_contains(self):
         objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
         for obj in objs:
             self.hdb.put(obj, obj)
             self.assert_(obj in self.hdb)
             self.hdb.out(obj)
+            self.assert_(obj not in self.hdb)
+
+        for obj in objs:
+            self.hdb.put(obj, obj)
+            self.assert_(obj in self.hdb)
+            del self.hdb[obj]
             self.assert_(obj not in self.hdb)
 
     def test_vsiz(self):
@@ -152,21 +263,24 @@ class TestHdb(unittest.TestCase):
         vsiz = self.hdb.vsiz(obj)
         self.assertEqual(vsiz, 8)
 
-    def ntest_iters(self):
+    def test_iters(self):
         objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
         for obj in objs:
             self.hdb.put(obj, obj)
 
         self.assertEqual(self.hdb.keys(), objs)
-        for key in self.hdb:
-            self.assert_(key in objs)
-
         self.assertEqual(self.hdb.values(), objs)
-        for value in self.hdb.itervalues():
-            self.assert_(value in objs)
+        self.assertEqual(zip(objs, objs), self.hdb.items())
 
-        zobjs = zip(objs, objs)
-        self.assertEqual(list(self.hdb.iteritems()), zobjs)
+        for key in self.hdb:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                self.assert_(key in objs)
+
+        for value in self.hdb.itervalues():
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                self.assert_(value in objs)
 
     def test_fwmkeys(self):
         objs = ['aa', 'ab', 'ac', 'xx', 'ad']
@@ -214,10 +328,17 @@ class TestHdb(unittest.TestCase):
         self.assertEquals(self.hdb.align(), 16)
         self.assertEquals(self.hdb.fbpmax(), 1024)
         self.assertEquals(self.hdb.xmsiz(), 67108864)
+
+        self.assert_(self.hdb.optimize(bnum=147451))
+        self.assertEquals(self.hdb.bnum(), 147451)
+        self.assertEquals(self.hdb.align(), 16)
+        self.assertEquals(self.hdb.fbpmax(), 1024)
+        self.assertEquals(self.hdb.xmsiz(), 67108864)
+
         self.assert_(self.hdb.inode())
         self.assert_((datetime.datetime.now()-self.hdb.mtime()).seconds <= 1)
-        # Why OTRUNC?!?
-        self.assertEquals(self.hdb.omode(), hdb.OWRITER|hdb.OCREAT|hdb.OTRUNC)
+        # Why only OWRITER?!?
+        self.assertEquals(self.hdb.omode(), hdb.OWRITER)
         self.assertEquals(self.hdb.type(), tc.THASH)
         self.assertEquals(self.hdb.flags(), hdb.FOPEN)
         self.assertEquals(self.hdb.opts(), 0)
