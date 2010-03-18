@@ -17,9 +17,9 @@ def serialize_obj(obj):
     # stored data with other languages, specifically in C (using
     # put_xxx)
     #
-    # We serialize all keys with this method, but we user two method
-    # to serialize values.  This one can serialize the generic pair
-    # put /get, but we need a different serializer because of add_xxx
+    # We serialize all keys with this method, but we use two method to
+    # serialize values.  This one can serialize the generic pair put /
+    # get, but we need a different serializer because of add_xxx
     # functions, that works on native integer and double C datatype.
 
     c_obj = None
