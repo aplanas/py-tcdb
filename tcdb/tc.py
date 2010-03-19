@@ -2,7 +2,6 @@
 # Tokyo Cabinet Python ctypes binding.
 
 from ctypes import CDLL, CFUNCTYPE, POINTER
-from ctypes import Structure
 from ctypes import c_int, c_int8, c_int32, c_int64
 from ctypes import c_uint, c_uint8, c_uint32, c_uint64
 from ctypes import c_bool, c_size_t
@@ -19,13 +18,13 @@ c_time_t = c_uint64              # FIX: This is valid in 64 bit architecture.
 class tc_char_p(c_char_p):
     """Automatic garbage collectable ctypes.c_char_p type."""
     def __del__(self):
-        if self:
+        if self and libtc:
             libtc.tcfree(self)
 
 class tc_void_p(c_void_p):
     """Automatic garbage collectable ctypes.c_void_p type."""
     def __del__(self):
-        if self:
+        if self and libtc:
             libtc.tcfree(self)
 
 
@@ -252,14 +251,13 @@ TCITER_P = POINTER(TCITER)
 
 # extensible string
 
-class TCXSTR(Structure):
+class TCXSTR_P(c_void_p):
     """Type of structure for an extensible string object."""
-    _fields_ = [('ptr', c_void_p),         # pointer to the region
-                ('size', c_int),           # size of the region
-                ('asize', c_int)]          # size of the allocated region
-
-TCXSTR_P = POINTER(TCXSTR)
-TCXSTR_P.__del__ = lambda self : libtc.tcxstrdel(self)
+    # We treat it as a opaque structure.  We can use ctype.Structure
+    # if needed.
+    def __del__(self):
+        if self and libtc:
+            libtc.tcxstrdel(self)
 
 
 tcxstrnew = cfunc('tcxstrnew', libtc, TCXSTR_P)
@@ -419,23 +417,13 @@ Note that the specified region is released when the object is deleted.
 
 #  array list
 
-class TCLISTDATUM(Structure):
-    """Type of structure for an element of a list."""
-    _fields_ = [('ptr', c_char_p),         # pointer to the region
-                ('size', c_int)]           # size of the effective region
-
-TCLISTDATUM_P = POINTER(TCLISTDATUM)
-
-
-class TCLIST(Structure):
+class TCLIST_P(c_void_p):
     """Type of structure for an array list."""
-    _fields_ = [('array', TCLISTDATUM_P),  # array of data
-                ('anum', c_int),           # number of the elements of the array
-                ('start', c_int),          # start index of used elements
-                ('num', c_int)]            # number of used elements
-
-TCLIST_P = POINTER(TCLIST)
-TCLIST_P.__del__ = lambda self : libtc.tclistdel(self)
+    # We treat it as a opaque structure.  We can use ctype.Structure
+    # if needed.
+    def __del__(self):
+        if self and libtc:
+            libtc.tclistdel(self)
 
 
 tclistnew = cfunc('tclistnew', libtc, TCLIST_P)

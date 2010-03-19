@@ -92,7 +92,7 @@ def deserialize_float(c_float, c_float_len):
 def deserialize_xstr_obj(xstr):
     """Deserialize an object, in format xstr, used in put / get."""
     try:
-        obj = ctypes.string_at(xstr.contents.ptr, xstr.contents.size)
+        obj = ctypes.string_at(tc.tcxstrptr(xstr), tc.tcxstrsize(xstr))
         obj = cPickle.loads(obj)
     except cPickle.UnpicklingError:
         pass
