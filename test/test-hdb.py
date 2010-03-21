@@ -34,12 +34,11 @@ class TestHDB(unittest.TestCase):
     def test_put(self):
         objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
         for obj1 in objs:
-            self.hdb.put('obj', obj1)
-            obj2 = self.hdb.get('obj')
-            self.assertEqual(obj1, obj2)
-
             self.hdb.put(obj1, obj1)
             obj2 = self.hdb.get(obj1)
+            self.assertEqual(obj1, obj2)
+            self.hdb.put(obj1, obj1, raw_key=True)
+            obj2 = self.hdb.get(obj1, raw_key=True)
             self.assertEqual(obj1, obj2)
         self.assertRaises(KeyError, self.hdb.get, 'nonexistent key')
 
@@ -49,6 +48,9 @@ class TestHDB(unittest.TestCase):
         for obj in objs:
             self.hdb.put_str(obj, str1)
             str2 = self.hdb.get_str(obj)
+            self.assertEqual(str1, str2)
+            self.hdb.put_str(obj, str1, as_raw=True)
+            str2 = self.hdb.get_str(obj, as_raw=True)
             self.assertEqual(str1, str2)
         unicode1 = u'unicode text [áéíóú]'
         for obj in objs:
@@ -65,6 +67,9 @@ class TestHDB(unittest.TestCase):
             self.hdb.put_unicode(obj, unicode1)
             unicode2 = self.hdb.get_unicode(obj)
             self.assertEqual(unicode1, unicode2)
+            self.hdb.put_unicode(obj, unicode1, as_raw=True)
+            unicode2 = self.hdb.get_unicode(obj, as_raw=True)
+            self.assertEqual(unicode1, unicode2)
         self.assertRaises(AssertionError, self.hdb.put_unicode, 'key', 10)
         self.assertRaises(KeyError, self.hdb.get_unicode, 'nonexistent key')
 
@@ -74,6 +79,9 @@ class TestHDB(unittest.TestCase):
         for obj in objs:
             self.hdb.put_int(obj, int1)
             int2 = self.hdb.get_int(obj)
+            self.assertEqual(int1, int2)
+            self.hdb.put_int(obj, int1, as_raw=True)
+            int2 = self.hdb.get_int(obj, as_raw=True)
             self.assertEqual(int1, int2)
         self.assertRaises(AssertionError, self.hdb.put_int, 'key', '10')
         self.assertRaises(KeyError, self.hdb.get_int, 'nonexistent key')
@@ -85,19 +93,15 @@ class TestHDB(unittest.TestCase):
             self.hdb.put_float(obj, float1)
             float2 = self.hdb.get_float(obj)
             self.assertEqual(float1, float2)
+            self.hdb.put_float(obj, float1, as_raw=True)
+            float2 = self.hdb.get_float(obj, as_raw=True)
+            self.assertEqual(float1, float2)
         self.assertRaises(AssertionError, self.hdb.put_float, 'key', 10)
         self.assertRaises(KeyError, self.hdb.get_float, 'nonexistent key')
 
     def test_putkeep(self):
         objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
         for obj1 in objs:
-            self.hdb.put('obj', obj1)
-            obj2 = self.hdb.get('obj')
-            self.assertEqual(obj1, obj2)
-            self.hdb.putkeep('obj', 'Never stored')
-            obj2 = self.hdb.get('obj')
-            self.assertEqual(obj1, obj2)
-
             self.hdb.putkeep(obj1, obj1)
             obj2 = self.hdb.get(obj1)
             self.assertEqual(obj1, obj2)
@@ -110,10 +114,10 @@ class TestHDB(unittest.TestCase):
         objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
         for obj in objs:
             self.hdb.putkeep_str(obj, str1)
-            str2 = self.hdb.get(obj)
+            str2 = self.hdb.get_str(obj)
             self.assertEqual(str1, str2)
             self.hdb.putkeep_str(obj, 'Never stored')
-            str2 = self.hdb.get(obj)
+            str2 = self.hdb.get_str(obj)
             self.assertEqual(str1, str2)
         self.assertRaises(AssertionError, self.hdb.putkeep_str, 'key', 10)
 
@@ -285,7 +289,7 @@ class TestHDB(unittest.TestCase):
     def test_fwmkeys(self):
         objs = ['aa', 'ab', 'ac', 'xx', 'ad']
         for obj in objs:
-            self.hdb.put(obj, 'same value')
+            self.hdb.put(obj, 'same value', raw_key=True)
         self.assertEqual(self.hdb.fwmkeys('a'), ['aa', 'ab', 'ac', 'ad'])
         self.assertEqual(self.hdb.fwmkeys('x'), ['xx'])
         self.assertEqual(self.hdb.fwmkeys('nonexistent key'), [])
@@ -317,7 +321,7 @@ class TestHDB(unittest.TestCase):
 
         self.hdb.sync()
         self.assertEquals(len(self.hdb), 5)
-        self.assertEquals(self.hdb.fsiz(), 529056)
+        self.assertEquals(self.hdb.fsiz(), 529072)
 
         self.hdb.vanish()
         self.assertEquals(self.hdb.fsiz(), 528704)
