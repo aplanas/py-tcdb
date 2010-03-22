@@ -178,10 +178,6 @@ class TestHDB(unittest.TestCase):
     def test_putasync(self):
         objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
         for obj1 in objs:
-            self.hdb.putasync('obj', obj1)
-            obj2 = self.hdb.get('obj')
-            self.assertEqual(obj1, obj2)
-
             self.hdb.putasync(obj1, obj1)
             obj2 = self.hdb.get(obj1)
             self.assertEqual(obj1, obj2)
