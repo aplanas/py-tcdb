@@ -580,12 +580,12 @@ class HDB(object):
     #     duplication handler."""
     #     # See tc.hdb_putproc
 
-    def foreach(self, proc, op, raw_key=False, value_type=None):
+    def foreach(self, proc, op, key_type=False, value_type=None):
         """Process each record atomically of a hash database
         object."""
         def proc_wraper(c_key, c_key_len, c_value, c_value_len, op):
             key = util.deserialize(ctypes.cast(c_key, ctypes.c_void_p),
-                                   c_key_len, raw_key)
+                                   c_key_len, key_type)
             value = util.deserialize(ctypes.cast(c_value, ctypes.c_void_p),
                                      c_value_len, value_type)
             return proc(key, value, ctypes.cast(op, ctypes.c_char_p).value)
@@ -604,5 +604,9 @@ class HDB(object):
 
     def __contains__(self, key):
         """Return True if hash database object has the key."""
-        (c_key, c_key_len) = util.serialize(key)
+        return self.contains(key)
+
+    def contains(self, key, raw_key=False):
+        """Return True if hash database object has the key."""
+        (c_key, c_key_len) = util.serialize(key, raw_key)
         return tc.hdb_iterinit2(self.db, c_key, c_key_len)
