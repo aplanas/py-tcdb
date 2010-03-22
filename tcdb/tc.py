@@ -3913,7 +3913,7 @@ bdb_fwmkeys = cfunc('tcbdbfwmkeys', libtc, TCLIST_P,
                     ('bdb', c_void_p, 1),
                     ('pbuf', c_void_p, 1),
                     ('psiz', c_int, 1),
-                    ('max', c_int, 1))
+                    ('max', c_int, 1, -1))
 bdb_fwmkeys.__doc__ =\
 """Get forward matching keys in a B+ tree database object.
 
@@ -3936,7 +3936,7 @@ it is no longer in use.
 bdb_fwmkeys2 = cfunc('tcbdbfwmkeys2', libtc, TCLIST_P,
                      ('bdb', c_void_p, 1),
                      ('pstr', c_char_p, 1),
-                     ('max', c_int, 1))
+                     ('max', c_int, 1, -1))
 bdb_fwmkeys2.__doc__ =\
 """Get forward matching string keys in a B+ tree database object.
 
