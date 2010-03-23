@@ -9,11 +9,11 @@ from ctypes import c_double
 from ctypes import c_char_p, c_void_p
 from ctypes.util import find_library
 
+
 c_int_p  = POINTER(c_int)
-
+c_uint64_p = POINTER(c_uint64)
 c_double_p = POINTER(c_double)
-
-c_time_t = c_uint64              # FIX: This is valid in 64 bit architecture.
+c_time = c_uint64              # FIX: This is valid in 64 bit architecture.
 
 class tc_char_p(c_char_p):
     """Automatic garbage collectable ctypes.c_char_p type."""
@@ -23,6 +23,12 @@ class tc_char_p(c_char_p):
 
 class tc_void_p(c_void_p):
     """Automatic garbage collectable ctypes.c_void_p type."""
+    def __del__(self):
+        if self and libtc:
+            libtc.tcfree(self)
+
+class tc_uint64_p(c_uint64_p):
+    """Automatic garbage collectable c_int64_p type."""
     def __del__(self):
         if self and libtc:
             libtc.tcfree(self)
@@ -1847,31 +1853,17 @@ hdb -- specifies the hash database object.
 
 The return value is the last happened error code.
 
-The following error codes are defined:
-  'ESUCCESS' for success,
-  'ETHREAD' for threading error,
-  'EINVALID' for invalid operation,
-  'ENOFILE' for file not found,
-  'ENOPERM' for no permission,
-  'EMETA' for invalid meta data,
-  'ERHEAD' for invalid record header,
-  'EOPEN' for open error,
-  'ECLOSE' for close error,
-  'ETRUNC' for trunc error,
-  'ESYNC' for sync error,
-  'ESTAT' for stat error,
-  'ESEEK' for seek error,
-  'EREAD' for read error,
-  'EWRITE' for write error,
-  'EMMAP' for mmap error,
-  'ELOCK' for lock error,
-  'EUNLINK' for unlink error,
-  'ERENAME' for rename error,
-  'EMKDIR' for mkdir error,
-  'ERMDIR' for rmdir error,
-  'EKEEP' for existing record,
-  'ENOREC' for no record found, and
-  'EMISC' for miscellaneous error.
+The following error codes are defined: 'ESUCCESS' for success,
+'ETHREAD' for threading error, 'EINVALID' for invalid operation,
+'ENOFILE' for file not found, 'ENOPERM' for no permission, 'EMETA' for
+invalid meta data, 'ERHEAD' for invalid record header, 'EOPEN' for
+open error, 'ECLOSE' for close error, 'ETRUNC' for trunc error,
+'ESYNC' for sync error, 'ESTAT' for stat error, 'ESEEK' for seek
+error, 'EREAD' for read error, 'EWRITE' for write error, 'EMMAP' for
+mmap error, 'ELOCK' for lock error, 'EUNLINK' for unlink error,
+'ERENAME' for rename error, 'EMKDIR' for mkdir error, 'ERMDIR' for
+rmdir error, 'EKEEP' for existing record, 'ENOREC' for no record
+found, and 'EMISC' for miscellaneous error.
 
 """
 
@@ -1912,15 +1904,12 @@ apow -- specifies the size of record alignment by power of 2.  If it
 fpow -- specifies the maximum number of elements of the free block pool
         by power of 2. If it is negative, the default value is
         specified.  The default value is 10 standing for 2^10=1024.
-opts -- specifies options by bitwise-or:
-        'HDBTLARGE' specifies that the size of the database can be
-         larger than 2GB by using 64-bit bucket array,
-        'HDBTDEFLATE' specifies that each record is compressed with
-         Deflate encoding,
-        'HDBTBZIP' specifies that each record is compressed with BZIP2
-         encoding,
-        'HDBTTCBS' specifies that each record is compressed with TCBS
-         encoding.
+opts -- specifies options by bitwise-or: 'TLARGE' specifies that the
+        size of the database can be larger than 2GB by using 64-bit
+        bucket array, 'TDEFLATE' specifies that each record is
+        compressed with Deflate encoding, 'TBZIP' specifies that each
+        record is compressed with BZIP2 encoding, 'TTCBS' specifies
+        that each record is compressed with TCBS encoding.
 
 If successful, the return value is true, else, it is false.
 
@@ -1993,22 +1982,16 @@ hdb_open.__doc__ =\
 
 hdb   -- specifies the hash database object which is not opened.
 path  -- specifies the path of the database file.
-omode -- specifies the connection mode:
-         'HDBOWRITER' as a writer,
-         'HDBOREADER' as a reader.
-         If the mode is 'HDBOWRITER', the following may be added by
-         bitwise-or:
-         'HDBOCREAT', which means it creates a new database if not exist,
-         'HDBOTRUNC', which means it creates a new database regardless if one
-          exists,
-         'HDBOTSYNC', which means every transaction synchronizes
-          updated contents with the device.
-         Both of 'HDBOREADER' and 'HDBOWRITER' can be added to by
-         bitwise-or:
-         'HDBONOLCK', which means it opens the database file without
-          file locking, or
-         'HDBOLCKNB', which means locking is performed without
-          blocking.
+omode -- specifies the connection mode: 'OWRITER' as a writer,
+         'OREADER' as a reader.  If the mode is 'OWRITER', the
+         following may be added by bitwise-or: 'OCREAT', which means
+         it creates a new database if not exist, 'OTRUNC', which means
+         it creates a new database regardless if one exists, 'OTSYNC',
+         which means every transaction synchronizes updated contents
+         with the device.  Both of 'OREADER' and 'OWRITER' can be
+         added to by bitwise-or: 'ONOLCK', which means it opens the
+         database file without file locking, or 'OLCKNB', which means
+         locking is performed without blocking.
 
 If successful, the return value is true, else, it is false.
 
@@ -2356,15 +2339,12 @@ of the return value, the return value can be treated as a character
 string.  Because the region of the return value is allocated with the
 'malloc' call, it should be released with the 'free' call when it is
 no longer in use.  It is possible to access every record by iteration
-of calling this function.
-
-It is allowed to update or remove records whose keys are fetched while
-the iteration.
-
-However, it is not assured if updating the database is occurred while
-the iteration.  Besides, the order of this traversal access method is
-arbitrary, so it is not assured that the order of storing matches the
-one of the traversal access.
+of calling this function.  It is allowed to update or remove records
+whose keys are fetched while the iteration.  However, it is not
+assured if updating the database is occurred while the iteration.
+Besides, the order of this traversal access method is arbitrary, so it
+is not assured that the order of storing matches the one of the
+traversal access.
 
 """
 
@@ -2382,12 +2362,10 @@ the iterator.
 Because the region of the return value is allocated with the 'malloc'
 call, it should be released with the 'free' call when it is no longer
 in use.  It is possible to access every record by iteration of calling
-this function.
-
-However, it is not assured if updating the database is occurred while
-the iteration.  Besides, the order of this traversal access method is
-arbitrary, so it is not assured that the order of storing matches the
-one of the traversal access.
+this function.  However, it is not assured if updating the database is
+occurred while the iteration.  Besides, the order of this traversal
+access method is arbitrary, so it is not assured that the order of
+storing matches the one of the traversal access.
 
 """
 
@@ -2520,7 +2498,7 @@ hdb_optimize = cfunc('tchdboptimize', libtc, c_bool,
                      ('bnum', c_int64, 1, 0),
                      ('apow', c_int8, 1, -1),
                      ('fpow', c_int8, 1, -1),
-                     ('opts', c_uint8, 1, 0))
+                     ('opts', c_uint8, 1, 255))
 hdb_optimize.__doc__ =\
 """Optimize the file of a hash database object.
 
@@ -2533,16 +2511,13 @@ apow -- specifies the size of record alignment by power of 2.  If it
 fpow -- specifies the maximum number of elements of the free block
         pool by power of 2.  If it is negative, the current setting is
         not changed.
-opts -- specifies options by bitwise-or:
-        'HDBTLARGE' specifies that the size of the database can be
-         larger than 2GB by using 64-bit bucket array,
-        'HDBTDEFLATE' specifies that each record is compressed with
-         Deflate encoding,
-        'HDBTBZIP' specifies that each record is compressed with BZIP2
-         encoding,
-        'HDBTTCBS' specifies that each record is compressed with TCBS
-         encoding.
-        If it is 'UINT8_MAX', the current setting is not changed.
+opts -- specifies options by bitwise-or: 'TLARGE' specifies that the
+        size of the database can be larger than 2GB by using 64-bit
+        bucket array, 'TDEFLATE' specifies that each record is
+        compressed with Deflate encoding, 'TBZIP' specifies that each
+        record is compressed with BZIP2 encoding, 'TTCBS' specifies
+        that each record is compressed with TCBS encoding.  If it is
+        'UINT8_MAX', the current setting is not changed.
 
 If successful, the return value is true, else, it is false.
 
@@ -2803,7 +2778,7 @@ object does not connect to any database file.
 
 """
 
-hdb_mtime = cfunc('tchdbmtime', libtc, c_time_t,
+hdb_mtime = cfunc('tchdbmtime', libtc, c_time,
                   ('hdb', c_void_p, 1))
 hdb_mtime.__doc__ =\
 """Get the modification time of the database file of a hash database
@@ -3217,31 +3192,17 @@ bdb -- specifies the B+ tree database object.
 
 The return value is the last happened error code.
 
-The following error codes are defined:
-  'ESUCCESS' for success,
-  'ETHREAD' for threading error,
-  'EINVALID' for invalid operation,
-  'ENOFILE' for file not found,
-  'ENOPERM' for no permission,
-  'EMETA' for invalid meta data,
-  'ERHEAD' for invalid record header,
-  'EOPEN' for open error,
-  'ECLOSE' for close error,
-  'ETRUNC' for trunc error,
-  'ESYNC' for sync error,
-  'ESTAT' for stat error,
-  'ESEEK' for seek error,
-  'EREAD' for read error,
-  'EWRITE' for write error,
-  'EMMAP' for mmap error,
-  'ELOCK' for lock error,
-  'EUNLINK' for unlink error,
-  'ERENAME' for rename error,
-  'EMKDIR' for mkdir error,
-  'ERMDIR' for rmdir error,
-  'EKEEP' for existing record,
-  'ENOREC' for no record found, and
-  'EMISC' for miscellaneous error.
+The following error codes are defined: 'ESUCCESS' for success,
+'ETHREAD' for threading error, 'EINVALID' for invalid operation,
+'ENOFILE' for file not found, 'ENOPERM' for no permission, 'EMETA' for
+invalid meta data, 'ERHEAD' for invalid record header, 'EOPEN' for
+open error, 'ECLOSE' for close error, 'ETRUNC' for trunc error,
+'ESYNC' for sync error, 'ESTAT' for stat error, 'ESEEK' for seek
+error, 'EREAD' for read error, 'EWRITE' for write error, 'EMMAP' for
+mmap error, 'ELOCK' for lock error, 'EUNLINK' for unlink error,
+'ERENAME' for rename error, 'EMKDIR' for mkdir error, 'ERMDIR' for
+rmdir error, 'EKEEP' for existing record, 'ENOREC' for no record
+found, and 'EMISC' for miscellaneous error.
 
 """
 
@@ -3322,15 +3283,12 @@ apow  -- specifies the size of record alignment by power of 2.  If it
 fpow  -- specifies the maximum number of elements of the free block
          pool by power of 2.  If it is negative, the default value is
          specified.  The default value is 10 standing for 2^10=1024.
-opts  -- specifies options by bitwise-or:
-         'BDBTLARGE' specifies that the size of the database can be
-          larger than 2GB by using 64-bit bucket array,
-         'BDBTDEFLATE' specifies that each page is compressed with
-          Deflate encoding,
-         'BDBTBZIP' specifies that each page is compressed with BZIP2
-          encoding,
-         'BDBTTCBS' specifies that each page is compressed with TCBS
-          encoding.
+opts  -- specifies options by bitwise-or: 'TLARGE' specifies that the
+         size of the database can be larger than 2GB by using 64-bit
+         bucket array, 'TDEFLATE' specifies that each page is
+         compressed with Deflate encoding, 'TBZIP' specifies that each
+         page is compressed with BZIP2 encoding, 'TTCBS' specifies
+         that each page is compressed with TCBS encoding.
 
 If successful, the return value is true, else, it is false.
 
@@ -3408,22 +3366,16 @@ bdb_open.__doc__ =\
 
 bdb   -- specifies the B+ tree database object which is not opened.
 path  -- specifies the path of the database file.
-omode -- specifies the connection mode:
-         'BDBOWRITER' as a writer,
-         'BDBOREADER' as a reader.
-         If the mode is 'BDBOWRITER', the following may be added by
-         bitwise-or:
-         'BDBOCREAT', which means it creates a new database if not exist,
-         'BDBOTRUNC', which means it creates a new database regardless if one
-          exists,
-         'BDBOTSYNC', which means every transaction synchronizes
-          updated contents with the device.
-         Both of 'BDBOREADER' and 'BDBOWRITER' can be added to by
-         bitwise-or:
-         'BDBONOLCK', which means it opens the database file without
-          file locking, or
-         'BDBOLCKNB', which means locking is performed without
-          blocking.
+omode -- specifies the connection mode: 'OWRITER' as a writer,
+          'OREADER' as a reader.  If the mode is 'OWRITER', the
+          following may be added by bitwise-or: 'OCREAT', which means
+          it creates a new database if not exist, 'OTRUNC', which
+          means it creates a new database regardless if one exists,
+          'OTSYNC', which means every transaction synchronizes updated
+          contents with the device.  Both of 'OREADER' and 'OWRITER'
+          can be added to by bitwise-or: 'ONOLCK', which means it
+          opens the database file without file locking, or 'OLCKNB',
+          which means locking is performed without blocking.
 
 If successful, the return value is true, else, it is false.
 
@@ -3852,7 +3804,7 @@ bdb_range = cfunc('tcbdbrange', libtc, TCLIST_P,
                   ('ekbuf', c_void_p, 1),
                   ('eksiz', c_int, 1),
                   ('einc', c_bool, 1),
-                  ('max', c_int, 1))
+                  ('max', c_int, 1, -1))
 bdb_range.__doc__ =\
 """Get keys of ranged records in a B+ tree database object.
 
@@ -3885,7 +3837,7 @@ bdb_range2 = cfunc('tcbdbrange2', libtc, TCLIST_P,
                    ('binc', c_bool, 1),
                    ('ekstr', c_char_p, 1),
                    ('einc', c_bool, 1),
-                   ('max', c_int, 1))
+                   ('max', c_int, 1, -1))
 bdb_range2.__doc__ =\
 """Get string keys of ranged records in a B+ tree database object.
 
@@ -4021,7 +3973,7 @@ bdb_optimize = cfunc('tcbdboptimize', libtc, c_bool,
                      ('bnum', c_int64, 1, 0),
                      ('apow', c_int8, 1, -1),
                      ('fpow', c_int8, 1, -1),
-                     ('opts', c_uint8, 1, 0))
+                     ('opts', c_uint8, 1, 255))
 bdb_optimize.__doc__ =\
 """Optimize the file of a B+ tree database object.
 
@@ -4038,16 +3990,13 @@ apow  -- specifies the size of record alignment by power of 2.  If it
 fpow  -- specifies the maximum number of elements of the free block
          pool by power of 2.  If it is negative, the current setting
          is not changed.
-opts  -- specifies options by bitwise-or:
-         'BDBTLARGE' specifies that the size of the database can be
-          larger than 2GB by using 64-bit bucket array,
-         'BDBTDEFLATE' specifies that each record is compressed with
-          Deflate encoding,
-         'BDBTBZIP' specifies that each page is compressed with BZIP2
-          encoding,
-         'BDBTTCBS' specifies that each page is compressed with TCBS
-          encoding.
-         If it is 'UINT8_MAX', the current setting is not changed.
+opts  -- specifies options by bitwise-or:'TLARGE' specifies that the
+         size of the database can be larger than 2GB by using 64-bit
+         bucket array, 'TDEFLATE' specifies that each record is
+         compressed with Deflate encoding, 'TBZIP' specifies that each
+         page is compressed with BZIP2 encoding, 'TTCBS' specifies
+         that each page is compressed with TCBS encoding.  If it is
+         'UINT8_MAX', the current setting is not changed.
 
 If successful, the return value is true, else, it is false.
 
@@ -4661,7 +4610,7 @@ object does not connect to any database file.
 
 """
 
-bdb_mtime = cfunc('tcbdbmtime', libtc, c_time_t,
+bdb_mtime = cfunc('tcbdbmtime', libtc, c_time,
                   ('bdb', c_void_p, 1))
 bdb_mtime.__doc__ =\
 """Get the modification time of the database file of a B+ tree
@@ -4975,5 +4924,1404 @@ If successful, the return value is true, else, it is false.
 Note that the callback function can not perform any database operation
 because the function is called in the critical section guarded by the
 same locks of database operations.
+
+"""
+
+
+#
+# Functions from tcfdb.h
+#
+
+fdb_errmsg = cfunc('tcfdberrmsg', libtc, c_char_p,
+                   ('ecode', c_int, 1))
+fdb_errmsg.__doc__ =\
+"""Get the message string corresponding to an error code.
+
+ecode -- specifies the error code.
+
+The return value is the message string of the error code.
+
+"""
+
+fdb_new = cfunc('tcfdbnew', libtc, c_void_p)
+fdb_new.__doc__ =\
+"""Create a fixed-length database object.
+
+The return value is the new fixed-length database object.
+
+"""
+
+fdb_del = cfunc('tcfdb', libtc, None,
+                ('fdb', c_void_p, 1))
+fdb_del.__doc__ =\
+"""Delete a fixed-length database object.
+
+fdb -- specifies the fixed-length database object.
+
+If the database is not closed, it is closed implicitly.  Note that the
+deleted object and its derivatives can not be used anymore.
+
+"""
+
+fdb_ecode = cfunc('tcfdb', libtc, c_int,
+                  ('fdb', c_void_p, 1))
+fdb_ecode.__doc__ =\
+""" Get the last happened error code of a fixed-length database
+object.
+
+fdb -- specifies the fixed-length database object.
+
+The return value is the last happened error code.
+
+The following error codes are defined: 'ESUCCESS' for success,
+'ETHREAD' for threading error, 'EINVALID' for invalid operation,
+'ENOFILE' for file not found, 'ENOPERM' for no permission, 'EMETA' for
+invalid meta data, 'ERHEAD' for invalid record header, 'EOPEN' for
+open error, 'ECLOSE' for close error, 'ETRUNC' for trunc error,
+'ESYNC' for sync error, 'ESTAT' for stat error, 'ESEEK' for seek
+error, 'EREAD' for read error, 'EWRITE' for write error, 'EMMAP' for
+mmap error, 'ELOCK' for lock error, 'EUNLINK' for unlink error,
+'ERENAME' for rename error, 'EMKDIR' for mkdir error, 'ERMDIR' for
+rmdir error, 'EKEEP' for existing record, 'ENOREC' for no record
+found, and 'EMISC' for miscellaneous error.
+
+"""
+
+fdb_setmutex = cfunc('tcfdbsetmutex', libtc, c_bool,
+                     ('fdb', c_void_p, 1))
+fdb_setmutex.__doc__ =\
+"""Set mutual exclusion control of a fixed-length database object for
+threading.
+
+fdb -- specifies the fixed-length database object which is not opened.
+
+If successful, the return value is true, else, it is false.
+
+Note that the mutual exclusion control is needed if the object is
+shared by plural threads and this function should be called before the
+database is opened.
+
+"""
+
+fdb_tune = cfunc('tcfdbtune', libtc, c_bool,
+                 ('fdb', c_void_p, 1),
+                 ('width', c_int32, 1, 0),
+                 ('limsiz', c_int64, 1, 0))
+fdb_tune.__doc__ =\
+"""Set the tuning parameters of a fixed-length database object.
+
+fdb    -- specifies the fixed-length database object which is not
+          opened.
+width  -- specifies the width of the value of each record.  If it is
+          not more than 0, the default value is specified.  The
+          default value is 255.
+limsiz -- specifies the limit size of the database file.  If it is not
+          more than 0, the default value is specified.  The default
+          value is 268435456.
+
+If successful, the return value is true, else, it is false.
+
+Note that the tuning parameters should be set before the database is
+opened.
+
+"""
+
+fdb_open = cfunc('tcfdbopen', libtc, None,
+                 ('fdb', c_void_p, 1),
+                 ('path', c_char_p, 1),
+                 ('omode', c_int, 1))
+fdb_open.__doc__ =\
+"""Open a database file and connect a fixed-length database object.
+
+fdb   -- specifies the fixed-length database object which is not
+         opened.
+path  -- specifies the path of the database file.
+omode -- specifies the connection mode: 'OWRITER' as a writer,
+         'OREADER' as a reader.  If the mode is 'OWRITER', the
+         following may be added by bitwise-or: 'OCREAT', which means
+         it creates a new database if not exist, 'OTRUNC', which means
+         it creates a new database regardless if one exists, 'OTSYNC',
+         which means every transaction synchronizes updated contents
+         with the device.  Both of 'OREADER' and 'OWRITER' can be
+         added to by bitwise-or: 'ONOLCK', which means it opens the
+         database file without file locking, or 'OLCKNB', which means
+         locking is performed without blocking.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+fdb_close = cfunc('tcfdb', libtc, c_bool,
+             ('fdb', c_void_p, 1))
+fdb_close.__doc__ =\
+"""Close a fixed-length database object.
+
+fdb -- specifies the fixed-length database object.
+
+If successful, the return value is true, else, it is false.
+
+Update of a database is assured to be written when the database is
+closed.  If a writer opens a database but does not close it
+appropriately, the database will be broken.
+
+"""
+
+fdb_put = cfunc('tcfdbput', libtc, c_bool,
+                ('fdb', c_void_p, 1),
+                ('id', c_int64, 1),
+                ('vbuf', c_void_p, 1),
+                ('vsiz', c_int, 1))
+fdb_put.__doc__ =\
+"""Store a record into a fixed-length database object.
+
+fdb  -- specifies the fixed-length database object connected as a
+        writer.
+id   -- specifies the ID number.  It should be more than 0.  If it is
+        'IDMIN', the minimum ID number of existing records is
+        specified.  If it is 'IDPREV', the number less by one than the
+        minimum ID number of existing records is specified.  If it is
+        'IDMAX', the maximum ID number of existing records is
+        specified.  If it is 'IDNEXT', the number greater by one than
+        the maximum ID number of existing records is specified.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.  If the size of
+        the value is greater than the width tuning parameter of the
+        database, the size is cut down to the width.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, it is
+overwritten.
+
+"""
+
+fdb_put2 = cfunc('tcfdbput2', libtc, c_bool,
+                 ('fdb', c_void_p, 1),
+                 ('kbuf', c_void_p, 1),
+                 ('ksiz', c_int, 1),
+                 ('vbuf', c_void_p, 1),
+                 ('vsiz', c_int, 1))
+fdb_put2.__doc__ =\
+"""Store a record with a decimal key into a fixed-length database
+object.
+
+fdb  -- specifies the fixed-length database object connected as a
+        writer.
+kbuf -- specifies the pointer to the region of the decimal key.  It
+        should be more than 0.  If it is "min", the minimum ID number
+        of existing records is specified.  If it is "prev", the number
+        less by one than the minimum ID number of existing records is
+        specified.  If it is "max", the maximum ID number of existing
+        records is specified.  If it is "next", the number greater by
+        one than the maximum ID number of existing records is
+        specified.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.  If the size of
+        the value is greater than the width tuning parameter of the
+        database, the size is cut down to the width.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, it is
+overwritten.
+
+"""
+
+fdb_put3 = cfunc('tcfdbput3', libtc, c_bool,
+                 ('fdb', c_void_p, 1),
+                 ('kstr', c_char_p, 1),
+                 ('vstr', c_char_p, 1))
+fdb_put3.__doc__ =\
+"""Store a string record with a decimal key into a fixed-length
+database object.
+
+fdb  -- specifies the fixed-length database object connected as a
+        writer.
+kstr -- specifies the string of the decimal key.  It should be more
+        than 0.  If it is "min", the minimum ID number of existing
+        records is specified.  If it is "prev", the number less by one
+        than the minimum ID number of existing records is specified.
+        If it is "max", the maximum ID number of existing records is
+        specified.  If it is "next", the number greater by one than
+        the maximum ID number of existing records is specified.
+vstr -- specifies the string of the value.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, it is
+overwritten.
+
+"""
+
+fdb_putkeep = cfunc('tcfdbputkeep', libtc, c_bool,
+                    ('fdb', c_void_p, 1),
+                    ('id', c_int64, 1),
+                    ('vbuf', c_void_p, 1),
+                    ('vsiz', c_int, 1))
+fdb_putkeep.__doc__ =\
+"""Store a new record into a fixed-length database object.
+
+fdb  -- specifies the fixed-length database object connected as a
+        writer.
+id   -- specifies the ID number.  It should be more than 0.  If it is
+        'IDMIN', the minimum ID number of existing records is
+        specified.  If it is 'IDPREV', the number less by one than the
+        minimum ID number of existing records is specified.  If it is
+        'IDMAX', the maximum ID number of existing records is
+        specified.  If it is 'IDNEXT', the number greater by one than
+        the maximum ID number of existing records is specified.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.  If the size of
+        the value is greater than the width tuning parameter of the
+        database, the size is cut down to the width.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, this function
+has no effect.
+
+"""
+
+fdb_putkeep2 = cfunc('tcfdbputkeep2', libtc, c_bool,
+                     ('fdb', c_void_p, 1),
+                     ('kbuf', c_void_p, 1),
+                     ('ksiz', c_int, 1),
+                     ('vbuf', c_void_p, 1),
+                     ('vsiz', c_int, 1))
+fdb_putkeep2.__doc__ =\
+"""Store a new record with a decimal key into a fixed-length database
+object.
+
+fdb  -- specifies the fixed-length database object connected as a
+        writer.
+kbuf -- specifies the pointer to the region of the decimal key.  It
+        should be more than 0.  If it is "min", the minimum ID number
+        of existing records is specified.  If it is "prev", the number
+        less by one than the minimum ID number of existing records is
+        specified.  If it is "max", the maximum ID number of existing
+        records is specified.  If it is "next", the number greater by
+        one than the maximum ID number of existing records is
+        specified.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.  If the size of
+        the value is greater than the width tuning parameter of the
+        database, the size is cut down to the width.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, this function
+has no effect.
+
+"""
+
+fdb_putkeep3 = cfunc('tcfdbputkeep3', libtc, c_bool,
+                     ('fdb', c_void_p, 1),
+                     ('kstr', c_char_p, 1),
+                     ('vstr', c_char_p, 1))
+fdb_putkeep3.__doc__ =\
+"""Store a new string record with a decimal key into a fixed-length
+database object.
+
+fdb  -- specifies the fixed-length database object connected as a
+        writer.
+kstr -- specifies the string of the decimal key.  It should be more
+        than 0.  If it is "min", the minimum ID number of existing
+        records is specified.  If it is "prev", the number less by one
+        than the minimum ID number of existing records is specified.
+        If it is "max", the maximum ID number of existing records is
+        specified.  If it is "next", the number greater by one than
+        the maximum ID number of existing records is specified.
+vstr -- specifies the string of the value.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, this function
+has no effect.
+
+"""
+
+fdb_putcat = cfunc('tcfdbputcat', libtc, c_bool,
+                   ('fdb', c_void_p, 1),
+                   ('id', c_int64, 1),
+                   ('vbuf', c_void_p, 1),
+                   ('vsiz', c_int, 1))
+fdb_putcat.__doc__ =\
+"""Concatenate a value at the end of the existing record in a
+fixed-length database object.
+
+fdb  -- specifies the fixed-length database object connected as a
+        writer.
+id   -- specifies the ID number.  It should be more than 0.  If it is
+        'IDMIN', the minimum ID number of existing records is
+        specified.  If it is 'IDPREV', the number less by one than the
+        minimum ID number of existing records is specified.  If it is
+        'IDMAX', the maximum ID number of existing records is
+        specified.  If it is 'IDNEXT', the number greater by one than
+        the maximum ID number of existing records is specified.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.  If the size of
+        the value is greater than the width tuning parameter of the
+        database, the size is cut down to the width.
+
+If successful, the return value is true, else, it is false.
+
+If there is no corresponding record, a new record is created.
+
+"""
+
+fdb_putcat2 = cfunc('tcfdbputcat2', libtc, c_bool,
+                    ('fdb', c_void_p, 1),
+                    ('kbuf', c_void_p, 1),
+                    ('ksiz', c_int, 1),
+                    ('vbuf', c_void_p, 1),
+                    ('vsiz', c_int, 1))
+fdb_putcat2.__doc__ =\
+"""Concatenate a value with a decimal key in a fixed-length database
+object.
+
+fdb  -- specifies the fixed-length database object connected as a
+        writer.
+kbuf -- specifies the pointer to the region of the decimal key.  It
+        should be more than 0.  If it is "min", the minimum ID number
+        of existing records is specified.  If it is "prev", the number
+        less by one than the minimum ID number of existing records is
+        specified.  If it is "max", the maximum ID number of existing
+        records is specified.  If it is "next", the number greater by
+        one than the maximum ID number of existing records is
+        specified.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.  If the size of
+        the value is greater than the width tuning parameter of the
+        database, the size is cut down to the width.
+
+If successful, the return value is true, else, it is false.
+
+If there is no corresponding record, a new record is created.
+
+"""
+
+fdb_putcat3 = cfunc('tcfdbputcat3', libtc, c_bool,
+                    ('fdb', c_void_p, 1),
+                    ('kstr', c_char_p, 1),
+                    ('vstr', c_char_p, 1))
+fdb_putcat3.__doc__ =\
+"""Concatenate a string value with a decimal key in a fixed-length
+database object.
+
+fdb  -- specifies the fixed-length database object connected as a
+        writer.
+kstr -- specifies the string of the decimal key.  It should be more
+        than 0.  If it is "min", the minimum ID number of existing
+        records is specified.  If it is "prev", the number less by one
+        than the minimum ID number of existing records is specified.
+        If it is "max", the maximum ID number of existing records is
+        specified.  If it is "next", the number greater by one than
+        the maximum ID number of existing records is specified.
+vstr -- specifies the string of the value.
+
+If successful, the return value is true, else, it is false.
+
+If there is no corresponding record, a new record is created.
+
+"""
+
+fdb_out = cfunc('tcfdbout', libtc, c_bool,
+                ('fdb', c_void_p, 1),
+                ('id', c_int64, 1))
+fdb_out.__doc__ =\
+"""Remove a record of a fixed-length database object.
+
+fdb -- specifies the fixed-length database object connected as a
+       writer.
+id  -- specifies the ID number.  It should be more than 0.  If it is
+       'IDMIN', the minimum ID number of existing records is
+       specified.  If it is 'IDMAX', the maximum ID number of existing
+       records is specified.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+fdb_out2 = cfunc('tcfdbout2', libtc, c_bool,
+                 ('fdb', c_void_p, 1),
+                 ('kbuf', c_void_p, 1),
+                 ('ksiz', c_int, 1))
+fdb_out2.__doc__ =\
+"""Remove a record with a decimal key of a fixed-length database
+object.
+
+fdb  -- specifies the fixed-length database object connected as a
+        writer.
+kbuf -- specifies the pointer to the region of the decimal key.  It
+        should be more than 0.  If it is "min", the minimum ID number
+        of existing records is specified.  If it is "max", the maximum
+        ID number of existing records is specified.
+ksiz -- specifies the size of the region of the key.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+fdb_out3 = cfunc('tcfdbout3', libtc, c_bool,
+                 ('fdb', c_void_p, 1),
+                 ('kstr', c_char_p, 1))
+fdb_.__doc__ =\
+"""Remove a string record with a decimal key of a fixed-length
+database object.
+
+fdb  -- specifies the fixed-length database object connected as a
+        writer.
+kstr -- specifies the string of the decimal key.  It should be more
+        than 0.  If it is "min", the minimum ID number of existing
+        records is specified.  If it is "max", the maximum ID number
+        of existing records is specified.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+fdb_get = cfunc('tcfdbget', libtc, tc_void_p,
+                ('fdb', c_void_p, 1),
+                ('id', c_int64, 1),
+                ('sp', c_int_p, 2))
+fdb_get.errcheck = lambda result, func, arguments : (result, arguments[2])
+fdb_get.__doc__ =\
+"""Retrieve a record in a fixed-length database object.
+
+fdb -- specifies the fixed-length database object.
+id  -- specifies the ID number.  It should be more than 0.  If it is
+       'IDMIN', the minimum ID number of existing records is
+       specified.  If it is 'IDMAX', the maximum ID number of existing
+       records is specified.
+sp  -- specifies the pointer to the variable into which the size of
+       the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+value of the corresponding record.  'NULL' is returned if no record
+corresponds.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.  Because the region of the return value is allocated with the
+'malloc' call, it should be released with the 'free' call when it is
+no longer in use.
+
+"""
+
+fdb_get2 = cfunc('tcfdbget2', libtc, tc_void_p,
+                 ('fdb', c_void_p, 1),
+                 ('kbuf', c_void_p, 1),
+                 ('ksiz', c_int, 1),
+                 ('sp', c_int_p, 2))
+fdb_get2.errcheck = lambda result, func, arguments : (result, arguments[3])
+fdb_get2.__doc__ =\
+"""Retrieve a record with a decimal key in a fixed-length database
+object.
+
+fdb  -- specifies the fixed-length database object.
+kbuf -- specifies the pointer to the region of the decimal key.  It
+        should be more than 0.  If it is "min", the minimum ID number
+        of existing records is specified.  If it is "max", the maximum
+        ID number of existing records is specified.
+ksiz -- specifies the size of the region of the key.
+sp   -- specifies the pointer to the variable into which the size of
+        the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+value of the corresponding record.  'NULL' is returned if no record
+corresponds.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.  Because the region of the return value is allocated with the
+'malloc' call, it should be released with the 'free' call when it is
+no longer in use.
+
+"""
+
+fdb_get3 = cfunc('tcfdbget3', libtc, tc_char_p,
+                 ('fdb', c_void_p, 1),
+                 ('kstr', c_char_p, 1))
+fdb_get3.__doc__ =\
+"""Retrieve a string record with a decimal key in a fixed-length
+database object.
+
+fdb  -- specifies the fixed-length database object.
+kstr -- specifies the string of the decimal key.  It should be more
+        than 0.  If it is "min", the minimum ID number of existing
+        records is specified.  If it is "max", the maximum ID number
+        of existing records is specified.
+
+If successful, the return value is the string of the value of the
+corresponding record. 'NULL' is returned if no record corresponds.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.  Because the region of the return value is allocated with the
+'malloc' call, it should be released with the 'free' call when it is
+no longer in use.
+
+"""
+
+fdb_get4 = cfunc('tcfdbget4', libtc, c_int,
+                 ('fdb', c_void_p, 1),
+                 ('id', c_int64, 1),
+                 ('vbuf', c_void_p, 1),
+                 ('max', c_int, 1))
+fdb_get4.__doc__ =\
+"""Retrieve a record in a fixed-length database object and write the
+value into a buffer.
+
+fdb  -- specifies the fixed-length database object.
+id   -- specifies the ID number.  It should be more than 0.  If it is
+        'IDMIN', the minimum ID number of existing records is
+        specified.  If it is 'IDMAX', the maximum ID number of
+        existing records is specified.
+vbuf -- specifies the pointer to the buffer into which the value of
+        the corresponding record is written.
+max  -- specifies the size of the buffer.
+
+If successful, the return value is the size of the written data, else,
+it is -1.  -1 is returned if no record corresponds to the specified
+key.
+
+Note that an additional zero code is not appended at the end of the
+region of the writing buffer.
+
+"""
+
+fdb_vsiz = cfunc('tcfdbvsiz', libtc, c_int,
+                 ('fdb', c_void_p, 1),
+                 ('id', c_int64, 1))
+fdb_vsiz.__doc__ =\
+"""Get the size of the value of a record in a fixed-length database
+object.
+
+fdb -- specifies the fixed-length database object.
+id  -- specifies the ID number.  It should be more than 0.  If it is
+      'IDMIN', the minimum ID number of existing records is specified.
+      If it is 'IDMAX', the maximum ID number of existing records is
+      specified.
+
+If successful, the return value is the size of the value of the
+corresponding record, else, it is -1.
+
+"""
+
+fdb_vsiz2 = cfunc('tcfdbvsiz2', libtc, c_int,
+                  ('fdb', c_void_p, 1),
+                  ('kbuf', c_void_p, 1),
+                  ('ksiz', c_int, 1))
+fdb_vsiz2.__doc__ =\
+"""Get the size of the value with a decimal key in a fixed-length
+database object.
+
+fdb  -- specifies the fixed-length database object.
+kbuf -- specifies the pointer to the region of the decimal key.  It
+        should be more than 0.  If it is "min", the minimum ID number
+        of existing records is specified.  If it is "max", the maximum
+        ID number of existing records is specified.
+ksiz -- specifies the size of the region of the key.
+
+If successful, the return value is the size of the value of the
+corresponding record, else, it is -1.
+
+"""
+
+fdb_vsiz3 = cfunc('tcfdbvsiz3', libtc, c_int,
+                  ('fdb', c_void_p, 1),
+                  ('kstr', c_char_p, 1))
+fdb_vsiz3.__doc__ =\
+"""Get the size of the string value with a decimal key in a
+fixed-length database object.
+
+fdb  -- specifies the fixed-length database object.
+kstr -- specifies the string of the decimal key.  It should be more
+        than 0.  If it is "min", the minimum ID number of existing
+        records is specified.  If it is "max", the maximum ID number
+        of existing records is specified.
+
+If successful, the return value is the size of the value of the
+corresponding record, else, it is -1.
+
+"""
+
+fdb_iterinit = cfunc('tcfdbiterinit', libtc, c_bool,
+                     ('fdb', c_void_p, 1))
+fdb_iterinit.__doc__ =\
+"""Initialize the iterator of a fixed-length database object.
+
+fdb -- specifies the fixed-length database object.
+
+If successful, the return value is true, else, it is false.
+
+The iterator is used in order to access the key of every record stored
+in a database.
+
+"""
+
+fdb_iternext = cfunc('tcfdbiternext', libtc, c_uint64,
+                     ('fdb', c_void_p, 1))
+fdb_iternext.__doc__ =\
+"""Get the next ID number of the iterator of a fixed-length database
+object.
+
+fdb -- specifies the fixed-length database object.
+
+If successful, the return value is the next ID number of the iterator,
+else, it is 0.  0 is returned when no record is to be get out of the
+iterator.
+
+It is possible to access every record by iteration of calling this
+function.  It is allowed to update or remove records whose keys are
+fetched while the iteration.  The order of this traversal access
+method is ascending of the ID number.
+
+"""
+
+fdb_iternext2 = cfunc('tcfdbiternext2', libtc, tc_void_p,
+                      ('fdb', c_void_p, 1),
+                      ('sp', c_int_p, 2))
+fdb_iternext2.errcheck = lambda result, func, arguments : (result, arguments[1])
+fdb_iternext2.__doc__ =\
+"""Get the next decimay key of the iterator of a fixed-length database
+object.
+
+fdb -- specifies the fixed-length database object.
+sp  -- specifies the pointer to the variable into which the size of
+       the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+next decimal key, else, it is 'NULL'.  'NULL' is returned when no
+record is to be get out of the iterator.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.  Because the region of the return value is allocated with the
+'malloc' call, it should be released with the 'free' call when it is
+no longer in use.  It is possible to access every record by iteration
+of calling this function.  It is allowed to update or remove records
+whose keys are fetched while the iteration.  The order of this
+traversal access method is ascending of the ID number.
+
+"""
+
+fdb_iternext3 = cfunc('tcfdbiternext3', libtc, c_char_p,
+                      ('fdb', c_void_p, 1))
+fdb_iternext3.__doc__ =\
+"""Get the next decimay key string of the iterator of a fixed-length
+database object.
+
+fdb -- specifies the fixed-length database object.
+
+If successful, the return value is the string of the next decimal key,
+else, it is 'NULL'.  'NULL' is returned when no record is to be get
+out of the iterator.
+
+Because the region of the return value is allocated with the 'malloc'
+call, it should be released with the 'free' call when it is no longer
+in use.  It is possible to access every record by iteration of calling
+this function.  It is allowed to update or remove records whose keys
+are fetched while the iteration.  The order of this traversal access
+method is ascending of the ID number.
+
+"""
+
+fdb_range = cfunc('tcfdbrange', libtc, tc_uint64_p,
+                  ('fdb', c_void_p, 1),
+                  ('lower', c_int64, 1),
+                  ('upper', c_int64, 1),
+                  ('max', c_int, 1, -1),
+                  ('np', c_int_p, 2))
+fdb_range.errcheck = lambda result, func, arguments : (result, arguments[3])
+fdb_range.__doc__ =\
+"""Get range matching ID numbers in a fixed-length database object.
+
+fdb   -- specifies the fixed-length database object.
+lower -- specifies the lower limit of the range.  If it is 'IDMIN',
+         the minimum ID is specified.
+upper -- specifies the upper limit of the range.  If it is 'IDMAX',
+         the maximum ID is specified.
+max   -- specifies the maximum number of keys to be fetched.  If it is
+         negative, no limit is specified.
+np    -- specifies the pointer to the variable into which the number
+         of elements of the return value is assigned.
+
+If successful, the return value is the pointer to an array of ID
+numbers of the corresponding records.  'NULL' is returned on failure.
+This function does never fail.  It returns an empty array even if no
+key corresponds.
+
+Because the region of the return value is allocated with the 'malloc'
+call, it should be released with the 'free' call when it is no longer
+in use.
+
+"""
+
+fdb_range2 = cfunc('tcfdbrange2', libtc, TCLIST_P,
+                   ('fdb', c_void_p, 1),
+                   ('lbuf', c_void_p, 1),
+                   ('lsiz', c_int, 1),
+                   ('ubuf', c_void_p, 1),
+                   ('usiz', c_int, 1),
+                   ('max', c_int, 1, -1))
+fdb_range2.__doc__ =\
+"""Get range matching decimal keys in a fixed-length database object.
+
+fdb  -- specifies the fixed-length database object.
+lbuf -- specifies the pointer to the region of the lower key.  If it
+        is "min", the minimum ID number of existing records is
+        specified.
+lsiz -- specifies the size of the region of the lower key.
+ubuf -- specifies the pointer to the region of the upper key.  If it
+        is "max", the maximum ID number of existing records is
+        specified.
+usiz -- specifies the size of the region of the upper key.
+max  -- specifies the maximum number of keys to be fetched.  If it is
+        negative, no limit is specified.
+
+The return value is a list object of the corresponding decimal keys.
+This function does never fail.  It returns an empty list even if no
+key corresponds.
+
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.  Note that this function may be very slow
+because every key in the database is scanned.
+
+"""
+
+fdb_range3 = cfunc('tcfdbrange3', libtc, TCLIST_P,
+                   ('fdb', c_void_p, 1),
+                   ('lstr', c_char_p, 1),
+                   ('ustr', c_char_p, 1),
+                   ('max', c_int, 1, -1))
+fdb_range3.__doc__ =\
+"""Get range matching decimal keys with strings in a fixed-length
+database object.
+
+fdb  -- specifies the fixed-length database object.
+lstr -- specifies the string of the lower key.  If it is "min", the
+        minimum ID number of existing records is specified.
+ustr -- specifies the string of the upper key.  If it is "max", the
+        maximum ID number of existing records is specified.
+max  -- specifies the maximum number of keys to be fetched.  If it is
+        negative, no limit is specified.
+
+The return value is a list object of the corresponding decimal keys.
+This function does never fail.  It returns an empty list even if no
+key corresponds.
+
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.  Note that this function may be very slow
+because every key in the database is scanned.
+
+"""
+
+fdb_range4 = cfunc('tcfdbrange4', libtc, TCLIST_P,
+                   ('fdb', c_void_p, 1),
+                   ('ibuf', c_void_p, 1),
+                   ('isiz', c_int, 1),
+                   ('max', c_int, 1, -1))
+fdb_range4.__doc__ =\
+"""Get keys with an interval notation in a fixed-length database
+object.
+
+fdb  -- specifies the fixed-length database object.
+ibuf -- specifies the pointer to the region of the interval notation.
+isiz -- specifies the size of the region of the interval notation.
+max  -- specifies the maximum number of keys to be fetched.  If it is
+        negative, no limit is specified.
+
+The return value is a list object of the corresponding decimal keys.
+This function does never fail.  It returns an empty list even if no
+key corresponds.
+
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.  Note that this function may be very slow
+because every key in the database is scanned.
+
+"""
+
+fdb_range5 = cfunc('tcfdbrange5', libtc, TCLISP_P,
+                   ('fdb', c_void_p, 1),
+                   ('istr', c_char_p, 1),
+                   ('max', c_int, 1, -1))
+fdb_range5.__doc__ =\
+"""Get keys with an interval notation string in a fixed-length
+database object.
+
+fdb  -- specifies the fixed-length database object.
+istr -- specifies the pointer to the region of the interval notation
+        string.
+max  -- specifies the maximum number of keys to be fetched.  If it is
+        negative, no limit is specified.
+
+The return value is a list object of the corresponding decimal keys.
+This function does never fail.  It returns an empty list even if no
+key corresponds.
+
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.  Note that this function may be very slow
+because every key in the database is scanned.
+
+"""
+
+fdb_addint = cfunc('tcfdbaddint', libtc, c_int,
+                   ('fdb', c_void_p, 1),
+                   ('id', c_int64, 1),
+                   ('num', c_int, 1))
+fdb_addint.__doc__ =\
+"""Add an integer to a record in a fixed-length database object.
+
+fdb -- specifies the fixed-length database object connected as a
+       writer.
+id' -- specifies the ID number.  It should be more than 0.  If it is
+       'IDMIN', the minimum ID number of existing records is
+       specified.  If it is 'IDPREV', the number less by one than the
+       minimum ID number of existing records is specified.  If it is
+       'IDMAX', the maximum ID number of existing records is
+       specified.  If it is 'IDNEXT', the number greater by one than
+       the maximum ID number of existing records is specified.
+num -- specifies the additional value.
+
+If successful, the return value is the summation value, else, it is
+'INT_MIN'.
+
+If the corresponding record exists, the value is treated as an integer
+and is added to.  If no record corresponds, a new record of the
+additional value is stored.
+
+"""
+
+fdb_adddouble = cfunc('tcfdbadddouble', libtc, c_double,
+                     ('fdb', c_void_p, 1))
+fdb_adddouble.__doc__ =\
+"""Add a real number to a record in a fixed-length database object.
+
+fdb -- specifies the fixed-length database object connected as a
+       writer.
+id  -- specifies the ID number.  It should be more than 0.  If it is
+       'IDMIN', the minimum ID number of existing records is
+       specified.  If it is 'IDPREV', the number less by one than the
+       minimum ID number of existing records is specified.  If it is
+       'IDMAX', the maximum ID number of existing records is
+       specified.  If it is 'IDNEXT', the number greater by one than
+       the maximum ID number of existing records is specified.
+num -- specifies the additional value.
+
+If successful, the return value is the summation value, else, it is
+Not-a-Number.
+
+If the corresponding record exists, the value is treated as a real
+number and is added to.  If no record corresponds, a new record of the
+additional value is stored.
+
+"""
+
+fdb_sync = cfunc('tcfdbsync', libtc, c_bool,
+                 ('fdb', c_void_p, 1))
+fdb_sync.__doc__ =\
+"""Synchronize updated contents of a fixed-length database object with
+the file and the device.
+
+fdb -- specifies the fixed-length database object connected as a
+       writer.
+
+If successful, the return value is true, else, it is false.
+
+This function is useful when another process connects to the same
+database file.
+
+"""
+
+fdb_optimize = cfunc('tcfdboptimize', libtc, c_bool,
+                     ('fdb', c_void_p, 1),
+                     ('width', c_int32, 1, 0),
+                     ('limsiz', c_int64, 1, 0))
+fdb_optimize.__doc__ =\
+"""Optimize the file of a fixed-length database object.
+
+fdb    -- specifies the fixed-length database object connected as a
+          writer.
+width  -- specifies the width of the value of each record.  If it is
+          not more than 0, the current setting is not changed.
+limsiz -- specifies the limit size of the database file.  If it is not
+          more than 0, the current setting is not changed.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+fdb_vanish = cfunc('tcfdbvanish', libtc, c_bool,
+                   ('fdb', c_void_p, 1))
+fdb_vanish.__doc__ =\
+"""Remove all records of a fixed-length database object.
+
+fdb -- specifies the fixed-length database object connected as a
+       writer.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+fdb_copy = cfunc('tcfdbcopy', libtc, c_bool,
+                 ('fdb', c_void_p, 1),
+                 ('path', c_char_p, 1))
+fdb_copy.__doc__ =\
+"""Copy the database file of a fixed-length database object.
+
+fdb  -- specifies the fixed-length database object.
+path -- specifies the path of the destination file.  If it begins with
+        '@', the trailing substring is executed as a command line.
+
+If successful, the return value is true, else, it is false.  False is
+returned if the executed command returns non-zero code.
+
+The database file is assured to be kept synchronized and not modified
+while the copying or executing operation is in progress.  So, this
+function is useful to create a backup file of the database file.
+
+"""
+
+fdb_tranbegin = cfunc('tcfdbtranbegin', libtc, c_bool,
+                      ('fdb', c_void_p, 1))
+fdb_tranbegin.__doc__ =\
+"""Begin the transaction of a fixed-length database object.
+
+fdb -- specifies the fixed-length database object connected as a
+       writer.
+
+If successful, the return value is true, else, it is false.
+
+The database is locked by the thread while the transaction so that
+only one transaction can be activated with a database object at the
+same time.  Thus, the serializable isolation level is assumed if every
+database operation is performed in the transaction.  All updated
+regions are kept track of by write ahead logging while the
+transaction.  If the database is closed during transaction, the
+transaction is aborted implicitly.
+
+"""
+
+fdb_trancommit = cfunc('tcfdbtrancommit', libtc, c_bool,
+                       ('fdb', c_void_p, 1))
+fdb_trancommit.__doc__ =\
+"""Commit the transaction of a fixed-length database object.
+
+fdb -- specifies the fixed-length database object connected as a
+       writer.
+
+If successful, the return value is true, else, it is false.
+
+Update in the transaction is fixed when it is committed successfully.
+
+"""
+
+fdb_tranabort = cfunc('tcfdbtranabort', libtc, c_bool,
+                     ('fdb', c_void_p, 1))
+fdb_tranabort.__doc__ =\
+"""Abort the transaction of a fixed-length database object.
+
+fdb -- specifies the fixed-length database object connected as a
+       writer.
+
+If successful, the return value is true, else, it is false.
+
+Update in the transaction is discarded when it is aborted.  The state
+of the database is rollbacked to before transaction.
+
+"""
+
+fdb_path = cfunc('tcfdbpath', libtc, c_char_p,
+                 ('fdb', c_void_p, 1))
+fdb_path.__doc__ =\
+"""Get the file path of a fixed-length database object.
+
+fdb -- specifies the fixed-length database object.
+
+The return value is the path of the database file or 'NULL' if the
+object does not connect to any database file.
+
+"""
+
+fdb_rnum = cfunc('tcfdbrnum', libtc, c_uint64,
+                 ('fdb', c_void_p, 1))
+fdb_rnum.__doc__ =\
+"""Get the number of records of a fixed-length database object.
+
+fdb specifies the fixed-length database object.
+
+The return value is the number of records or 0 if the object does not
+connect to any database file.
+
+"""
+
+fdb_fsiz = cfunc('tcfdbfsiz', libtc, c_uint64,
+                     ('fdb', c_void_p, 1))
+fdb_fsiz.__doc__ =\
+"""Get the size of the database file of a fixed-length database
+object.
+
+fdb -- specifies the fixed-length database object.
+
+The return value is the size of the database file or 0 if the object
+does not connect to any database file.
+
+"""
+
+# features for experts
+
+fdb_setecode = cfunc('tcfdbsetecode', libtc, None,
+                     ('fdb', c_void_p, 1),
+                     ('ecode', c_int, 1),
+                     ('filename', c_char_p, 1),
+                     ('line', c_int, 1),
+                     ('func', c_char_p, 1))
+fdb_setecode.__doc__ =\
+"""Set the error code of a fixed-length database object.
+
+fdb   -- specifies the fixed-length database object.
+ecode -- specifies the error code.
+file  -- specifies the file name of the code.
+line  -- specifies the line number of the code.
+func  -- specifies the function name of the code.
+
+"""
+
+fdb_setdbgfd = cfunc('tcfdbsetdbgfd', libtc, None,
+                     ('fdb', c_void_p, 1),
+                     ('fd', c_int, 1))
+fdb_setdbgfd.__doc__ =\
+"""Set the file descriptor for debugging output.
+
+fdb -- specifies the fixed-length database object.
+fd  -- specifies the file descriptor for debugging output.
+
+"""
+
+fdb_dbgfd = cfunc('tcfdbdbgfd', libtc, c_int,
+                  ('fdb', c_void_p, 1))
+fdb_dbgfd.__doc__ =\
+"""Get the file descriptor for debugging output.
+
+fdb -- specifies the fixed-length database object.
+
+The return value is the file descriptor for debugging output.
+
+"""
+
+fdb_hasmutex = cfunc('tcfdbhasmutex', libtc, c_bool,
+                     ('fdb', c_void_p, 1))
+fdb_hasmutex.__doc__ =\
+"""Check whether mutual exclusion control is set to a fixed-length
+database object.
+
+fdb -- specifies the fixed-length database object.
+
+If mutual exclusion control is set, it is true, else it is false.
+
+"""
+
+fdb_memsync = cfunc('tcfdbmemsync', libtc, c_bool,
+                    ('fdb', c_void_p, 1),
+                    ('phys', c_bool, 1))
+fdb_memsync.__doc__ =\
+"""Synchronize updating contents on memory of a fixed-length database
+object.
+
+fdb  -- specifies the fixed-length database object connected as a
+        writer.
+phys -- specifies whether to synchronize physically.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+fdb_min = cfunc('tcfdbmin', libtc, c_uint64,
+                ('fdb', c_void_p, 1))
+fdb_min.__doc__ =\
+"""Get the minimum ID number of records of a fixed-length database
+object.
+
+fdb -- specifies the fixed-length database object.
+
+The return value is the minimum ID number of records or 0 if the
+object does not connect to any database file.
+
+"""
+
+fdb_max = cfunc('tcfdbmax', libtc, c_uint64,
+                ('fdb', c_void_p, 1))
+fdb_.__doc__ =\
+"""Get the maximum ID number of records of a fixed-length database
+object.
+
+fdb -- specifies the fixed-length database object.
+
+The return value is the maximum ID number of records or 0 if the
+object does not connect to any database file.
+
+"""
+
+fdb_width = cfunc('tcfdbwidth', libtc, c_uint32,
+                  ('fdb', c_void_p, 1))
+fdb_width.__doc__ =\
+"""Get the width of the value of each record of a fixed-length
+database object.
+
+fdb -- specifies the fixed-length database object.
+
+The return value is the width of the value of each record or 0 if the
+object does not connect to any database file.
+
+"""
+
+fdb_limsiz = cfunc('tcfdblimsiz', libtc, c_uint64,
+                   ('fdb', c_void_p, 1))
+fdb_limsiz.__doc__ =\
+"""Get the limit file size of a fixed-length database object.
+
+fdb -- specifies the fixed-length database object.
+
+The return value is the limit file size or 0 if the object does not
+connect to any database file.
+
+"""
+
+fdb_limid = cfunc('tcfdblimid', libtc, c_uint64,
+                  ('fdb', c_void_p, 1))
+fdb_limid.__doc__ =\
+"""Get the limit ID number of a fixed-length database object.
+
+fdb -- specifies the fixed-length database object.
+
+The return value is the limit ID number or 0 if the object does not
+connect to any database file.
+
+"""
+
+fdb_inode = cfunc('tcfdbinode', libtc, c_uint64,
+                  ('fdb', c_void_p, 1))
+fdb_inode.__doc__ =\
+"""Get the inode number of the database file of a fixed-length
+database object.
+
+fdb -- specifies the fixed-length database object.
+
+The return value is the inode number of the database file or 0 if the
+object does not connect to any database file.
+
+"""
+
+fdb_mtime = cfunc('tcfdbmtime', libtc, c_time,
+                  ('fdb', c_void_p, 1))
+fdb_mtime.__doc__ =\
+"""Get the modification time of the database file of a fixed-length
+database object.
+
+fdb -- specifies the fixed-length database object.
+
+The return value is the inode number of the database file or 0 if the
+object does not connect to any database file.
+
+"""
+
+fdb_omode = cfunc('tcfdbomode', libtc, c_int,
+                  ('fdb', c_void_p, 1))
+fdb_omode.__doc__ =\
+"""Get the connection mode of a fixed-length database object.
+
+fdb -- specifies the fixed-length database object.
+
+The return value is the connection mode.
+"""
+
+fdb_type = cfunc('tcfdbtype', libtc, c_uint8,
+                 ('fdb', c_void_p, 1))
+fdb_type.__doc__ =\
+"""Get the database type of a fixed-length database object.
+
+fdb -- specifies the fixed-length database object.
+
+The return value is the database type.
+
+"""
+
+fdb_flags = cfunc('tcfdbflags', libtc, c_uint8,
+                  ('fdb', c_void_p, 1))
+fdb_flags.__doc__ =\
+"""Get the additional flags of a fixed-length database object.
+
+fdb -- specifies the fixed-length database object.
+
+The return value is the additional flags.
+
+"""
+
+fdb_opaque = cfunc('tcfdbopaque', libtc, c_char_p,
+                   ('fdb', c_void_p, 1))
+fdb_opaque.__doc__ =\
+"""Get the pointer to the opaque field of a fixed-length database
+object.
+
+fdb -- specifies the fixed-length database object.
+
+The return value is the pointer to the opaque field whose size is 128
+bytes.
+
+"""
+
+fdb_putporc = cfunc('tcfdbputporc', libtc, c_bool,
+                    ('fdb', c_void_p, 1),
+                    ('id', c_int64, 1),
+                    ('vbuf', c_void_p, 1),
+                    ('vsiz', c_int, 1),
+                    ('proc', TCPDPROC, 1),
+                    ('op', c_void_p, 1))
+fdb_putporc.__doc__ =\
+"""Store a record into a fixed-length database object with a
+duplication handler.
+
+fdb  -- specifies the fixed-length database object connected as a
+        writer.
+id   -- specifies the ID number.  It should be more than 0.  If it is
+        'IDMIN', the minimum ID number of existing records is
+        specified.  If it is 'IDPREV', the number less by one than the
+        minimum ID number of existing records is specified.  If it is
+        'IDMAX', the maximum ID number of existing records is
+        specified.  If it is 'IDNEXT', the number greater by one than
+        the maximum ID number of existing records is specified.
+vbuf -- specifies the pointer to the region of the value.  'NULL'
+        means that record addition is ommited if there is no
+        corresponding record.
+vsiz -- specifies the size of the region of the value.  If the size of
+        the value is greater than the width tuning parameter of the
+        database, the size is cut down to the width.
+proc -- specifies the pointer to the callback function to process
+        duplication.  It receives four parameters.  The first
+        parameter is the pointer to the region of the value.  The
+        second parameter is the size of the region of the value.  The
+        third parameter is the pointer to the variable into which the
+        size of the region of the return value is assigned.  The
+        fourth parameter is the pointer to the optional opaque object.
+        It returns the pointer to the result object allocated with
+        'malloc'.  It is released by the caller.  If it is 'NULL', the
+        record is not modified.  If it is '(void *)-1', the record is
+        removed.
+op   -- specifies an arbitrary pointer to be given as a parameter of
+        the callback function.  If it is not needed, 'NULL' can be
+        specified.
+
+If successful, the return value is true, else, it is false.
+
+Note that the callback function can not perform any database operation
+because the function is called in the critical section guarded by the
+same locks of database operations.
+
+"""
+
+fdb_iterinit2 = cfunc('tcfdbiterinit2', libtc, c_bool,
+                      ('fdb', c_void_p, 1),
+                      ('id', c_int64, 1))
+fdb_iterinit2.__doc__ =\
+"""Move the iterator to the record corresponding a key of a
+fixed-length database object.
+
+fdb -- specifies the fixed-length database object.
+id  -- specifies the ID number.  It should be more than 0.  If it is
+       'IDMIN', the minimum ID number of existing records is
+       specified.  If it is 'IDMAX', the maximum ID number of existing
+       records is specified.
+
+If successful, the return value is true, else, it is false.  False is
+returned if there is no record corresponding the condition.
+
+"""
+
+fdb_iterinit3 = cfunc('tcfdbiterinit3', libtc, c_bool,
+                      ('fdb', c_void_p, 1),
+                      ('kbuf', c_void_p, 1),
+                      ('ksiz', c_int, 1))
+fdb_iterinit3.__doc__ =\
+"""Move the iterator to the decimal record of a fixed-length database
+object.
+
+fdb  -- specifies the fixed-length database object.
+kbuf -- specifies the pointer to the region of the decimal key.  It
+        should be more than 0.  If it is "min", the minimum ID number
+        of existing records is specified.  If it is "max", the maximum
+        ID number of existing records is specified.
+ksiz -- specifies the size of the region of the key.
+
+If successful, the return value is true, else, it is false.  False is
+returned if there is no record corresponding the condition.
+
+"""
+
+fdb_iterinit4 = cfunc('tcfdbiterinit4', libtc, c_bool,
+                      ('fdb', c_void_p, 1),
+                      ('kstr', c_char_p, 1))
+fdb_iterinit4.__doc__ =\
+"""Move the iterator to the decimal string record of a fixed-length
+database object.
+
+fdb  -- specifies the fixed-length database object.
+
+kstr -- specifies the string of the decimal key.  It should be more
+        than 0.  If it is "min", the minimum ID number of existing
+        records is specified.  If it is "max", the maximum ID number
+        of existing records is specified.
+
+If successful, the return value is true, else, it is false.  False is
+returned if there is no record corresponding the condition.
+
+"""
+
+fdb_foreach = cfunc('tcfdbforeach', libtc, c_bool,
+                    ('fdb', c_void_p, 1),
+                    ('iter', TCITER, 1),
+                    ('op', c_char_p, 1))
+fdb_foreach.__doc__ =\
+"""Process each record atomically of a fixed-length database object.
+
+fdb  -- specifies the fixed-length database object.
+iter -- specifies the pointer to the iterator function called for each
+        record.  It receives five parameters.  The first parameter is
+        the pointer to the region of the key.  The second parameter is
+        the size of the region of the key.  The third parameter is the
+        pointer to the region of the value.  The fourth parameter is
+        the size of the region of the value.  The fifth parameter is
+        the pointer to the optional opaque object.  It returns true to
+        continue iteration or false to stop iteration.
+op   -- specifies an arbitrary pointer to be given as a parameter of
+        the iterator function.  If it is not needed, 'NULL' can be
+        specified.
+
+If successful, the return value is true, else, it is false.
+
+Note that the callback function can not perform any database operation
+because the function is called in the critical section guarded by the
+same locks of database operations.
+
+"""
+
+fdb_keytoid = cfunc('tcfdbkeytoid', libtc, c_int64,
+                    ('fdb', c_void_p, 1),
+                    ('kbuf', c_char_p, 1),
+                    ('ksiz', c_int, 1))
+fdb_keytoid.__doc__ =\
+"""Generate the ID number from arbitrary binary data.
+
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+
+The return value is the ID number.
 
 """
