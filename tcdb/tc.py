@@ -5368,7 +5368,7 @@ If successful, the return value is true, else, it is false.
 fdb_out3 = cfunc('tcfdbout3', libtc, c_bool,
                  ('fdb', c_void_p, 1),
                  ('kstr', c_char_p, 1))
-fdb_.__doc__ =\
+fdb_out3.__doc__ =\
 """Remove a string record with a decimal key of a fixed-length
 database object.
 
@@ -5609,7 +5609,7 @@ traversal access method is ascending of the ID number.
 
 """
 
-fdb_iternext3 = cfunc('tcfdbiternext3', libtc, c_char_p,
+fdb_iternext3 = cfunc('tcfdbiternext3', libtc, tc_char_p,
                       ('fdb', c_void_p, 1))
 fdb_iternext3.__doc__ =\
 """Get the next decimay key string of the iterator of a fixed-length
@@ -5748,7 +5748,7 @@ because every key in the database is scanned.
 
 """
 
-fdb_range5 = cfunc('tcfdbrange5', libtc, TCLISP_P,
+fdb_range5 = cfunc('tcfdbrange5', libtc, TCLIST_P,
                    ('fdb', c_void_p, 1),
                    ('istr', c_char_p, 1),
                    ('max', c_int, 1, -1))
@@ -6059,7 +6059,7 @@ object does not connect to any database file.
 
 fdb_max = cfunc('tcfdbmax', libtc, c_uint64,
                 ('fdb', c_void_p, 1))
-fdb_.__doc__ =\
+fdb_max.__doc__ =\
 """Get the maximum ID number of records of a fixed-length database
 object.
 
