@@ -10,7 +10,7 @@ from ctypes import c_char_p, c_void_p
 from ctypes.util import find_library
 
 
-c_int_p  = POINTER(c_int)
+c_int_p = POINTER(c_int)
 c_uint64_p = POINTER(c_uint64)
 c_double_p = POINTER(c_double)
 c_time = c_uint64              # FIX: This is valid in 64 bit architecture.
@@ -27,7 +27,7 @@ class tc_void_p(c_void_p):
         if self and libtc:
             libtc.tcfree(self)
 
-class tc_uint64_p(c_uint64_p):
+class tc_uint64_p(c_void_p):
     """Automatic garbage collectable c_int64_p type."""
     def __del__(self):
         if self and libtc:
@@ -4951,7 +4951,7 @@ The return value is the new fixed-length database object.
 
 """
 
-fdb_del = cfunc('tcfdb', libtc, None,
+fdb_del = cfunc('tcfdbdel', libtc, None,
                 ('fdb', c_void_p, 1))
 fdb_del.__doc__ =\
 """Delete a fixed-length database object.
@@ -4963,7 +4963,7 @@ deleted object and its derivatives can not be used anymore.
 
 """
 
-fdb_ecode = cfunc('tcfdb', libtc, c_int,
+fdb_ecode = cfunc('tcfdbecode', libtc, c_int,
                   ('fdb', c_void_p, 1))
 fdb_ecode.__doc__ =\
 """ Get the last happened error code of a fixed-length database
@@ -5026,7 +5026,7 @@ opened.
 
 """
 
-fdb_open = cfunc('tcfdbopen', libtc, None,
+fdb_open = cfunc('tcfdbopen', libtc, c_bool,
                  ('fdb', c_void_p, 1),
                  ('path', c_char_p, 1),
                  ('omode', c_int, 1))
@@ -5051,7 +5051,7 @@ If successful, the return value is true, else, it is false.
 
 """
 
-fdb_close = cfunc('tcfdb', libtc, c_bool,
+fdb_close = cfunc('tcfdbclose', libtc, c_bool,
              ('fdb', c_void_p, 1))
 fdb_close.__doc__ =\
 """Close a fixed-length database object.
@@ -5636,7 +5636,7 @@ fdb_range = cfunc('tcfdbrange', libtc, tc_uint64_p,
                   ('upper', c_int64, 1),
                   ('max', c_int, 1, -1),
                   ('np', c_int_p, 2))
-fdb_range.errcheck = lambda result, func, arguments : (result, arguments[3])
+fdb_range.errcheck = lambda result, func, arguments : (result, arguments[4])
 fdb_range.__doc__ =\
 """Get range matching ID numbers in a fixed-length database object.
 
@@ -5801,7 +5801,9 @@ additional value is stored.
 """
 
 fdb_adddouble = cfunc('tcfdbadddouble', libtc, c_double,
-                     ('fdb', c_void_p, 1))
+                      ('fdb', c_void_p, 1),
+                      ('id', c_int64, 1),
+                      ('num', c_double, 1))
 fdb_adddouble.__doc__ =\
 """Add a real number to a record in a fixed-length database object.
 
@@ -6178,14 +6180,14 @@ bytes.
 
 """
 
-fdb_putporc = cfunc('tcfdbputporc', libtc, c_bool,
+fdb_putproc = cfunc('tcfdbputproc', libtc, c_bool,
                     ('fdb', c_void_p, 1),
                     ('id', c_int64, 1),
                     ('vbuf', c_void_p, 1),
                     ('vsiz', c_int, 1),
                     ('proc', TCPDPROC, 1),
                     ('op', c_void_p, 1))
-fdb_putporc.__doc__ =\
+fdb_putproc.__doc__ =\
 """Store a record into a fixed-length database object with a
 duplication handler.
 
