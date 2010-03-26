@@ -80,3 +80,10 @@ def deserialize_xstr(xstr, as_type=None):
     (c_obj, c_obj_len) = (tc.tcxstrptr(xstr), tc.tcxstrsize(xstr))
     obj = deserialize(c_obj, c_obj_len, as_type)
     return obj
+
+
+def deserialize_tcuint64(tcuint64, size):
+    """Deserialize an array of c_uint64_p to an array of integers."""
+    ptr = ctypes.cast(tcuint64, tc.c_uint64_p)
+    ints = [ptr[i] for i in range(size.value)]
+    return ints
