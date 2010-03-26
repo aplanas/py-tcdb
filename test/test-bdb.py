@@ -6,7 +6,6 @@ import unittest
 import warnings
 
 from tcdb import bdb
-from tcdb import tc
 
 
 class TestBDB(unittest.TestCase):
