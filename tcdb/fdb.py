@@ -51,7 +51,7 @@ ONOLCK  = 1 << 4                # open without locking
 OLCKNB  = 1 << 5                # lock without blocking
 OTSYNC  = 1 << 6                # synchronize every transaction
 
-# enumeration for ID constants 
+# enumeration for ID constants
 IDMIN  = -1                     # minimum number
 IDPREV = -2                     # less by one than the minimum
 IDMAX  = -3                     # maximum number
