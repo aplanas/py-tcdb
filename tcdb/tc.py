@@ -421,7 +421,7 @@ Note that the specified region is released when the object is deleted.
 
 """
 
-#  array list
+# array list
 
 class TCLIST_P(c_void_p):
     """Type of structure for an array list."""
@@ -890,7 +890,7 @@ list -- specifies the list object.
 
 """
 
-# XXX Fix params type
+# FIX params type
 # tclistsortex = cfunc('tclistsortex', libtc, None,
 #                      ('list', TCLIST_P, 1),
 #                      ('cmp', c_void_p, 1))
@@ -914,7 +914,7 @@ list -- specifies the list object.
 
 """
 
-# XXX Fix params type
+# FIX params type
 # tclistprintf = cfunc('tclistprintf', libtc, None,
 #                      ('list', TCLIST_P, 1),
 #                      ('format', c_char_p, 1))
@@ -934,6 +934,802 @@ list -- specifies the list object.
 # The other arguments are used according to the format string.
 
 # """
+
+# hash map
+
+class TCMAP_P(c_void_p):
+    """Type of structure for a map."""
+    # We treat it as a opaque structure.  We can use ctype.Structure
+    # if needed.
+    def __del__(self):
+        if self and libtc:
+            libtc.tcmapdel(self)
+
+
+tcmapnew = cfunc('tcmapnew', libtc, TCMAP_P)
+tcmapnew.__doc__ =\
+"""Create a map object.
+
+The return value is the new map object.
+
+"""
+
+tcmapnew2 = cfunc('tcmapnew2', libtc, TCMAP_P,
+                  ('bnum', c_uint32, 1))
+tcmapnew2.__doc__ =\
+"""Create a map object with specifying the number of the buckets.
+
+bnum -- specifies the number of the buckets.
+
+The return value is the new map object.
+
+"""
+
+tcmapnew3 = cfunc('tcmapnew3', libtc, TCMAP_P,
+                  ('str', c_char_p, 1))
+tcmapnew3.__doc__ =\
+"""Create a map object with initial string elements.
+
+str -- specifies the string of the first element.
+
+The other arguments are other elements.  They should be trailed by a
+'NULL' argument.
+
+The return value is the new map object.
+
+The key and the value of each record are situated one after the other.
+
+"""
+
+tcmapdup = cfunc('tcmapdup', libtc, TCMAP_P,
+                 ('map', TCMAP_P, 1))
+tcmapdup.__doc__ =\
+"""Copy a map object.
+
+map -- specifies the map object.
+
+The return value is the new map object equivalent to the specified
+object.
+
+"""
+
+tcmapdel = cfunc('tcmapdel', libtc, None,
+                 ('map', TCMAP_P, 1))
+tcmapdel.__doc__ =\
+"""Delete a map object.
+
+map -- specifies the map object.
+
+Note that the deleted object and its derivatives can not be used
+anymore.
+
+"""
+
+tcmapput = cfunc('tcmapput', libtc, None,
+                 ('map', TCMAP_P, 1),
+                 ('kbuf', c_void_p, 1),
+                 ('ksiz', c_int, 1),
+                 ('vbuf', c_void_p, 1),
+                 ('vsiz', c_int, 1))
+tcmapput.__doc__ =\
+"""Store a record into a map object.
+
+map  -- specifies the map object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.
+
+If a record with the same key exists in the map, it is overwritten.
+
+"""
+
+tcmapput2 = cfunc('tcmapput2', libtc, None,
+                  ('map', TCMAP_P, 1),
+                  ('kstr', c_char_p, 1),
+                  ('vstr', c_char_p, 1))
+tcmapput2.__doc__ =\
+"""Store a string record into a map object.
+
+map  -- specifies the map object.
+kstr -- specifies the string of the key.
+vstr -- specifies the string of the value.
+
+If a record with the same key exists in the map, it is overwritten.
+
+"""
+
+tcmapputkeep = cfunc('tcmapputkeep', libtc, c_bool,
+                     ('map', TCMAP_P, 1),
+                     ('kbuf', c_void_p, 1),
+                     ('ksiz', c_int, 1),
+                     ('vbuf', c_void_p, 1),
+                     ('vsiz', c_int, 1))
+tcmapputkeep.__doc__ =\
+"""Store a new record into a map object.
+
+map  -- specifies the map object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the map, this function has no effect.
+
+"""
+
+tcmapputkeep2 = cfunc('tcmapputkeep2', libtc, c_bool,
+                      ('map', TCMAP_P, 1),
+                      ('kstr', c_char_p, 1),
+                      ('vstr', c_char_p, 1))
+tcmapputkeep2.__doc__ =\
+"""Store a new string record into a map object.
+
+map  -- specifies the map object.
+kstr -- specifies the string of the key.
+vstr -- specifies the string of the value.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the map, this function has no
+effect.
+
+"""
+
+tcmapputcat = cfunc('tcmapputcat', libtc, None,
+                    ('map', TCMAP_P, 1),
+                    ('kbuf', c_void_p, 1),
+                    ('ksiz', c_int, 1),
+                    ('vbuf', c_void_p, 1),
+                    ('vsiz', c_int, 1))
+tcmapputcat.__doc__ =\
+"""Concatenate a value at the end of the value of the existing record
+in a map object.
+
+map  -- specifies the map object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.
+
+If there is no corresponding record, a new record is created.
+
+"""
+
+tcmapputcat2 = cfunc('tcmapputcat2', libtc, None,
+                     ('map', TCMAP_P, 1),
+                     ('kstr', c_char_p, 1),
+                     ('vstr', c_char_p, 1))
+tcmapputcat2.__doc__ =\
+"""Concatenate a string value at the end of the value of the existing
+record in a map object.
+
+map  -- specifies the map object.
+kstr -- specifies the string of the key.
+vstr -- specifies the string of the value.
+
+If there is no corresponding record, a new record is created.
+
+"""
+
+tcmapout = cfunc('tcmapout', libtc, c_bool,
+                 ('map', TCMAP_P, 1),
+                 ('kbuf', c_void_p, 1),
+                 ('ksiz', c_int, 1))
+tcmapout.__doc__ =\
+"""Remove a record of a map object.
+
+map  -- specifies the map object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+
+If successful, the return value is true.  False is returned when no
+record corresponds to the specified key.
+
+"""
+
+tcmapout2 = cfunc('tcmapout2', libtc, c_bool,
+                  ('map', TCMAP_P, 1),
+                  ('kstr', c_char_p, 1))
+tcmapout2.__doc__ =\
+"""Remove a string record of a map object.
+
+map  -- specifies the map object.
+kstr -- specifies the string of the key.
+
+If successful, the return value is true.  False is returned when no
+record corresponds to the specified key.
+
+"""
+
+tcmapget = cfunc('tcmapget', libtc, tc_void_p,
+                 ('map', TCMAP_P, 1),
+                 ('kbuf', c_void_p, 1),
+                 ('ksiz', c_int, 1),
+                 ('sp', c_int_p, 2))
+tcmapget.errcheck = lambda result, func, arguments: (result, arguments[3])
+tcmapget.__doc__ =\
+"""Retrieve a record in a map object.
+
+map  -- specifies the map object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+sp   -- specifies the pointer to the variable into which the size of
+        the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+value of the corresponding record.  'NULL' is returned when no record
+corresponds.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.
+
+"""
+
+tcmapget2 = cfunc('tcmapget2', libtc, tc_char_p,
+                  ('map', TCMAP_P, 1),
+                  ('kstr', c_char_p, 1))
+tcmapget2.__doc__ =\
+"""Retrieve a string record in a map object.
+
+map -- specifies the map object.
+
+kstr' specifies the string of the key.  If successful, the return
+value is the string of the value of the corresponding record.  'NULL'
+is returned when no record corresponds.
+
+"""
+
+tcmapmove = cfunc('tcmapmove', libtc, c_bool,
+                  ('map', TCMAP_P, 1),
+                  ('kbuf', c_void_p, 1),
+                  ('ksiz', c_int, 1),
+                  ('head', c_bool, 1))
+tcmapmove.__doc__ =\
+"""Move a record to the edge of a map object.
+
+map  -- specifies the map object.
+kbuf -- specifies the pointer to the region of a key.
+ksiz -- specifies the size of the region of the key.
+head -- specifies the destination which is the head if it is true or
+        the tail if else.
+
+If successful, the return value is true.  False is returned when no
+record corresponds to the specified key.
+
+"""
+
+tcmapmove2 = cfunc('tcmapmove2', libtc, c_bool,
+                   ('map', TCMAP_P, 1),
+                   ('kstr', c_char_p, 1),
+                   ('head', c_bool, 1))
+tcmapmove2.__doc__ =\
+"""Move a string record to the edge of a map object.
+
+map  -- specifies the map object.
+kstr -- specifies the string of a key.
+head -- specifies the destination which is the head if it is true or
+        the tail if else.
+
+If successful, the return value is true.  False is returned when no
+record corresponds to the specified key.
+
+"""
+
+tcmapiterinit = cfunc('tcmapiterinit', libtc, None,
+                      ('map', TCMAP_P, 1))
+tcmapiterinit.__doc__ =\
+"""Initialize the iterator of a map object.
+
+map -- specifies the map object.
+
+The iterator is used in order to access the key of every record stored
+in the map object.
+
+"""
+
+tcmapiternext = cfunc('tcmapiternext', libtc, tc_void_p,
+                      ('map', TCMAP_P, 1),
+                      ('sp', c_int_p, 2))
+tcmapiternext.errcheck = lambda result, func, arguments : (result, arguments[1])
+tcmapiternext.__doc__ =\
+"""Get the next key of the iterator of a map object.
+
+map -- specifies the map object.
+sp  -- specifies the pointer to the variable into which the size of
+       the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+next key, else, it is 'NULL'.  'NULL' is returned when no record can
+be fetched from the iterator.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.
+
+The order of iteration is assured to be the same as the stored order.
+
+"""
+
+tcmapiternext2 = cfunc('tcmapiternext2', libtc, tc_char_p,
+                       ('map', TCMAP_P, 1))
+tcmapiternext2.__doc__ =\
+"""Get the next key string of the iterator of a map object.
+
+map -- specifies the map object.
+
+If successful, the return value is the pointer to the region of the
+next key, else, it is 'NULL'.  'NULL' is returned when no record can
+be fetched from the iterator.
+
+The order of iteration is assured to be the same as the stored order.
+
+"""
+
+tcmaprnum = cfunc('tcmaprnum', libtc, c_uint64,
+                  ('map', TCMAP_P, 1))
+tcmaprnum.__doc__ =\
+"""Get the number of records stored in a map object.
+
+map -- specifies the map object.
+
+The return value is the number of the records stored in the map
+object.
+
+"""
+
+tcmapmsiz = cfunc('tcmapmsiz', libtc, c_uint64,
+                  ('map', TCMAP_P, 1))
+tcmapmsiz.__doc__ =\
+"""Get the total size of memory used in a map object.
+
+map -- specifies the map object.
+
+The return value is the total size of memory used in a map object.
+
+"""
+
+tcmapkeys = cfunc('tcmapkeys', libtc, TCLIST_P,
+                  ('map', TCMAP_P, 1))
+tcmapkeys.__doc__ =\
+"""Create a list object containing all keys in a map object.
+
+map -- specifies the map object.
+
+The return value is the new list object containing all keys in the map
+object.
+
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.
+
+"""
+
+tcmapvals = cfunc('tcmapvals', libtc, TCLIST_P,
+                  ('map', TCMAP_P, 1))
+tcmapvals.__doc__ =\
+"""Create a list object containing all values in a map object.
+
+map -- specifies the map object.
+
+The return value is the new list object containing all values in the
+map object.
+
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.
+
+"""
+
+tcmapaddint = cfunc('tcmapaddint', libtc, c_int,
+                    ('map', TCMAP_P, 1),
+                    ('kbuf', c_void_p, 1),
+                    ('ksiz', c_int, 1),
+                    ('num', c_int, 1))
+tcmapaddint.__doc__ =\
+"""Add an integer to a record in a map object.
+
+map  -- specifies the map object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+num  -- specifies the additional value.
+
+The return value is the summation value.
+
+If the corresponding record exists, the value is treated as an integer
+and is added to.  If no record corresponds, a new record of the
+additional value is stored.
+
+"""
+
+tcmapadddouble = cfunc('tcmapadddouble', libtc, c_double,
+                       ('map', TCMAP_P, 1),
+                       ('kbuf', c_void_p, 1),
+                       ('ksiz', c_int, 1),
+                       ('num', c_int, 1))
+tcmapadddouble.__doc__ =\
+"""Add a real number to a record in a map object.
+
+map  -- specifies the map object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+num  -- specifies the additional value.
+
+The return value is the summation value.
+
+If the corresponding record exists, the value is treated as a real
+number and is added to.  If no record corresponds, a new record of the
+additional value is stored.
+
+"""
+
+tcmapclear = cfunc('tcmapclear', libtc, None,
+                   ('map', TCMAP_P, 1))
+tcmapclear.__doc__ =\
+"""Clear a map object.
+
+map -- specifies the map object.
+
+All records are removed.
+
+"""
+
+tcmapcutfront = cfunc('tcmapcutfront', libtc, None,
+                      ('map', TCMAP_P, 1),
+                      ('num', c_int, 1))
+tcmapcutfront.__doc__ =\
+"""Remove front records of a map object.
+
+map -- specifies the map object.
+num -- specifies the number of records to be removed.
+
+"""
+
+tcmapdump = cfunc('tcmapdump', libtc, tc_void_p,
+                  ('map', TCMAP_P, 1),
+                  ('sp', c_int_p, 2))
+tcmapdump.errcheck = lambda result, func, arguments : (result, arguments[1])
+tcmapdump.__doc__ =\
+"""Serialize a map object into a byte array.
+
+map -- specifies the map object.
+sp  -- specifies the pointer to the variable into which the size of
+       the region of the return value is assigned.
+
+The return value is the pointer to the region of the result serial
+region.
+
+Because the region of the return value is allocated with the 'malloc'
+call, it should be released with the 'free' call when it is no longer
+in use.
+
+"""
+
+tcmapload = cfunc('tcmapload', libtc, TCMAP_P,
+                  ('ptr', c_void_p, 1),
+                  ('size', c_int, 1))
+tcmapload.__doc__ =\
+"""Create a map object from a serialized byte array.
+
+ptr  -- specifies the pointer to the region of serialized byte array.
+size -- specifies the size of the region.
+
+The return value is a new map object.
+
+Because the object of the return value is created with the function
+'tcmapnew', it should be deleted with the function 'tcmapdel' when it
+is no longer in use.
+
+"""
+
+# hash map (for experts)
+
+tcmapput3 = cfunc('tcmapput3', libtc, None,
+                  ('map', TCMAP_P, 1),
+                  ('kbuf', c_void_p, 1),
+                  ('ksiz', c_int, 1),
+                  ('vbuf', c_void_p, 1),
+                  ('vsiz', c_int, 1))
+tcmapput3.__doc__ =\
+"""Store a record and make it semivolatile in a map object.
+
+map  -- specifies the map object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.
+
+If a record with the same key exists in the map, it is overwritten.
+
+The record is moved to the tail.
+
+"""
+
+tcmapput4 = cfunc('tcmapput4', libtc, None,
+                  ('map', TCMAP_P, 1),
+                  ('kbuf', c_void_p, 1),
+                  ('ksiz', c_int, 1),
+                  ('fvbuf', c_void_p, 1),
+                  ('fvsiz', c_int, 1),
+                  ('lvbuf', c_void_p, 1),
+                  ('lvsiz', c_int, 1))
+tcmapput4.__doc__ =\
+"""Store a record of the value of two regions into a map object.
+
+map   -- specifies the map object.
+kbuf  -- specifies the pointer to the region of the key.
+ksiz  -- specifies the size of the region of the key.
+fvbuf -- specifies the pointer to the former region of the value.
+fvsiz -- specifies the size of the former region of the value.
+lvbuf -- specifies the pointer to the latter region of the value.
+lvsiz -- specifies the size of the latter region of the value.
+
+If a record with the same key exists in the map, it is overwritten.
+
+"""
+
+tcmapputcat3 = cfunc('tcmapputcat3', libtc, None,
+                     ('map', TCMAP_P, 1),
+                     ('kbuf', c_void_p, 1),
+                     ('ksiz', c_int, 1),
+                     ('vbuf', c_void_p, 1),
+                     ('vsiz', c_int, 1))
+tcmapputcat3.__doc__ =\
+"""Concatenate a value at the existing record and make it semivolatile
+in a map object.
+
+map  -- specifies the map object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.
+vsiz -- specifies the size of the region of the value.
+
+If there is no corresponding record, a new record is created.
+
+"""
+
+tcmapputproc = cfunc('tcmapputproc', libtc, c_bool,
+                     ('map', TCMAP_P, 1),
+                     ('kbuf', c_void_p, 1),
+                     ('ksiz', c_int, 1),
+                     ('vbuf', c_void_p, 1),
+                     ('vsiz', c_int, 1),
+                     ('proc', TCPDPROC, 1),
+                     ('op', c_void_p, 1))
+tcmapputproc.__doc__ =\
+"""Store a record into a map object with a duplication handler.
+
+map  -- specifies the map object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+vbuf -- specifies the pointer to the region of the value.  'NULL'
+        means that record addition is ommited if there is no
+        corresponding record.
+vsiz -- specifies the size of the region of the value.
+proc -- specifies the pointer to the callback function to process
+        duplication.  It receives four parameters.  The first
+        parameter is the pointer to the region of the value.  The
+        second parameter is the size of the region of the value.  The
+        third parameter is the pointer to the variable into which the
+        size of the region of the return value is assigned.  The
+        fourth parameter is the pointer to the optional opaque object.
+        It returns the pointer to the result object allocated with
+        'malloc'.  It is released by the caller.  If it is 'NULL', the
+        record is not modified.  If it is '(void *)-1', the record is
+        removed.
+op   -- specifies an arbitrary pointer to be given as a parameter of
+        the callback function.  If it is not needed, 'NULL' can be
+        specified.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+tcmapget3 = cfunc('tcmapget3', libtc, tc_void_p,
+                  ('map', TCMAP_P, 1),
+                  ('kbuf', c_void_p, 1),
+                  ('ksiz', c_int, 1),
+                  ('sp', c_int_p, 2))
+tcmapget3.errcheck = lambda result, func, arguments: (result, arguments[3])
+tcmapget3.__doc__ =\
+"""Retrieve a semivolatile record in a map object.
+
+map  -- specifies the map object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+sp   -- specifies the pointer to the variable into which the size of
+        the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+value of the corresponding record.  'NULL' is returned when no record
+corresponds.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.  The internal region of the returned record is moved to the
+tail so that the record will survive for a time under LRU cache
+algorithm removing records from the head.
+
+"""
+
+tcmapget4 = cfunc('tcmapget4', libtc, tc_char_p,
+                  ('map', TCMAP_P, 1),
+                  ('kstr', c_char_p, 1),
+                  ('dstr', c_char_p, 1))
+tcmapget4.__doc__ =\
+"""Retrieve a string record in a map object with specifying the
+default value string.
+
+map  -- specifies the map object.
+kstr -- specifies the string of the key.
+dstr -- specifies the string of the default value.
+
+The return value is the string of the value of the corresponding
+record or the default value string.
+
+"""
+
+tcmapiterinit2 = cfunc('tcmapiterinit2', libtc, None,
+                       ('map', TCMAP_P, 1),
+                       ('kbuf', c_void_p, 1),
+                       ('ksiz', c_int, 1))
+tcmapiterinit2.__doc__ =\
+"""Initialize the iterator of a map object at the record corresponding
+a key.
+
+map  -- specifies the map object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+
+If there is no record corresponding the condition, the iterator is not
+modified.
+
+"""
+
+tcmapiterinit3 = cfunc('tcmapiterinit3', libtc, None,
+                       ('map', TCMAP_P, 1),
+                       ('kstr', c_char_p, 1))
+tcmapiterinit3.__doc__ =\
+"""Initialize the iterator of a map object at the record corresponding
+a key string.
+
+map  -- specifies the map object.
+kstr -- specifies the string of the key.
+
+If there is no record corresponding the condition, the iterator is not
+modified.
+
+"""
+
+tcmapiterval = cfunc('tcmapiterval', libtc, tc_void_p,
+                     ('kbuf', c_void_p, 1),
+                     ('sp', c_int_p, 2))
+tcmapiterval.errcheck = lambda result, func, arguments : (result, arguments[1])
+tcmapiterval.__doc__ =\
+"""Get the value bound to the key fetched from the iterator of a map object.
+
+kbuf -- specifies the pointer to the region of the iteration key.
+sp   -- specifies the pointer to the variable into which the size of
+        the region of the return value is assigned.
+
+The return value is the pointer to the region of the value of the
+corresponding record.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.
+
+"""
+
+tcmapiterval2 = cfunc('tcmapiterval2', libtc, tc_char_p,
+                      ('kstr', c_char_p, 1))
+tcmapiterval2.__doc__ =\
+"""Get the value string bound to the key fetched from the iterator of
+a map object.
+
+kstr -- specifies the string of the iteration key.
+
+The return value is the pointer to the region of the value of the
+corresponding record.
+
+"""
+
+# FIX look this char ** return type
+# tcmapkeys2 = cfunc('tcmapkeys2', libtc, tc_char_pp,
+#                    ('map', TCMAP_P, 1),
+#                    ('np', c_int_p, 2))
+# tcmapkeys2.errcheck = lambda result, func, arguments : (result, arguments[1])
+# tcmapkeys2.__doc__ =\
+# """Create an array of strings of all keys in a map object.
+
+# map -- specifies the map object.
+# np  -- specifies the pointer to a variable into which the number of
+#        elements of the return value is assigned.
+
+# The return value is the pointer to the array of all string keys in the
+# map object.
+
+# Because the region of the return value is allocated with the 'malloc'
+# call, it should be released with the 'free' call if when is no longer
+# in use.  Note that elements of the array point to the inner objects,
+# whose life duration is synchronous with the map object.
+
+# """
+
+# FIX look this char ** return type
+# tcmapvals2 = cfunc('tcmapvals2', libtc, tc_char_pp,
+#                    ('map', TCMAP_P, 1),
+#                    ('np', c_int_p, 2))
+# tcmapvals2.errcheck = lambda result, func, arguments : (result, arguments[1])
+# tcmapvals2.__doc__ =\
+# """Create an array of strings of all values in a map object.
+
+# map -- specifies the map object.
+# np  -- specifies the pointer to a variable into which the number of
+#        elements of the return value is assigned.
+
+# The return value is the pointer to the array of all string values in
+# the map object.
+
+# Because the region of the return value is allocated with the 'malloc'
+# call, it should be released with the 'free' call if when is no longer
+# in use.  Note that elements of the array point to the inner objects,
+# whose life duration is synchronous with the map object.
+
+# """
+
+tcmaploadone = cfunc('tcmaploadone', libtc, tc_void_p,
+                     ('ptr', c_void_p, 1),
+                     ('size', c_int, 1),
+                     ('kbuf', c_void_p, 1),
+                     ('ksiz', c_int, 1),
+                     ('sp', c_int_p, 2))
+tcmaploadone.errcheck = lambda result, func, arguments : (result, arguments[1])
+tcmaploadone.__doc__ =\
+"""Extract a map record from a serialized byte array.
+
+ptr  -- specifies the pointer to the region of serialized byte array.
+size -- specifies the size of the region.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+sp   -- specifies the pointer to the variable into which the size of
+        the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+value of the corresponding record.  'NULL' is returned when no record
+corresponds.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.
+
+"""
+
+# FIX params type
+tcmapprintf = cfunc('tcmapprintf', libtc, None,
+                    ('map', TCMAP_P, 1),
+                    ('format', c_char_p, 1))
+tcmapprintf.__doc__ =\
+"""Perform formatted output into a map object.
+
+map    -- specifies the map object.
+kstr   -- specifies the string of the key.
+format -- specifies the printf-like format string.  The conversion
+          character '%' can be used with such flag characters as 's',
+          'd', 'o', 'u', 'x', 'X', 'c', 'e', 'E', 'f', 'g', 'G', '@',
+          '?', 'b', and '%'.  '@' works as with 's' but escapes meta
+          characters of XML.  '?' works as with 's' but escapes meta
+          characters of URL.  'b' converts an integer to the string as
+          binary numbers.  The other conversion character work as with
+          each original.
+
+The other arguments are used according to the format string.
+
+"""
+
 
 # enumeration for database type
 THASH  = 0                      # hash table
@@ -1375,7 +2171,8 @@ access.
 adb_iternext2 = cfunc('tcadbiternext2', libtc, tc_char_p,
                       ('adb', c_void_p, 1))
 adb_iternext2.__doc__ =\
-"""Get the next key string of the iterator of an abstract database object.
+"""Get the next key string of the iterator of an abstract database
+object.
 
 adb -- specifies the abstract database object.
 
@@ -2545,7 +3342,7 @@ hdb_copy.__doc__ =\
 
 hdb  -- specifies the hash database object.
 path -- specifies the path of the destination file.  If it begins with
-`@', the trailing substring is executed as a command line.
+'@', the trailing substring is executed as a command line.
 
 If successful, the return value is true, else, it is false.  False is
 returned if the executed command returns non-zero code.
@@ -3048,7 +3845,7 @@ in use.
 #                      ('kbuf', c_void_p, 1),
 #                      ('ksiz', c_int, 1),
 #                      ('sp', c_int_p, 2),
-#                      ('vbp', c_char_pp, 2),
+#                      ('vbp', tc_char_pp, 2),
 #                      ('vsp', c_int_p, 2))
 # hdb_getnext3.__doc__ =\
 # """Retrieve the key and the value of the next record of a record in a
@@ -3212,7 +4009,7 @@ bdb_setmutex.__doc__ =\
 """Set mutual exclusion control of a B+ tree database object for
 threading.
 
-hdb -- specifies the B+ tree database object which is not opened.
+bdb -- specifies the B+ tree database object which is not opened.
 
 If successful, the return value is true, else, it is false.
 
@@ -4127,7 +4924,7 @@ bdb -- specifies the B+ tree database object.
 The return value is the new cursor object.
 
 Note that the cursor is available only after initialization with the
-'tcbdbcurfirst' or the `tcbdbcurjump' functions and so on.  Moreover,
+'tcbdbcurfirst' or the 'tcbdbcurjump' functions and so on.  Moreover,
 the position of the cursor will be indefinite when the database is
 updated after the initialization of the cursor.
 
@@ -6325,5 +7122,1693 @@ kbuf -- specifies the pointer to the region of the key.
 ksiz -- specifies the size of the region of the key.
 
 The return value is the ID number.
+
+"""
+
+
+#
+# Functions from tctdb.h
+#
+
+TDBQRYPROC = CFUNCTYPE(c_int, c_void_p, c_int, TCMAP_P, c_void_p)
+TDBQRYPROC.__doc__ =\
+"""Type of the pointer to a iterator function for each table record.
+
+pkbuf -- specifies the pointer to the region of the primary key.
+pksiz -- specifies the size of the region of the primary key.
+cols  -- specifies a map object containing columns.
+op    -- specifies the pointer to the optional opaque object.
+
+The return value is flags of the post treatment by bitwise-or: `QPPUT'
+to modify the record, `QPOUT' to remove the record, `QPSTOP' to stop
+the iteration.
+
+"""
+
+tdb_errmsg = cfunc('tctdberrmsg', libtc, c_char_p,
+                   ('ecode', c_int, 1))
+tdb_errmsg.__doc__ =\
+"""Get the message string corresponding to an error code.
+
+ecode -- specifies the error code.
+
+The return value is the message string of the error code.
+
+"""
+
+tdb_new = cfunc('tctdbnew', libtc, c_void_p)
+tdb_new.__doc__ =\
+"""Create a table database object.
+
+The return value is the new table database object.
+
+"""
+
+tdb_del = cfunc('tctdbdel', libtc, None,
+                ('tdb', c_void_p, 1))
+tdb_del.__doc__ =\
+"""Delete a table database object.
+
+tdb -- specifies the table database object.
+
+If the database is not closed, it is closed implicitly.  Note that the
+deleted object and its derivatives can not be used anymore.
+
+"""
+
+tdb_ecode = cfunc('tctdbecode', libtc, c_int,
+                  ('tdb', c_void_p, 1))
+tdb_ecode.__doc__ =\
+"""Get the last happened error code of a table database object.
+
+tdb -- specifies the table database object.
+
+The return value is the last happened error code.
+
+The following error code is defined: 'ESUCCESS' for success, 'ETHREAD'
+for threading error, 'EINVALID' for invalid operation, 'ENOFILE' for
+file not found, 'ENOPERM' for no permission, 'EMETA' for invalid meta
+data, 'ERHEAD' for invalid record header, 'EOPEN' for open error,
+'ECLOSE' for close error, 'ETRUNC' for trunc error, 'ESYNC' for sync
+error, 'ESTAT' for stat error, 'ESEEK' for seek error, 'EREAD' for
+read error, 'EWRITE' for write error, 'EMMAP' for mmap error, 'ELOCK'
+for lock error, 'EUNLINK' for unlink error, 'ERENAME' for rename
+error, 'EMKDIR' for mkdir error, 'ERMDIR' for rmdir error, 'EKEEP' for
+existing record, 'ENOREC' for no record found, and 'EMISC' for
+miscellaneous error.
+
+"""
+
+tdb_setmutex = cfunc('tctdbsetmutex', libtc, c_bool,
+                     ('tdb', c_void_p, 1))
+tdb_setmutex.__doc__ =\
+"""Set mutual exclusion control of a table database object for
+threading.
+
+tdb -- specifies the table database object which is not opened.
+
+If successful, the return value is true, else, it is false.
+
+Note that the mutual exclusion control is needed if the object is
+shared by plural threads and this function should be called before the
+database is opened.
+
+"""
+
+tdb_tune = cfunc('tctdbtune', libtc, c_bool,
+                 ('tdb', c_void_p, 1),
+                 ('bnum', c_int64, 1, 0),
+                 ('apow', c_int8, 1, -1),
+                 ('fpow', c_int8, 1, -1),
+                 ('opts', c_uint8, 1, 0))
+tdb_tune.__doc__ =\
+"""Set the tuning parameters of a table database object.
+
+tdb  -- specifies the table database object which is not opened.
+bnum -- specifies the number of elements of the bucket array.  If it
+        is not more than 0, the default value is specified.  The
+        default value is 131071.  Suggested size of the bucket array
+        is about from 0.5 to 4 times of the number of all records to
+        be stored.
+apow -- specifies the size of record alignment by power of 2.  If it
+        is negative, the default value is specified.  The default
+        value is 4 standing for 2^4=16.
+fpow -- specifies the maximum number of elements of the free block
+        pool by power of 2.  If it is negative, the default value is
+        specified.  The default value is 10 standing for 2^10=1024.
+opts -- specifies options by bitwise-or: 'TLARGE' specifies that the
+        size of the database can be larger than 2GB by using 64-bit
+        bucket array, 'TDEFLATE' specifies that each record is
+        compressed with Deflate encoding, 'TBZIP' specifies that each
+        record is compressed with BZIP2 encoding, 'TTCBS' specifies
+        that each record is compressed with TCBS encoding.
+
+If successful, the return value is true, else, it is false.
+
+Note that the tuning parameters should be set before the database is
+opened.
+
+"""
+
+tdb_setcache = cfunc('tctdbsetcache', libtc, c_bool,
+                     ('tdb', c_void_p, 1),
+                     ('rcnum', c_int32, 1, 0),
+                     ('lcnum', c_int32, 1, 0),
+                     ('ncnum', c_int32, 1, 0))
+tdb_setcache.__doc__ =\
+"""Set the caching parameters of a table database object.
+
+tdb   -- specifies the table database object which is not opened.
+rcnum -- specifies the maximum number of records to be cached.  If it
+         is not more than 0, the record cache is disabled.  It is
+         disabled by default.
+lcnum -- specifies the maximum number of leaf nodes to be cached.  If
+         it is not more than 0, the default value is specified.  The
+         default value is 4096.
+ncnum -- specifies the maximum number of non-leaf nodes to be cached.
+         If it is not more than 0, the default value is specified.
+         The default value is 512.
+
+If successful, the return value is true, else, it is false.
+
+Note that the caching parameters should be set before the database is
+opened.  Leaf nodes and non-leaf nodes are used in column indices.
+
+"""
+
+tdb_setxmsiz = cfunc('tctdbsetxmsiz', libtc, c_bool,
+                     ('tdb', c_void_p, 1),
+                     ('xmsiz', c_int64, 1, 0))
+tdb_setxmsiz.__doc__ =\
+"""Set the size of the extra mapped memory of a table database object.
+
+tdb   -- specifies the table database object which is not opened.
+xmsiz -- specifies the size of the extra mapped memory.  If it is not
+         more than 0, the extra mapped memory is disabled.  The
+         default size is 67108864.
+
+If successful, the return value is true, else, it is false.
+
+Note that the mapping parameters should be set before the database is opened.
+
+"""
+
+tdb_setdfunit = cfunc('tctdbsetdfunit', libtc, c_bool,
+                      ('tdb', c_void_p, 1),
+                      ('dfunit', c_int32, 1, 0))
+tdb_setdfunit.__doc__ =\
+"""Set the unit step number of auto defragmentation of a table
+database object.
+
+tdb    -- specifies the table database object which is not opened.
+
+dfunit -- specifie the unit step number.  If it is not more than 0,
+          the auto defragmentation is disabled.  It is disabled by
+          default.
+
+If successful, the return value is true, else, it is false.
+
+Note that the defragmentation parameters should be set before the
+database is opened.
+
+"""
+
+tdb_open = cfunc('tctdbopen', libtc, c_bool,
+                 ('tdb', c_void_p, 1),
+                 ('path', c_char_p, 1),
+                 ('omode', c_int, 1))
+tdb_open.__doc__ =\
+"""Open a database file and connect a table database object.
+
+tdb   -- specifies the table database object which is not opened.
+path  -- specifies the path of the database file.
+omode -- specifies the connection mode: 'OWRITER' as a writer,
+         'OREADER' as a reader.  If the mode is 'OWRITER', the
+         following may be added by bitwise-or: 'OCREAT', which means
+         it creates a new database if not exist, 'OTRUNC', which means
+         it creates a new database regardless if one exists, 'OTSYNC',
+         which means every transaction synchronizes updated contents
+         with the device.  Both of 'OREADER' and 'OWRITER' can be
+         added to by bitwise-or: 'ONOLCK', which means it opens the
+         database file without file locking, or 'OLCKNB', which means
+         locking is performed without blocking.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+tdb_close = cfunc('tctdbclose', libtc, c_bool,
+                  ('tdb', c_void_p, 1))
+tdb_close.__doc__ =\
+"""Close a table database object.
+
+tdb -- specifies the table database object.
+
+If successful, the return value is true, else, it is false.
+
+Update of a database is assured to be written when the database is
+closed.  If a writer opens a database but does not close it
+appropriately, the database will be broken.
+
+"""
+
+tdb_put = cfunc('tctdbput', libtc, c_bool,
+                ('tdb', c_void_p, 1),
+                ('pkbuf', c_void_p, 1),
+                ('pksiz', c_int, 1),
+                ('cols', TCMAP_P, 1))
+tdb_put.__doc__ =\
+"""Store a record into a table database object.
+
+tdb   -- specifies the table database object connected as a writer.
+pkbuf -- specifies the pointer to the region of the primary key.
+pksiz -- specifies the size of the region of the primary key.
+cols  -- specifies a map object containing columns.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, it is overwritten.
+
+"""
+
+tdb_put2 = cfunc('tctdbput2', libtc, c_bool,
+                 ('tdb', c_void_p, 1),
+                 ('pkbuf', c_void_p, 1),
+                 ('pksiz', c_int, 1),
+                 ('cbuf', c_void_p, 1),
+                 ('csiz', c_int, 1))
+tdb_put2.__doc__ =\
+"""Store a string record into a table database object with a zero
+separated column string.
+
+tdb   -- specifies the table database object connected as a writer.
+pkbuf -- specifies the pointer to the region of the primary key.
+pksiz -- specifies the size of the region of the primary key.
+cbuf  -- specifies the pointer to the region of the zero separated
+         column string where the name and the value of each column are
+         situated one after the other.
+csiz  -- specifies the size of the region of the column string.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, it is
+overwritten.
+
+"""
+
+tdb_put3 = cfunc('tctdbput3', libtc, c_bool,
+                 ('tdb', c_void_p, 1),
+                 ('pkstr', c_char_p, 1),
+                 ('cstr', c_char_p, 1))
+tdb_put3.__doc__ =\
+"""Store a string record into a table database object with a tab
+separated column string.
+
+tdb   -- specifies the table database object connected as a writer.
+pkstr -- specifies the string of the primary key.
+cstr -- specifies the string of the the tab separated column string
+        where the name and the value of each column are situated one
+        after the other.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, it is overwritten.
+
+"""
+
+tdb_putkeep = cfunc('tctdbputkeep', libtc, c_bool,
+                    ('tdb', c_void_p, 1),
+                    ('pkbuf', c_void_p, 1),
+                    ('pksiz', c_int, 1),
+                    ('cols', TCMAP_P, 1))
+tdb_putkeep.__doc__ =\
+"""Store a new record into a table database object.
+
+tdb   -- specifies the table database object connected as a writer.
+pkbuf -- specifies the pointer to the region of the primary key.
+pksiz -- specifies the size of the region of the primary key.
+cols  -- specifies a map object containing columns.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, this function
+has no effect.
+
+"""
+
+tdb_putkeep2 = cfunc('tctdbputkeep2', libtc, c_bool,
+                     ('tdb', c_void_p, 1),
+                     ('pkbuf', c_void_p, 1),
+                     ('pksiz', c_int, 1),
+                     ('cbuf', c_void_p, 1),
+                     ('csiz', c_int, 1))
+tdb_putkeep2.__doc__ =\
+"""Store a new string record into a table database object with a zero
+separated column string.
+
+tdb   -- specifies the table database object connected as a writer.
+pkbuf -- specifies the pointer to the region of the primary key.
+pksiz -- specifies the size of the region of the primary key.
+cbuf  -- specifies the pointer to the region of the zero separated
+         column string where the name and the value of each column are
+         situated one after the other.
+csiz  -- specifies the size of the region of the column string.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, this function
+has no effect.
+
+"""
+
+tdb_putkeep3 = cfunc('tctdbputkeep3', libtc, c_bool,
+                     ('tdb', c_void_p, 1),
+                     ('pkstr', c_char_p, 1),
+                     ('cstr', c_char_p, 1))
+tdb_putkeep3.__doc__ =\
+"""Store a new string record into a table database object with a tab
+separated column string.
+
+tdb   -- specifies the table database object connected as a writer.
+pkstr -- specifies the string of the primary key.
+cstr  -- specifies the string of the the tab separated column string
+         where the name and the value of each column are situated one
+         after the other.
+
+If successful, the return value is true, else, it is false.
+
+If a record with the same key exists in the database, this function
+has no effect.
+
+"""
+
+tdb_putcat = cfunc('tctdbputcat', libtc, c_bool,
+                   ('tdb', c_void_p, 1),
+                   ('pkbuf', c_void_p, 1),
+                   ('pksiz', c_int, 1),
+                   ('cols', TCMAP_P, 1))
+tdb_putcat.__doc__ =\
+"""Concatenate columns of the existing record in a table database
+object.
+
+tdb   -- specifies the table database object connected as a writer.
+pkbuf -- specifies the pointer to the region of the primary key.
+pksiz -- specifies the size of the region of the primary key.
+cols  -- specifies a map object containing columns.
+
+If successful, the return value is true, else, it is false.
+
+If there is no corresponding record, a new record is created.
+
+"""
+
+tdb_putcat2 = cfunc('tctdbputcat2', libtc, c_bool,
+                    ('tdb', c_void_p, 1),
+                    ('pkbuf', c_void_p, 1),
+                    ('pksiz', c_int, 1),
+                    ('cbuf', c_void_p, 1),
+                    ('csiz', c_int, 1))
+tdb_putcat2.__doc__ =\
+"""Concatenate columns in a table database object with a zero
+separated column string.
+
+tdb   -- specifies the table database object connected as a writer.
+pkbuf -- specifies the pointer to the region of the primary key.
+pksiz -- specifies the size of the region of the primary key.
+cbuf  -- specifies the pointer to the region of the zero separated
+         column string where the name and the value of each column are
+         situated one after the other.
+csiz  -- specifies the size of the region of the column string.
+
+If successful, the return value is true, else, it is false.
+
+If there is no corresponding record, a new record is created.
+
+"""
+
+tdb_putcat3 = cfunc('tctdbputcat3', libtc, c_bool,
+                    ('tdb', c_void_p, 1),
+                    ('pkstr', c_char_p, 1),
+                    ('cstr', c_char_p, 1))
+tdb_putcat3.__doc__ =\
+"""Concatenate columns in a table database object with with a tab
+separated column string.
+
+tdb   -- specifies the table database object connected as a writer.
+pkstr -- specifies the string of the primary key.
+cstr  -- specifies the string of the the tab separated column string
+         where the name and the value of each column are situated one
+         after the other.
+
+If successful, the return value is true, else, it is false.
+
+If there is no corresponding record, a new record is created.
+
+"""
+
+tdb_out = cfunc('tctdbout', libtc, c_bool,
+                ('tdb', c_void_p, 1),
+                ('pkbuf', c_void_p, 1),
+                ('pksiz', c_int, 1))
+tdb_out.__doc__ =\
+"""Remove a record of a table database object.
+
+tdb   -- specifies the table database object connected as a writer.
+pkbuf -- specifies the pointer to the region of the primary key.
+pksiz -- specifies the size of the region of the primary key.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+tdb_out2 = cfunc('tctdbout2', libtc, c_bool,
+                 ('tdb', c_void_p, 1),
+                 ('pkstr', c_char_p, 1))
+tdb_out2.__doc__ =\
+"""Remove a string record of a table database object.
+
+tdb  -- specifies the table database object connected as a writer.
+pkstr -- specifies the string of the primary key.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+tdb_get = cfunc('tctdbget', libtc, TCMAP_P,
+                ('tdb', c_void_p, 1),
+                ('pkbuf', c_void_p, 1),
+                ('pksiz', c_int, 1))
+tdb_get.__doc__ =\
+"""Retrieve a record in a table database object.
+
+tdb   -- specifies the table database object.
+pkbuf -- specifies the pointer to the region of the primary key.
+pksiz .. specifies the size of the region of the primary key.
+
+If successful, the return value is a map object of the columns of the
+corresponding record. 'NULL' is returned if no record corresponds.
+
+Because the object of the return value is created with the function
+'tcmapnew', it should be deleted with the function 'tcmapdel' when it
+is no longer in use.
+
+"""
+
+tdb_get2 = cfunc('tctdbget2', libtc, tc_char_p,
+                 ('tdb', c_void_p, 1),
+                 ('pkbuf', c_void_p, 1),
+                 ('pksiz', c_int, 1),
+                 ('sp', c_int_p, 2))
+tdb_get2.errcheck = lambda result, func, arguments : (result, arguments[3])
+tdb_get2.__doc__ =\
+"""Retrieve a record in a table database object as a zero separated
+column string.
+
+tdb   -- specifies the table database object.
+pkbuf -- specifies the pointer to the region of the primary key.
+pksiz -- specifies the size of the region of the primary key.
+sp    -- specifies the pointer to the variable into which the size of
+         the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+column string of the corresponding record.  'NULL' is returned if no
+record corresponds.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.  Because the region of the return value is allocated with the
+'malloc' call, it should be released with the 'free' call when it is
+no longer in use.
+
+"""
+
+tdb_get3 = cfunc('tctdbget3', libtc, tc_char_p,
+                 ('tdb', c_void_p, 1),
+                 ('pkstr', c_char_p, 1))
+tdb_get3.__doc__ =\
+"""Retrieve a string record in a table database object as a tab
+separated column string.
+
+tdb   -- specifies the table database object.
+pkstr -- specifies the string of the primary key.
+
+If successful, the return value is the tab separated column string of
+the corresponding record.  'NULL' is returned if no record
+corresponds.
+
+Because the region of the return value is allocated with the 'malloc'
+call, it should be released with the 'free' call when it is no longer
+in use.
+
+"""
+
+tdb_vsiz = cfunc('tctdbvsiz', libtc, c_int,
+                 ('tdb', c_void_p, 1),
+                 ('pkbuf', c_void_p, 1),
+                 ('pksiz', c_int, 1))
+tdb_vsiz.__doc__ =\
+"""Get the size of the value of a record in a table database object.
+
+tdb  -- specifies the table database object.
+kbuf -- specifies the pointer to the region of the primary key.
+ksiz -- specifies the size of the region of the primary key.
+
+If successful, the return value is the size of the value of the
+corresponding record, else, it is -1.
+
+"""
+
+tdb_vsiz2 = cfunc('tctdbvsiz2', libtc, c_int,
+                  ('tdb', c_void_p, 1),
+                  ('pkstr', c_char_p, 1))
+tdb_vsiz2.__doc__ =\
+"""Get the size of the value of a string record in a table database object.
+
+tdb  -- specifies the table database object.
+kstr -- specifies the string of the primary key.
+
+If successful, the return value is the size of the value of the
+corresponding record, else, it is -1.
+
+"""
+
+tdb_iterinit = cfunc('tctdbiterinit', libtc, c_bool,
+                     ('tdb', c_void_p, 1))
+tdb_iterinit.__doc__ =\
+"""Initialize the iterator of a table database object.
+
+tdb -- specifies the table database object.
+
+If successful, the return value is true, else, it is false.
+
+The iterator is used in order to access the primary key of every
+record stored in a database.
+
+"""
+
+tdb_iternext = cfunc('tctdbiternext', libtc, tc_void_p,
+                     ('tdb', c_void_p, 1),
+                     ('sp', c_int_p, 2))
+tdb_iternext.errcheck = lambda result, func, arguments : (result, arguments[1])
+tdb_iternext.__doc__ =\
+"""Get the next primary key of the iterator of a table database
+object.
+
+tdb -- specifies the table database object.
+sp  -- specifies the pointer to the variable into which the size of
+       the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+next primary key, else, it is 'NULL'.  'NULL' is returned when no
+record is to be get out of the iterator.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.  Because the region of the return value is allocated with the
+'malloc' call, it should be released with the 'free' call when it is
+no longer in use.  It is possible to access every record by iteration
+of calling this function.  It is allowed to update or remove records
+whose keys are fetched while the iteration.  However, it is not
+assured if updating the database is occurred while the iteration.
+Besides, the order of this traversal access method is arbitrary, so it
+is not assured that the order of storing matches the one of the
+traversal access.
+
+"""
+
+tdb_iternext2 = cfunc('tctdbiternext2', libtc, tc_char_p,
+                      ('tdb', c_void_p, 1))
+tdb_iternext2.__doc__ =\
+"""Get the next primary key string of the iterator of a table database
+object.
+
+tdb -- specifies the table database object.
+
+If successful, the return value is the string of the next primary key,
+else, it is 'NULL'.  'NULL' is returned when no record is to be get
+out of the iterator.
+
+Because the region of the return value is allocated with the 'malloc'
+call, it should be released with the 'free' call when it is no longer
+in use.  It is possible to access every record by iteration of calling
+this function.  However, it is not assured if updating the database is
+occurred while the iteration.  Besides, the order of this traversal
+access method is arbitrary, so it is not assured that the order of
+storing matches the one of the traversal access.
+
+"""
+
+tdb_iternext3 = cfunc('tctdbiternext3', libtc, TCMAP_P,
+                      ('tdb', c_void_p, 1))
+tdb_iternext3.__doc__ =\
+"""Get the columns of the next record of the iterator of a table
+database object.
+
+tdb -- specifies the table database object.
+
+If successful, the return value is a map object of the columns of the
+next record, else, it is 'NULL'.  'NULL' is returned when no record is
+to be get out of the iterator.  The primary key is added into the map
+as a column of an empty string key.
+
+Because the object of the return value is created with the function
+'tcmapnew', it should be deleted with the function 'tcmapdel' when it
+is no longer in use.  It is possible to access every record by
+iteration of calling this function.  However, it is not assured if
+updating the database is occurred while the iteration.  Besides, the
+order of this traversal access method is arbitrary, so it is not
+assured that the order of storing matches the one of the traversal
+access.
+
+"""
+
+tdb_fwmkeys = cfunc('tctdbfwmkeys', libtc, TCLIST_P,
+                    ('tdb', c_void_p, 1),
+                    ('pbuf', c_void_p, 1),
+                    ('psiz', c_int, 1),
+                    ('max', c_int, 1, -1))
+tdb_fwmkeys.__doc__ =\
+"""Get forward matching primary keys in a table database object.
+
+tdb -- specifies the table database object.
+pbuf -- specifies the pointer to the region of the prefix.
+psiz -- specifies the size of the region of the prefix.
+max  -- specifies the maximum number of keys to be fetched.  If it is
+        negative, no limit is specified.
+
+The return value is a list object of the corresponding keys.  This
+function does never fail.  It returns an empty list even if no key
+corresponds.
+
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.  Note that this function may be very slow
+because every key in the database is scanned.
+
+"""
+
+tdb_fwmkeys2 = cfunc('tctdbfwmkeys2', libtc, TCLIST_P,
+                     ('tdb', c_void_p, 1),
+                     ('pstr', c_char_p, 1),
+                     ('max', c_int, 1, -1))
+tdb_fwmkeys2.__doc__ =\
+"""Get forward matching string primary keys in a table database
+object.
+
+tdb  -- specifies the table database object.
+pstr -- specifies the string of the prefix.
+max  -- specifies the maximum number of keys to be fetched.  If it is
+        negative, no limit is specified.
+
+The return value is a list object of the corresponding keys.  This
+function does never fail.  It returns an empty list even if no key
+corresponds.
+
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.  Note that this function may be very slow
+because every key in the database is scanned.
+
+"""
+
+tdb_addint = cfunc('tctdbaddint', libtc, c_int,
+                   ('tdb', c_void_p, 1),
+                   ('pkbuf', c_void_p, 1),
+                   ('pksiz', c_int, 1),
+                   ('num', c_int, 1))
+tdb_addint.__doc__ =\
+"""Add an integer to a column of a record in a table database object.
+
+tdb   -- specifies the table database object connected as a writer.
+pkbuf -- specifies the pointer to the region of the primary key.
+pksiz -- specifies the size of the region of the primary key.
+num   -- specifies the additional value.
+
+If successful, the return value is the summation value, else, it is
+'INT_MIN'.
+
+The additional value is stored as a decimal string value of a column
+whose name is "_num".  If no record corresponds, a new record with the
+additional value is stored.
+
+"""
+
+tdb_adddouble = cfunc('tctdbadddouble', libtc, c_double,
+                      ('tdb', c_void_p, 1),
+                      ('pkbuf', c_void_p, 1),
+                      ('pksiz', c_int, 1),
+                      ('num', c_double, 1))
+tdb_adddouble.__doc__ =\
+"""Add a real number to a column of a record in a table database
+object.
+
+tdb   -- specifies the table database object connected as a writer.
+pkbuf -- specifies the pointer to the region of the primary key.
+pksiz -- specifies the size of the region of the primary key.
+num   -- specifies the additional value.
+
+If successful, the return value is the summation value, else, it is
+Not-a-Number.
+
+The additional value is stored as a decimal string value of a column
+whose name is "_num".  If no record corresponds, a new record with the
+additional value is stored.
+
+"""
+
+tdb_sync = cfunc('tctdbsync', libtc, c_bool,
+                 ('tdb', c_void_p, 1))
+tdb_sync.__doc__ =\
+"""Synchronize updated contents of a table database object with the
+file and the device.
+
+tdb -- specifies the table database object connected as a writer.
+
+If successful, the return value is true, else, it is false.
+
+This function is useful when another process connects to the same
+database file.
+
+"""
+
+tdb_optimize = cfunc('tctdboptimize', libtc, c_bool,
+                     ('tdb', c_void_p, 1),
+                     ('bnum', c_int64, 1, 0),
+                     ('apow', c_int8, 1, -1),
+                     ('fpow', c_int8, 1, -1),
+                     ('opts', c_uint8, 1, 0))
+tdb_optimize.__doc__ =\
+"""Optimize the file of a table database object.
+
+tdb  -- specifies the table database object connected as a writer.
+bnum -- specifies the number of elements of the bucket array.  If it
+        is not more than 0, the default value is specified.  The
+        default value is two times of the number of records.
+apow -- specifies the size of record alignment by power of 2.  If it
+        is negative, the current setting is not changed.
+fpow -- specifies the maximum number of elements of the free block
+        pool by power of 2.  If it is negative, the current setting is
+        not changed.
+opts -- specifies options by bitwise-or: 'TLARGE' specifies that the
+        size of the database can be larger than 2GB by using 64-bit
+        bucket array, 'TDEFLATE' specifies that each record is
+        compressed with Deflate encoding, 'TBZIP' specifies that each
+        record is compressed with BZIP2 encoding, 'TTCBS' specifies
+        that each record is compressed with TCBS encoding.  If it is
+        'UINT8_MAX', the current setting is not changed.
+
+If successful, the return value is true, else, it is false.
+
+This function is useful to reduce the size of the database file with
+data fragmentation by successive updating.
+
+"""
+
+tdb_vanish = cfunc('tctdbvanish', libtc, c_bool,
+                   ('tdb', c_void_p, 1))
+tdb_vanish.__doc__ =\
+"""Remove all records of a table database object.
+
+tdb -- specifies the table database object connected as a writer.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+tdb_copy = cfunc('tctdbcopy', libtc, c_bool,
+                 ('tdb', c_void_p, 1),
+                 ('path', c_char_p, 1))
+tdb_copy.__doc__ =\
+"""Copy the database file of a table database object.
+
+tdb  -- specifies the table database object.
+
+path -- specifies the path of the destination file.  If it begins with
+        '@', the trailing substring is executed as a command line.
+
+If successful, the return value is true, else, it is false.  False is
+returned if the executed command returns non-zero code.
+
+The database file is assured to be kept synchronized and not modified
+while the copying or executing operation is in progress.  So, this
+function is useful to create a backup file of the database file.
+
+"""
+
+tdb_tranbegin = cfunc('tctdbtranbegin', libtc, c_bool,
+                      ('tdb', c_void_p, 1))
+tdb_tranbegin.__doc__ =\
+"""Begin the transaction of a table database object.
+
+tdb -- specifies the table database object connected as a writer.
+
+If successful, the return value is true, else, it is false.
+
+The database is locked by the thread while the transaction so that
+only one transaction can be activated with a database object at the
+same time.  Thus, the serializable isolation level is assumed if every
+database operation is performed in the transaction.  Because all pages
+are cached on memory while the transaction, the amount of referred
+records is limited by the memory capacity.  If the database is closed
+during transaction, the transaction is aborted implicitly.
+
+"""
+
+tdb_trancommit = cfunc('tctdbtrancommit', libtc, c_bool,
+                       ('tdb', c_void_p, 1))
+tdb_trancommit.__doc__ =\
+"""Commit the transaction of a table database object.
+
+tdb -- specifies the table database object connected as a writer.
+
+If successful, the return value is true, else, it is false.
+
+Update in the transaction is fixed when it is committed successfully.
+
+"""
+
+tdb_tranabort = cfunc('tctdbtranabort', libtc, c_bool,
+                      ('tdb', c_void_p, 1))
+tdb_tranabort.__doc__ =\
+"""Abort the transaction of a table database object.
+
+tdb -- specifies the table database object connected as a writer.
+
+If successful, the return value is true, else, it is false.
+
+Update in the transaction is discarded when it is aborted.  The state
+of the database is rollbacked to before transaction.
+
+"""
+
+tdb_path = cfunc('tctdbpath', libtc, c_char_p,
+                 ('tdb', c_void_p, 1))
+tdb_path.__doc__ =\
+"""Get the file path of a table database object.
+
+tdb -- specifies the table database object.
+
+The return value is the path of the database file or 'NULL' if the
+object does not connect to any database file.
+
+"""
+
+tdb_rnum = cfunc('tctdbrnum', libtc, c_uint64,
+                 ('tdb', c_void_p, 1))
+tdb_rnum.__doc__ =\
+"""Get the number of records ccccof a table database object.
+
+tdb -- specifies the table database object.
+
+The return value is the number of records or 0 if the object does not
+connect to any database file.
+
+"""
+
+tdb_fsiz = cfunc('tctdbfsiz', libtc, c_uint64,
+                 ('tdb', c_void_p, 1))
+tdb_fsiz.__doc__ =\
+"""Get the size of the database file of a table database object.
+
+tdb -- specifies the table database object.
+
+The return value is the size of the database file or 0 if the object
+does not connect to any database file.
+
+"""
+
+tdb_setindex = cfunc('tctdbsetindex', libtc, c_bool,
+                     ('tdb', c_void_p, 1),
+                     ('name', c_char_p, 1),
+                     ('type', c_int, 1))
+tdb_setindex.__doc__ =\
+"""Set a column index to a table database object.
+
+tdb  -- specifies the table database object connected as a writer.
+name -- specifies the name of a column.  If the name of an existing
+        index is specified, the index is rebuilt.  An empty string
+        means the primary key.
+type -- specifies the index type: 'ITLEXICAL' for lexical string,
+        'ITDECIMAL' for decimal string, 'ITTOKEN' for token inverted
+        index, 'ITQGRAM' for q-gram inverted index.  If it is 'ITOPT',
+        the index is optimized.  If it is 'ITVOID', the index is
+        removed.  If 'ITKEEP' is added by bitwise-or and the index
+        exists, this function merely returns failure.
+
+If successful, the return value is true, else, it is false.
+
+Note that the setting indices should be set after the database is
+opened.
+
+"""
+
+tdb_genuid = cfunc('tctdbgenuid', libtc, c_int64,
+                   ('tdb', c_void_p, 1))
+tdb_genuid.__doc__ =\
+"""Generate a unique ID number of a table database object.
+
+tdb -- specifies the table database object connected as a writer.
+
+The return value is the new unique ID number or -1 on failure.
+
+"""
+
+tdb_qrynew = cfunc('tctdbqrynew', libtc, c_void_p,
+                   ('tdb', c_void_p, 1))
+tdb_qrynew.__doc__ =\
+"""Create a query object.
+
+tdb -- specifies the table database object.
+
+The return value is the new query object.
+
+"""
+
+tdb_qrydel = cfunc('tctdbqrydel', libtc, None,
+                   ('qry', c_void_p, 1))
+tdb_qrydel.__doc__ =\
+"""Delete a query object.
+
+qry -- specifies the query object.
+
+"""
+
+tdb_qryaddcond = cfunc('tctdbqryaddcond', libtc, None,
+                       ('qry', c_void_p, 1),
+                       ('name', c_char_p, 1),
+                       ('op', c_int, 1),
+                       ('expr', c_char_p, 1))
+tdb_qryaddcond.__doc__ =\
+"""Add a narrowing condition to a query object.
+
+qry  -- specifies the query object.
+name -- specifies the name of a column.  An empty string means the
+        primary key.
+op   -- specifies an operation type: 'QCSTREQ' for string which is
+        equal to the expression, 'QCSTRINC' for string which is
+        included in the expression, 'QCSTRBW' for string which begins
+        with the expression, 'QCSTREW' for string which ends with the
+        expression, 'QCSTRAND' for string which includes all tokens in
+        the expression, 'QCSTROR' for string which includes at least
+        one token in the expression, 'QCSTROREQ' for string which is
+        equal to at least one token in the expression, 'QCSTRRX' for
+        string which matches regular expressions of the expression,
+        'QCNUMEQ' for number which is equal to the expression,
+        'QCNUMGT' for number which is greater than the expression,
+        'QCNUMGE' for number which is greater than or equal to the
+        expression, 'QCNUMLT' for number which is less than the
+        expression, 'QCNUMLE' for number which is less than or equal
+        to the expression, 'QCNUMBT' for number which is between two
+        tokens of the expression, 'QCNUMOREQ' for number which is
+        equal to at least one token in the expression, 'QCFTSPH' for
+        full-text search with the phrase of the expression, 'QCFTSAND'
+        for full-text search with all tokens in the expression,
+        'QCFTSOR' for full-text search with at least one token in the
+        expression, 'QCFTSEX' for full-text search with the compound
+        expression.  All operations can be flagged by bitwise-or:
+        'QCNEGATE' for negation, 'QCNOIDX' for using no index.
+expr -- specifies an operand exression.
+
+"""
+
+tdb_qrysetorder = cfunc('tctdbqrysetorder', libtc, None,
+                        ('qry', c_void_p, 1),
+                        ('name', c_char_p, 1),
+                        ('type', c_int, 1))
+tdb_qrysetorder.__doc__ =\
+"""Set the order of a query object.
+
+qry  -- specifies the query object.
+name -- specifies the name of a column.  An empty string means the
+        primary key.
+type -- specifies the order type: 'QOSTRASC' for string ascending,
+        'QOSTRDESC' for string descending, 'QONUMASC' for number
+        ascending, 'QONUMDESC' for number descending.
+
+"""
+
+tdb_qrysetlimit = cfunc('tctdbqrysetlimit', libtc, None,
+                        ('qry', c_void_p, 1),
+                        ('max', c_int, 1, -1),
+                        ('skip', c_int, 1, 0))
+tdb_qrysetlimit.__doc__ =\
+"""Set the limit number of records of the result of a query object.
+
+qry  -- specifies the query object.
+max  -- specifies the maximum number of records of the result.  If it
+        is negative, no limit is specified.
+skip -- specifies the number of skipped records of the result.  If it
+        is not more than 0, no record is skipped.
+
+"""
+
+tdb_qrysearch = cfunc('tctdbqrysearch', libtc, TCLIST_P,
+                      ('qry', c_void_p, 1))
+tdb_qrysearch.__doc__ =\
+"""Execute the search of a query object.
+
+qry -- specifies the query object.
+
+The return value is a list object of the primary keys of the
+corresponding records.  This function does never fail.  It returns an
+empty list even if no record corresponds.
+
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.
+
+"""
+
+tdb_qrysearchout = cfunc('tctdbqrysearchout', libtc, c_bool,
+                         ('qry', c_void_p, 1))
+tdb_qrysearchout.__doc__ =\
+"""Remove each record corresponding to a query object.
+
+qry -- specifies the query object of the database connected as a
+       writer.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+tdb_qryproc = cfunc('tctdbqryproc', libtc, c_bool,
+                    ('qry', c_void_p, 1),
+                    ('proc', TDBQRYPROC, 1),
+                    ('op', c_void_p, 1))
+tdb_qryproc.__doc__ =\
+"""Process each record corresponding to a query object.
+
+qry  -- specifies the query object of the database connected as a
+        writer.
+proc -- specifies the pointer to the iterator function called for each
+        record.  It receives four parameters.  The first parameter is
+        the pointer to the region of the primary key.  The second
+        parameter is the size of the region of the primary key.  The
+        third parameter is a map object containing columns.  The
+        fourth parameter is the pointer to the optional opaque object.
+        It returns flags of the post treatment by bitwise-or: 'QPPUT'
+        to modify the record, 'QPOUT' to remove the record, 'QPSTOP'
+        to stop the iteration.
+op   -- specifies an arbitrary pointer to be given as a parameter of
+        the iterator function.  If it is not needed, 'NULL' can be
+        specified.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+tdb_qryhint = cfunc('tctdbqryhint', libtc, c_char_p,
+                    ('qry', c_void_p, 1))
+tdb_qryhint.__doc__ =\
+"""Get the hint string of a query object.
+
+qry -- specifies the query object.
+
+The return value is the hint string.
+
+This function should be called after the query execution by
+'tctdbqrysearch' and so on.  The region of the return value is
+overwritten when this function is called again.
+
+"""
+
+# FIX param qrys (c_void_pp)
+# tdb_metasearch = cfunc('tctdbmetasearch', libtc, TCLIST_P,
+#                        ('qrys', c_void_p, 1),
+#                        ('num', c_int, 1),
+#                        ('type', c_int, 1))
+# tdb_metasearch.__doc__ =\
+# """Retrieve records with multiple query objects and get the set of the result.
+
+# qrys -- specifies an array of the query objects.
+# num  -- specifies the number of elements of the array.
+# type -- specifies a set operation type: 'MSUNION' for the union set,
+#         'MSISECT' for the intersection set, 'MSDIFF' for the
+#         difference set.
+
+# The return value is a list object of the primary keys of the
+# corresponding records.  This function does never fail.  It returns an
+# empty list even if no record corresponds.
+
+# If the first query object has the order setting, the result array is
+# sorted by the order.  Because the object of the return value is
+# created with the function 'tclistnew', it should be deleted with the
+# function 'tclistdel' when it is no longer in use.
+
+# """
+
+# features for experts
+
+tdb_setecode = cfunc('tctdbsetecode', libtc, None,
+                     ('tdb', c_void_p, 1),
+                     ('ecode', c_int, 1),
+                     ('filename', c_char_p, 1),
+                     ('line', c_int, 1),
+                     ('func', c_char_p, 1))
+tdb_setecode.__doc__ =\
+"""Set the error code of a table database object.
+
+tdb   -- specifies the table database object.
+ecode -- specifies the error code.
+file  -- specifies the file name of the code.
+line  -- specifies the line number of the code.
+func  -- specifies the function name of the code.
+
+"""
+
+tdb_setdbgfd = cfunc('tctdbsetdbgfd', libtc, None,
+                     ('tdb', c_void_p, 1),
+                     ('fd', c_int, 1))
+tdb_setdbgfd.__doc__ =\
+"""Set the file descriptor for debugging output.
+
+tdb -- specifies the table database object.
+fd  -- specifies the file descriptor for debugging output.
+
+"""
+
+tdb_dbgfd = cfunc('tctdbdbgfd', libtc, c_int,
+                  ('tdb', c_void_p, 1))
+tdb_dbgfd.__doc__ =\
+"""Get the file descriptor for debugging output.
+
+tdb -- specifies the table database object.
+
+The return value is the file descriptor for debugging output.
+
+"""
+
+tdb_hasmutex = cfunc('tctdbhasmutex', libtc, c_bool,
+                     ('tdb', c_void_p, 1))
+tdb_hasmutex.__doc__ =\
+"""Check whether mutual exclusion control is set to a table database
+object.
+
+tdb -- specifies the table database object.
+
+If mutual exclusion control is set, it is true, else it is false.
+
+"""
+
+tdb_memsync = cfunc('tctdbmemsync', libtc, c_bool,
+                    ('tdb', c_void_p, 1),
+                    ('phys', c_bool, 1))
+tdb_memsync.__doc__ =\
+"""Synchronize updating contents on memory of a table database object.
+
+tdb  -- specifies the table database object connected as a writer.
+phys -- specifies whether to synchronize physically.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+tdb_bnum = cfunc('tctdbbnum', libtc, c_uint64,
+                 ('tdb', c_void_p, 1))
+tdb_bnum.__doc__ =\
+"""Get the number of elements of the bucket array of a table database
+object.
+
+tdb -- specifies the table database object.
+
+The return value is the number of elements of the bucket array or 0 if
+the object does not connect to any database file.
+
+"""
+
+tdb_align = cfunc('tctdbalign', libtc, c_uint32,
+                  ('tdb', c_void_p, 1))
+tdb_align.__doc__ =\
+"""Get the record alignment of a table database object.
+
+tdb -- specifies the table database object.
+
+The return value is the record alignment or 0 if the object does not
+connect to any database file.
+
+"""
+
+tdb_fbpmax = cfunc('tctdbfbpmax', libtc, c_uint32,
+                   ('tdb', c_void_p, 1))
+tdb_fbpmax.__doc__ =\
+"""Get the maximum number of the free block pool of a table database
+object.
+
+tdb -- specifies the table database object.
+
+The return value is the maximum number of the free block pool or 0 if
+the object does not connect to any database file.
+
+"""
+
+tdb_inode = cfunc('tctdbinode', libtc, c_uint64,
+                  ('tdb', c_void_p, 1))
+tdb_inode.__doc__ =\
+"""Get the inode number of the database file of a table database
+object.
+
+tdb -- specifies the table database object.
+
+The return value is the inode number of the database file or 0 if the
+object does not connect to any database file.
+
+"""
+
+tdb_mtime = cfunc('tctdbmtime', libtc, c_time,
+                  ('tdb', c_void_p, 1))
+tdb_mtime.__doc__ =\
+"""Get the modification time of the database file of a table database
+object.
+
+tdb -- specifies the table database object.
+
+The return value is the inode number of the database file or 0 if the
+object does not connect to any database file.
+
+"""
+
+tdb_flags = cfunc('tctdbflags', libtc, c_uint8,
+                  ('tdb', c_void_p, 1))
+tdb_flags.__doc__ =\
+"""Get the additional flags of a table database object.
+
+tdb -- specifies the table database object.
+
+The return value is the additional flags.
+
+"""
+
+tdb_opts = cfunc('tctdbopts', libtc, c_uint8,
+                 ('tdb', c_void_p, 1))
+tdb_opts.__doc__ =\
+"""Get the options of a table database object.
+
+tdb -- specifies the table database object.
+
+The return value is the options.
+
+"""
+
+tdb_opaque = cfunc('tctdbopaque', libtc, c_char_p,
+                   ('tdb', c_void_p, 1))
+tdb_opaque.__doc__ =\
+"""Get the pointer to the opaque field of a table database object.
+
+tdb -- specifies the table database object.
+
+The return value is the pointer to the opaque field whose size is 128
+bytes.
+
+"""
+
+tdb_bnumused = cfunc('tctdbbnumused', libtc, c_uint64,
+                     ('tdb', c_void_p, 1))
+tdb_bnumused.__doc__ =\
+"""Get the number of used elements of the bucket array of a table
+database object.
+
+tdb -- specifies the table database object.
+
+The return value is the number of used elements of the bucket array or
+0 if the object does not connect to any database file.
+
+"""
+
+tdb_inum = cfunc('tctdbinum', libtc, c_int,
+                 ('tdb', c_void_p, 1))
+tdb_inum.__doc__ =\
+"""Get the number of column indices of a table database object.
+
+tdb -- specifies the table database object.
+
+The return value is the number of column indices or 0 if the object
+does not connect to any database file.
+
+"""
+
+tdb_uidseed = cfunc('tctdbuidseed', libtc, c_int64,
+                    ('tdb', c_void_p, 1))
+tdb_uidseed.__doc__ =\
+"""Get the seed of unique ID unumbers of a table database object.
+
+tdb -- specifies the table database object.
+
+The return value is the seed of unique ID numbers or -1 on failure.
+
+"""
+
+tdb_setuidseed = cfunc('tctdbsetuidseed', libtc, c_bool,
+                       ('tdb', c_void_p, 1),
+                       ('seed', c_int64, 1))
+tdb_setuidseed.__doc__ =\
+"""Set the seed of unique ID unumbers of a table database object.
+
+tdb -- specifies the table database object connected as a writer.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+tdb_setinvcache = cfunc('tctdbsetinvcache', libtc, c_bool,
+                        ('tdb', c_void_p, 1),
+                        ('iccmax', c_int64, 1, 0),
+                        ('iccsync', c_double, 1, 0))
+tdb_setinvcache.__doc__ =\
+"""Set the parameters of the inverted cache of a table database object.
+
+tdb     -- specifies the table database object.
+iccmax  -- specifies the maximum size.  If it is not more than 0, the
+           default value is specified.  The default value is 67108864.
+iccsync -- specifies synchronization ratio.  If it is not more than 0,
+           the default value is specified.  The default value is 0.01.
+
+If successful, the return value is true, else, it is false.
+
+Note that the caching parameters should be set before the database is
+opened.
+
+"""
+
+tdb_setcodecfunc = cfunc('tctdbsetcodecfunc', libtc, c_bool,
+                         ('tdb', c_void_p, 1),
+                         ('enc', TCCODEC, 1),
+                         ('encop', c_void_p, 1),
+                         ('dec', TCCODEC, 1),
+                         ('decop', c_void_p, 1))
+tdb_setcodecfunc.__doc__ =\
+"""Set the custom codec functions of a table database object.
+
+tdb   -- specifies the table database object.
+enc   -- specifies the pointer to the custom encoding function.  It
+         receives four parameters.  The first parameter is the pointer
+         to the region.  The second parameter is the size of the
+         region.  The third parameter is the pointer to the variable
+         into which the size of the region of the return value is
+         assigned.  The fourth parameter is the pointer to the
+         optional opaque object.  It returns the pointer to the result
+         object allocated with 'malloc' call if successful, else, it
+         returns 'NULL'.
+encop -- specifies an arbitrary pointer to be given as a parameter of
+         the encoding function.  If it is not needed, 'NULL' can be
+         specified.
+dec   -- specifies the pointer to the custom decoding function.
+decop -- specifies an arbitrary pointer to be given as a parameter of
+         the decoding function.  If it is not needed, 'NULL' can be
+         specified.
+
+If successful, the return value is true, else, it is false.
+
+Note that the custom codec functions should be set before the database
+is opened and should be set every time the database is being opened.
+
+"""
+
+tdb_dfunit = cfunc('tctdbdfunit', libtc, c_uint32,
+                   ('tdb', c_void_p, 1))
+tdb_dfunit.__doc__ =\
+"""Get the unit step number of auto defragmentation of a table
+database object.
+
+tdb -- specifies the table database object.
+
+The return value is the unit step number of auto defragmentation.
+
+"""
+
+tdb_defrag = cfunc('tctdbdefrag', libtc, c_bool,
+                   ('tdb', c_void_p, 1),
+                   ('step', c_int64, 1, 0))
+tdb_defrag.__doc__ =\
+"""Perform dynamic defragmentation of a table database object.
+
+tdb  -- specifies the table database object connected as a writer.
+step -- specifie the number of steps.  If it is not more than 0, the
+        whole file is defragmented gradually without keeping a
+        continuous lock.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+# tdb_cacheclear = cfunc('tctdbcacheclear', libtc, c_bool,
+#                        ('tdb', c_void_p, 1))
+# tdb_cacheclear.__doc__ =\
+# """Clear the cache of a table tree database object.
+
+# tdb -- specifies the table tree database object.
+
+# If successful, the return value is true, else, it is false.
+
+# """
+
+tdb_putproc = cfunc('tctdbputproc', libtc, c_bool,
+                    ('tdb', c_void_p, 1),
+                    ('pkbuf', c_void_p, 1),
+                    ('pksiz', c_int, 1),
+                    ('cbuf', c_void_p, 1),
+                    ('csiz', c_int, 1),
+                    ('proc', TCPDPROC, 1),
+                    ('op', c_void_p, 1))
+tdb_putproc.__doc__ =\
+"""Store a record into a table database object with a duplication
+handler.
+
+tdb   -- specifies the table database object connected as a writer.
+pkbuf -- specifies the pointer to the region of the primary key.
+pksiz -- specifies the size of the region of the primary key.
+cbuf  -- specifies the pointer to the region of the zero separated
+         column string where the name and the value of each column are
+         situated one after the other.  'NULL' means that record
+         addition is ommited if there is no corresponding record.
+csiz  -- specifies the size of the region of the column string.
+proc  -- specifies the pointer to the callback function to process
+         duplication.  It receives four parameters.  The first
+         parameter is the pointer to the region of the value.  The
+         second parameter is the size of the region of the value.  The
+         third parameter is the pointer to the variable into which the
+         size of the region of the return value is assigned.  The
+         fourth parameter is the pointer to the optional opaque
+         object.  It returns the pointer to the result object
+         allocated with 'malloc'.  It is released by the caller.  If
+         it is 'NULL', the record is not modified.  If it is '(void
+         *)-1', the record is removed.
+op    -- specifies an arbitrary pointer to be given as a parameter of
+         the callback function.  If it is not needed, 'NULL' can be
+         specified.
+
+If successful, the return value is true, else, it is false.
+
+Note that the callback function can not perform any database operation
+because the function is called in the critical section guarded by the
+same locks of database operations.
+
+"""
+
+tdb_get4 = cfunc('tctdbget4', libtc, tc_char_p,
+                 ('tdb', c_void_p, 1),
+                 ('pkbuf', c_void_p, 1),
+                 ('pksiz', c_int, 1),
+                 ('nbuf', c_void_p, 1),
+                 ('nsiz', c_int, 1),
+                 ('sp', c_int_p, 2))
+tdb_get4.errcheck = lambda result, func, arguments : (result, arguments[5])
+tdb_get4.__doc__ =\
+"""Retrieve the value of a column of a record in a table database
+object.
+
+tdb   -- specifies the table database object.
+pkbuf -- specifies the pointer to the region of the primary key.
+pksiz -- specifies the size of the region of the primary key.
+nbuf  -- specifies the pointer to the region of the column name.
+nsiz  -- specifies the size of the region of the column name.
+sp    -- specifies the pointer to the variable into which the size of
+         the region of the return value is assigned.
+
+If successful, the return value is the pointer to the region of the
+value of the column of the corresponding record.  'NULL' is returned
+if no record corresponds or there is no column.
+
+Because an additional zero code is appended at the end of the region
+of the return value, the return value can be treated as a character
+string.  Because the region of the return value is allocated with the
+'malloc' call, it should be released with the 'free' call when it is
+no longer in use.
+
+"""
+
+tdb_iterinit2 = cfunc('tctdbiterinit2', libtc, c_bool,
+                      ('tdb', c_void_p, 1),
+                      ('pkbuf', c_void_p, 1),
+                      ('pksiz', c_int, 1))
+tdb_iterinit2.__doc__ =\
+"""Move the iterator to the record corresponding a key of a table
+database object.
+
+tdb   -- specifies the table database object.
+pkbuf -- specifies the pointer to the region of the primary key.
+pksiz -- specifies the size of the region of the primary key.
+
+If successful, the return value is true, else, it is false.  False is
+returned if there is no record corresponding the condition.
+
+"""
+
+tdb_iterinit3 = cfunc('tctdbiterinit3', libtc, c_bool,
+                      ('tdb', c_void_p, 1),
+                      ('pkstr', c_char_p, 1))
+tdb_iterinit3.__doc__ =\
+"""Move the iterator to the record corresponding a key string of a
+table database object.
+
+tdb  -- specifies the table database object.
+kstr -- specifies the string of the primary key.
+
+If successful, the return value is true, else, it is false.  False is
+returned if there is no record corresponding the condition.
+
+"""
+
+tdb_foreach = cfunc('tctdbforeach', libtc, c_bool,
+                    ('tdb', c_void_p, 1),
+                    ('iter', TCITER, 1),
+                    ('op', c_void_p, 1))
+tdb_foreach.__doc__ =\
+"""Process each record atomically of a table database object.
+
+tdb  -- specifies the table database object.
+iter -- specifies the pointer to the iterator function called for each
+        record.  It receives five parameters.  The first parameter is
+        the pointer to the region of the key.  The second parameter is
+        the size of the region of the key.  The third parameter is the
+        pointer to the region of the value.  The fourth parameter is
+        the size of the region of the value.  The fifth parameter is
+        the pointer to the optional opaque object.  It returns true to
+        continue iteration or false to stop iteration.
+op   -- specifies an arbitrary pointer to be given as a parameter of
+        the iterator function.  If it is not needed, 'NULL' can be
+        specified.
+
+If successful, the return value is true, else, it is false.
+
+Note that the callback function can not perform any database operation
+because the function is called in the critical section guarded by the
+same locks of database operations.
+
+"""
+
+tdb_qryproc2 = cfunc('tctdbqryproc2', libtc, c_bool,
+                     ('qry', c_void_p, 1),
+                     ('proc', TDBQRYPROC, 1),
+                     ('op', c_void_p, 1))
+tdb_qryproc2.__doc__ =\
+"""Process each record corresponding to a query object with non-atomic
+fashion.
+
+qry  -- specifies the query object of the database connected as a
+        writer.
+proc -- specifies the pointer to the iterator function called for each
+        record.  It receives four parameters.  The first parameter is
+        the pointer to the region of the primary key.  The second
+        parameter is the size of the region of the primary key.  The
+        third parameter is a map object containing columns.  The
+        fourth parameter is the pointer to the optional opaque object.
+        It returns flags of the post treatment by bitwise-or: 'QPPUT'
+        to modify the record, 'QPOUT' to remove the record, 'QPSTOP'
+        to stop the iteration.
+op   -- specifies an arbitrary pointer to be given as a parameter of
+        the iterator function.  If it is not needed, 'NULL' can be
+        specified.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+tdb_qrysearchout2 = cfunc('tctdbqrysearchout2', libtc, c_bool,
+                          ('qry', c_void_p, 1))
+tdb_qrysearchout2.__doc__ =\
+"""Remove each record corresponding to a query object with non-atomic
+fashion.
+
+qry -- specifies the query object of the database connected as a writer.
+
+If successful, the return value is true, else, it is false.
+
+"""
+
+tdb_strtoindextype = cfunc('tctdbstrtoindextype', libtc, c_int,
+                           ('str', c_char_p, 1))
+tdb_strtoindextype.__doc__ =\
+"""Convert a string into the index type number.
+
+str -- specifies a string.
+
+The return value is the index type number or -1 on failure.
+
+"""
+
+tdb_strtometasearchtype = cfunc('tctdbstrtometasearcytype', libtc, c_int,
+                                ('str', c_char_p, 1))
+tdb_strtometasearchtype.__doc__ =\
+"""Convert a string into the meta search type number.
+
+str -- specifies a string.
+
+The return value is the meta search type number or -1 on failure.
+
+"""
+
+tdb_qrycount = cfunc('tctdbqrycount', libtc, c_int,
+                     ('qry', c_void_p, 1))
+tdb_qrycount.__doc__ =\
+"""Get the count of corresponding records of a query object.
+
+qry -- specifies the query object.
+
+The return value is the count of corresponding records.
+
+"""
+
+tdb_qrykwic = cfunc('tctdbqrykwic', libtc, TCLIST_P,
+                    ('qry', c_void_p, 1),
+                    ('cols', TCMAP_P, 1),
+                    ('name', c_char_p, 1),
+                    ('width', c_int, 1),
+                    ('opts', c_int, 1))
+tdb_qrykwic.__doc__ =\
+"""Generate keyword-in-context strings from a query object.
+
+qry   -- specifies the query object.
+cols  -- specifies a map object containing columns.
+name  -- specifies the name of a column.  If it is 'NULL', the first
+         column of the query is specified.
+width -- specifies the width of strings picked up around each keyword.
+opts  -- specifies options by bitwise-or: 'KWMUTAB' specifies that
+         each keyword is marked up between two tab characters,
+         'KWMUCTRL' specifies that each keyword is marked up by the
+         STX (0x02) code and the ETX (0x03) code, 'KWMUBRCT' specifies
+         that each keyword is marked up by the two square brackets,
+         'KWNOOVER' specifies that each context does not overlap,
+         'KWPULEAD' specifies that the lead string is picked up
+         forcibly.
+
+The return value is the list object whose elements are strings around
+keywords.
+
+Because the object of the return value is created with the function
+'tclistnew', it should be deleted with the function 'tclistdel' when
+it is no longer in use.
+
+"""
+
+tdb_qrystrtocondop = cfunc('tctdbqrystrtocondop', libtc, c_int,
+                           ('str', c_char_p, 1))
+tdb_qrystrtocondop.__doc__ =\
+"""Convert a string into the query operation number.
+
+str -- specifies a string.
+
+The return value is the query operation number or -1 on failure.
+
+"""
+
+tdb_qrystrtoordertype = cfunc('tctdbqrystrtoordertype', libtc, c_int,
+                              ('str', c_char_p, 1))
+tdb_qrystrtoordertype.__doc__ =\
+"""Convert a string into the query order type number.
+
+str -- specifies a string.
+
+The return value is the query order type or -1 on failure.
+
+"""
+
+tdb_metastrtosettype = cfunc('tctdbmetastrtosettype', libtc, c_int,
+                             ('str', c_char_p, 1))
+tdb_metastrtosettype.__doc__ =\
+"""Convert a string into the set operation type number.
+
+str -- specifies a string.
+
+The return value is the set operation type or -1 on failure.
 
 """
