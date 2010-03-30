@@ -1144,7 +1144,7 @@ record corresponds to the specified key.
 
 """
 
-tcmapget = cfunc('tcmapget', libtc, tc_void_p,
+tcmapget = cfunc('tcmapget', libtc, c_void_p,
                  ('map', TCMAP_P, 1),
                  ('kbuf', c_void_p, 1),
                  ('ksiz', c_int, 1),
@@ -1169,7 +1169,7 @@ string.
 
 """
 
-tcmapget2 = cfunc('tcmapget2', libtc, tc_char_p,
+tcmapget2 = cfunc('tcmapget2', libtc, c_char_p,
                   ('map', TCMAP_P, 1),
                   ('kstr', c_char_p, 1))
 tcmapget2.__doc__ =\
@@ -1231,7 +1231,7 @@ in the map object.
 
 """
 
-tcmapiternext = cfunc('tcmapiternext', libtc, tc_void_p,
+tcmapiternext = cfunc('tcmapiternext', libtc, c_void_p,
                       ('map', TCMAP_P, 1),
                       ('sp', c_int_p, 2))
 tcmapiternext.errcheck = lambda result, func, arguments : (result, arguments[1])
@@ -1254,7 +1254,7 @@ The order of iteration is assured to be the same as the stored order.
 
 """
 
-tcmapiternext2 = cfunc('tcmapiternext2', libtc, tc_char_p,
+tcmapiternext2 = cfunc('tcmapiternext2', libtc, c_char_p,
                        ('map', TCMAP_P, 1))
 tcmapiternext2.__doc__ =\
 """Get the next key string of the iterator of a map object.
@@ -1528,7 +1528,7 @@ If successful, the return value is true, else, it is false.
 
 """
 
-tcmapget3 = cfunc('tcmapget3', libtc, tc_void_p,
+tcmapget3 = cfunc('tcmapget3', libtc, c_void_p,
                   ('map', TCMAP_P, 1),
                   ('kbuf', c_void_p, 1),
                   ('ksiz', c_int, 1),
@@ -1555,7 +1555,7 @@ algorithm removing records from the head.
 
 """
 
-tcmapget4 = cfunc('tcmapget4', libtc, tc_char_p,
+tcmapget4 = cfunc('tcmapget4', libtc, c_char_p,
                   ('map', TCMAP_P, 1),
                   ('kstr', c_char_p, 1),
                   ('dstr', c_char_p, 1))
@@ -1604,7 +1604,7 @@ modified.
 
 """
 
-tcmapiterval = cfunc('tcmapiterval', libtc, tc_void_p,
+tcmapiterval = cfunc('tcmapiterval', libtc, c_void_p,
                      ('kbuf', c_void_p, 1),
                      ('sp', c_int_p, 2))
 tcmapiterval.errcheck = lambda result, func, arguments : (result, arguments[1])
@@ -1624,7 +1624,7 @@ string.
 
 """
 
-tcmapiterval2 = cfunc('tcmapiterval2', libtc, tc_char_p,
+tcmapiterval2 = cfunc('tcmapiterval2', libtc, c_char_p,
                       ('kstr', c_char_p, 1))
 tcmapiterval2.__doc__ =\
 """Get the value string bound to the key fetched from the iterator of
@@ -1681,7 +1681,7 @@ corresponding record.
 
 # """
 
-tcmaploadone = cfunc('tcmaploadone', libtc, tc_void_p,
+tcmaploadone = cfunc('tcmaploadone', libtc, c_void_p,
                      ('ptr', c_void_p, 1),
                      ('size', c_int, 1),
                      ('kbuf', c_void_p, 1),
@@ -7406,9 +7406,9 @@ separated column string.
 
 tdb   -- specifies the table database object connected as a writer.
 pkstr -- specifies the string of the primary key.
-cstr -- specifies the string of the the tab separated column string
-        where the name and the value of each column are situated one
-        after the other.
+cstr  -- specifies the string of the the tab separated column string
+         where the name and the value of each column are situated one
+         after the other.
 
 If successful, the return value is true, else, it is false.
 
@@ -7662,7 +7662,8 @@ tdb_vsiz2 = cfunc('tctdbvsiz2', libtc, c_int,
                   ('tdb', c_void_p, 1),
                   ('pkstr', c_char_p, 1))
 tdb_vsiz2.__doc__ =\
-"""Get the size of the value of a string record in a table database object.
+"""Get the size of the value of a string record in a table database
+object.
 
 tdb  -- specifies the table database object.
 kstr -- specifies the string of the primary key.
@@ -8218,7 +8219,8 @@ overwritten when this function is called again.
 #                        ('num', c_int, 1),
 #                        ('type', c_int, 1))
 # tdb_metasearch.__doc__ =\
-# """Retrieve records with multiple query objects and get the set of the result.
+# """Retrieve records with multiple query objects and get the set of the
+# result.
 
 # qrys -- specifies an array of the query objects.
 # num  -- specifies the number of elements of the array.
