@@ -59,11 +59,11 @@ def deserialize(c_obj, c_obj_len, as_type=None):
 
 def serialize_tclist(objs, as_raw=False):
     """Serialize an array of objects, ready to be used in putdup."""
-    tclist_vals = tc.tclistnew2(len(objs))
+    tclist_objs = tc.tclistnew2(len(objs))
     for obj in objs:
         (c_obj, c_obj_len) = serialize(obj, as_raw)
-        tc.tclistpush(tclist_vals, c_obj, c_obj_len)
-    return tclist_vals
+        tc.tclistpush(tclist_objs, c_obj, c_obj_len)
+    return tclist_objs
 
 
 def deserialize_tclist(tclist_objs, as_type=None):
@@ -73,6 +73,32 @@ def deserialize_tclist(tclist_objs, as_type=None):
         (c_obj, c_obj_len) = tc.tclistval(tclist_objs, index)
         objs.append(deserialize(c_obj, c_obj_len, as_type))
     return objs
+
+
+def serialize_tcmap(dict_, as_raw=False):
+    """Serialize a dictionary into a TCMAP object."""
+    tcmap = tc.tcmapnew()
+    for key, value in dict_.iteritems():
+        (c_key, c_key_len) = serialize(key, as_raw=True)
+        (c_value, c_value_len) = serialize(key, as_raw=as_raw)
+        tc.tcmapput(tcmap, c_key, c_key_len, c_value, c_value_len)
+    return tcmap
+
+
+def deserialize_tcmap(tcmap, schema=None):
+    """Deserialize a TCMAP object into a dictionary."""
+    dict_ = {}
+    tc.tcmapiterinit(tcmap)
+    while True:
+        c_key, c_key_len = tc.tcmapiternext(tcmap)
+        if not c_key:
+            break
+        c_value, c_value_len = tc.tcmapiterval(c_key)
+        key = deserialize(c_key, c_key_len, as_type=str)
+        as_type = schema.get(key, None) if schema else None
+        value = deserialize(c_key, c_key_len, as_type=as_type)
+        dict_[key] = value
+    return dict_
 
 
 def deserialize_xstr(xstr, as_type=None):
