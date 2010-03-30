@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 # Tokyo Cabinet Python ctypes binding.
 
-# TODO
-#   Go to http://docs.python.org/reference/datamodel.html
-#   chapter 3.4.6 additional-methods-for-emulation-of-sequence-types
-#   and implement slice methods.
-
 """
 FDB is an implementation of bsddb-like API for Tokyo Cabinet
 fixed-length database.
@@ -39,23 +34,23 @@ import util
 
 
 # enumeration for additional flags
-FOPEN   = 1 << 0                # whether opened
-FFATAL  = 1 << 1                # whether with fatal error
+FOPEN   = 1 << 0              # whether opened
+FFATAL  = 1 << 1              # whether with fatal error
 
 # enumeration for open modes
-OREADER = 1 << 0                # open as a reader
-OWRITER = 1 << 1                # open as a writer
-OCREAT  = 1 << 2                # writer creating
-OTRUNC  = 1 << 3                # writer truncating
-ONOLCK  = 1 << 4                # open without locking
-OLCKNB  = 1 << 5                # lock without blocking
-OTSYNC  = 1 << 6                # synchronize every transaction
+OREADER = 1 << 0              # open as a reader
+OWRITER = 1 << 1              # open as a writer
+OCREAT  = 1 << 2              # writer creating
+OTRUNC  = 1 << 3              # writer truncating
+ONOLCK  = 1 << 4              # open without locking
+OLCKNB  = 1 << 5              # lock without blocking
+OTSYNC  = 1 << 6              # synchronize every transaction
 
 # enumeration for ID constants
-IDMIN  = -1                     # minimum number
-IDPREV = -2                     # less by one than the minimum
-IDMAX  = -3                     # maximum number
-IDNEXT = -4                     # greater by one than the miximum
+IDMIN   = -1                  # minimum number
+IDPREV  = -2                  # less by one than the minimum
+IDMAX   = -3                  # maximum number
+IDNEXT  = -4                  # greater by one than the miximum
 
 
 class FDB(object):
@@ -75,7 +70,10 @@ class FDB(object):
     def tune(self, width, limsiz):
         """Set the tuning parameters of a fixed-length database
         object."""
-        return tc.fdb_tume(self.db, width, limsiz)
+        result = tc.fdb_tume(self.db, width, limsiz)
+        if not result:
+            raise tc.TCException(tc.tdb_errmsg(tc.tdb_ecode(self.db)))
+        return result
 
     def open(self, path, omode=OWRITER|OCREAT, width=None, limsiz=None):
         """Open a database file and connect a fixed-length database
@@ -137,8 +135,7 @@ class FDB(object):
         """Store a new Python object into a fixed-length database
         object."""
         (c_value, c_value_len) = util.serialize(value, as_raw)
-        result = tc.fdb_putkeep(self.db, key, c_value, c_value_len)
-        return result
+        return tc.fdb_putkeep(self.db, key, c_value, c_value_len)
 
     def putkeep_str(self, key, value):
         """Store a new string record into a fixed-length database
