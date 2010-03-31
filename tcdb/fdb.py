@@ -67,22 +67,18 @@ class FDB(object):
         object for threading."""
         return tc.fdb_setmutex(self.db)
 
-    def tune(self, width, limsiz):
+    def tune(self, width=0, limsiz=0):
         """Set the tuning parameters of a fixed-length database
         object."""
-        result = tc.fdb_tume(self.db, width, limsiz)
+        result = tc.fdb_tune(self.db, width, limsiz)
         if not result:
             raise tc.TCException(tc.tdb_errmsg(tc.tdb_ecode(self.db)))
         return result
 
-    def open(self, path, omode=OWRITER|OCREAT, width=None, limsiz=None):
+    def open(self, path, omode=OWRITER|OCREAT, width=0, limsiz=0):
         """Open a database file and connect a fixed-length database
         object."""
-        kwargs = dict([x for x in (('width', width),
-                                   ('limsiz', limsiz)) if x[1]])
-        if kwargs:
-            if not tc.fdb_tune(self.db, **kwargs):
-                raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
+        self.tune(width, limsiz)
 
         if not tc.fdb_open(self.db, path, omode):
             raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
