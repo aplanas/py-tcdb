@@ -574,7 +574,7 @@ class HDB(object):
     #     duplication handler."""
     #     # See tc.hdb_putproc
 
-    def foreach(self, proc, op, key_type=False, value_type=None):
+    def foreach(self, proc, op, key_type=None, value_type=None):
         """Process each record atomically of a hash database
         object."""
         def proc_wraper(c_key, c_key_len, c_value, c_value_len, op):

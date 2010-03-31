@@ -648,7 +648,7 @@ class TDB(object):
     #     duplication handler."""
     #     # See tc.tdb_putproc
 
-    def foreach(self, proc, op, key_type=False, schema=None):
+    def foreach(self, proc, op, key_type=None, schema=None):
         """Process each record atomically of a table database
         object."""
         def proc_wraper(c_key, c_key_len, c_cols, c_cols_len, op):
