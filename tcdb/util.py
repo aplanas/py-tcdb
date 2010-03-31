@@ -80,7 +80,7 @@ def serialize_tcmap(dict_, as_raw=False):
     tcmap = tc.tcmapnew()
     for key, value in dict_.iteritems():
         (c_key, c_key_len) = serialize(key, as_raw=True)
-        (c_value, c_value_len) = serialize(key, as_raw=as_raw)
+        (c_value, c_value_len) = serialize(value, as_raw=as_raw)
         tc.tcmapput(tcmap, c_key, c_key_len, c_value, c_value_len)
     return tcmap
 
@@ -91,12 +91,14 @@ def deserialize_tcmap(tcmap, schema=None):
     tc.tcmapiterinit(tcmap)
     while True:
         c_key, c_key_len = tc.tcmapiternext(tcmap)
-        if not c_key:
+        # Bug in tcmapiternext.  Some NULL keys don't return NULL wen
+        # called after tc.tdb_iternext3 method.  So we test c_key_len.
+        if not c_key_len:
             break
         c_value, c_value_len = tc.tcmapiterval(c_key)
         key = deserialize(c_key, c_key_len, as_type=str)
         as_type = schema.get(key, None) if schema else None
-        value = deserialize(c_key, c_key_len, as_type=as_type)
+        value = deserialize(c_value, c_value_len, as_type=as_type)
         dict_[key] = value
     return dict_
 
