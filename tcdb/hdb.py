@@ -68,21 +68,21 @@ class HDB(object):
         threading."""
         return tc.hdb_setmutex(self.db)
 
-    def tune(self, bnum, apow, fpow, opts):
+    def tune(self, bnum=0, apow=-1, fpow=-1, opts=0):
         """Set the tuning parameters of a hash database object."""
-        result = tc.hdb_tume(self.db, bnum, apow, fpow, opts)
+        result = tc.hdb_tune(self.db, bnum, apow, fpow, opts)
         if not result:
             raise tc.TCException(tc.tdb_errmsg(tc.tdb_ecode(self.db)))
         return result
 
-    def setcache(self, rcnum):
+    def setcache(self, rcnum=0):
         """Set the caching parameters of a hash database object."""
         result = tc.hdb_setcache(self.db, rcnum)
         if not result:
             raise tc.TCException(tc.tdb_errmsg(tc.tdb_ecode(self.db)))
         return result
 
-    def setxmsiz(self, xmsiz):
+    def setxmsiz(self, xmsiz=0):
         """Set the size of the extra mapped memory of a hash database
         object."""
         result = tc.hdb_setxmsiz(self.db, xmsiz)
@@ -90,7 +90,7 @@ class HDB(object):
             raise tc.TCException(tc.tdb_errmsg(tc.tdb_ecode(self.db)))
         return result
 
-    def setdfunit(self, dfunit):
+    def setdfunit(self, dfunit=0):
         """Set the unit step number of auto defragmentation of a hash
         database object."""
         result = tc.hdb_setdfunit(self.db, dfunit)
@@ -98,25 +98,13 @@ class HDB(object):
             raise tc.TCException(tc.tdb_errmsg(tc.tdb_ecode(self.db)))
         return result
 
-    def open(self, path, omode=OWRITER|OCREAT, bnum=None, apow=None, fpow=None,
-             opts=None, rcnum=None, xmsiz=None, dfunit=None):
+    def open(self, path, omode=OWRITER|OCREAT, bnum=0, apow=-1, fpow=-1,
+             opts=0, rcnum=0, xmsiz=0, dfunit=0):
         """Open a database file and connect a hash database object."""
-        if rcnum:
-            self.setcache(rcnum)
-
-        if xmsiz:
-            self.setxmsiz(xmsiz)
-
-        if dfunit:
-            self.setdfunit(dfunit)
-
-        kwargs = dict([x for x in (('bnum', bnum),
-                                   ('apow', apow),
-                                   ('fpow', fpow),
-                                   ('opts', opts)) if x[1]])
-        if kwargs:
-            if not tc.hdb_tune(self.db, **kwargs):
-                raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        self.setcache(rcnum)
+        self.setxmsiz(xmsiz)
+        self.setdfunit(dfunit)
+        self.tune(bnum, apow, fpow, opts)
 
         if not tc.hdb_open(self.db, path, omode):
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
