@@ -233,21 +233,21 @@ class BDB(object):
             raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
         return result
 
-    def tune(self, lmemb, nmemb, bnum, apow, fpow, opts):
+    def tune(self, lmemb=0, nmemb=0, bnum=0, apow=-1, fpow=-1, opts=0):
         """Set the tuning parameters of a B+ tree database object."""
-        result = tc.bdb_tume(self.db, lmemb, nmemb, bnum, apow, fpow, opts)
+        result = tc.bdb_tune(self.db, lmemb, nmemb, bnum, apow, fpow, opts)
         if not result:
             raise tc.TCException(tc.tdb_errmsg(tc.tdb_ecode(self.db)))
         return result
 
-    def setcache(self, lcnum, ncnum):
+    def setcache(self, lcnum=0, ncnum=0):
         """Set the caching parameters of a B+ tree database object."""
         result = tc.bdb_setcache(self.db, lcnum, ncnum)
         if not result:
             raise tc.TCException(tc.tdb_errmsg(tc.tdb_ecode(self.db)))
         return result
 
-    def setxmsiz(self, xmsiz):
+    def setxmsiz(self, xmsiz=0):
         """Set the size of the extra mapped memory of a B+ tree
         database object."""
         result = tc.bdb_setxmsiz(self.db, xmsiz)
@@ -255,7 +255,7 @@ class BDB(object):
             raise tc.TCException(tc.tdb_errmsg(tc.tdb_ecode(self.db)))
         return result
 
-    def setdfunit(self, dfunit):
+    def setdfunit(self, dfunit=0):
         """Set the unit step number of auto defragmentation of a B+
         tree database object."""
         result = tc.bdb_setdfunit(self.db, dfunit)
@@ -263,28 +263,13 @@ class BDB(object):
             raise tc.TCException(tc.tdb_errmsg(tc.tdb_ecode(self.db)))
         return result
 
-    def open(self, path, omode=OWRITER|OCREAT, lmemb=None, nmemb=None,
-             bnum=None, apow=None, fpow=None, opts=None, lcnum=None, ncnum=None,
-             xmsiz=None, dfunit=None):
+    def open(self, path, omode=OWRITER|OCREAT, lmemb=0, nmemb=0, bnum=0,
+             apow=-1, fpow=-1, opts=0, lcnum=0, ncnum=0, xmsiz=0, dfunit=0):
         """Open a database file and connect a B+ tree database object."""
-        if lcnum or ncnum:
-            self.setcache(lcnum, ncnum)
-
-        if xmsiz:
-            self.setxmsiz(xmsiz)
-
-        if dfunit:
-            self.setdfunit(dfunit)
-
-        kwargs = dict([x for x in (('lmemb', lmemb),
-                                   ('nmemb', nmemb),
-                                   ('bnum', bnum),
-                                   ('apow', apow),
-                                   ('fpow', fpow),
-                                   ('opts', opts)) if x[1]])
-        if kwargs:
-            if not tc.bdb_tune(self.db, **kwargs):
-                raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        self.setcache(lcnum, ncnum)
+        self.setxmsiz(xmsiz)
+        self.setdfunit(dfunit)
+        self.tune(lmemb, nmemb, bnum, apow, fpow, opts)
 
         if not tc.bdb_open(self.db, path, omode):
             raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
@@ -935,3 +920,8 @@ class BDB(object):
         finally:
             cursor.close()
         return result
+
+    def cursor(self):
+        """Create a cursor object associated with the B+ tree database
+        object."""
+        return Cursor(self.db)
