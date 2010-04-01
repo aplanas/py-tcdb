@@ -278,6 +278,7 @@ class TestTDB(unittest.TestCase):
         qry = self.tdb.query()
         qry.addcond('order', tdb.QCNUMLT, '100')
         # Why not tdb.QONUMASC?
+        # Looks like that it's better to store numbers as string
         qry.setorder('order', tdb.QOSTRASC)
         r = qry.search()
         self.assertEqual(len(r), 8)
