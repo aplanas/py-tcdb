@@ -2,6 +2,10 @@
 # Tokyo Cabinet Python ctypes binding.
 
 import hdb
+import bdb
+import fdb
+import tdb
+import adb
 from tc import __version__
 
 
@@ -34,6 +38,30 @@ EMISC    = 9999                 # miscellaneous error
 
 def hdbopen(path, **kwargs):
     """Simple hdb class constructor."""
-    db = hdb.hdb()
+    db = hdb.HDB()
+    db.open(path, **kwargs)
+    return db
+
+def bdbopen(path, **kwargs):
+    """Simple bdb class constructor."""
+    db = bdb.BDB()
+    db.open(path, **kwargs)
+    return db
+
+def fdbopen(path, **kwargs):
+    """Simple fdb class constructor."""
+    db = fdb.FDB()
+    db.open(path, **kwargs)
+    return db
+
+def tdbopen(path, **kwargs):
+    """Simple tdb class constructor."""
+    db = tdb.TDB()
+    db.open(path, **kwargs)
+    return db
+
+def adbopen(path, **kwargs):
+    """Simple adb class constructor."""
+    db = adb.ADB()
     db.open(path, **kwargs)
     return db
