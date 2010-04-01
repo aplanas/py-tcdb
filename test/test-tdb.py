@@ -288,8 +288,6 @@ class TestTDB(unittest.TestCase):
             self.assert_(last <= l)
             last = l
 
-
-
     def row(self, value):
         return {
             'value': value,
