@@ -1,10 +1,29 @@
+import os
 from distutils.core import setup
 
-setup(name='tcdb',
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+setup(name='py-tcdb',
       version='0.1',
-      description='Tokyo Cabinet ctypes Python binding.',
+      description='A Python wrapper for Tokyo Cabinet database using ctypes.',
+      long_description=read('README'),
       author='Alberto Planas',
       author_email='aplanas@gmail.com',
       url='http://code.google.com/p/py-tcdb/',
+      download_url='http://code.google.com/p/py-tcdb/',
       packages=['tcdb'],
+      classifiers=[
+        'Development Status :: 4 - Beta',
+        'Environment :: Other Environment',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.6',
+        'Topic :: Database',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        ],
+      license='LGPL',
+      keywords=['tokyo cabinet', 'ctypes', 'database'],
       )
