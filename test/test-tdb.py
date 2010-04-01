@@ -248,7 +248,7 @@ class TestTDB(unittest.TestCase):
         self.tdb.foreach(proc, 'test')
 
     def test_qry(self):
-        pks = [1+1j, 'some text [áéíóú]', 10, 10.0]
+        pks = [1+1j, 'some text [áéíóú]', 10, 10.0, 't1', 't2', 't3', 't4']
         for pk in pks:
             cols = self.row(str(pk))
             cols['order'] = random.choice(range(50))
@@ -265,7 +265,7 @@ class TestTDB(unittest.TestCase):
         qry = self.tdb.query()
         qry.addcond('order', tdb.QCNUMLT, '100')
         r = qry.search()
-        self.assertEqual(len(r), 4)
+        self.assertEqual(len(r), 8)
         qry.close()
 
         qry = self.tdb.query()
@@ -277,9 +277,10 @@ class TestTDB(unittest.TestCase):
 
         qry = self.tdb.query()
         qry.addcond('order', tdb.QCNUMLT, '100')
-        qry.setorder('order', tdb.QONUMASC)
+        # Why not tdb.QONUMASC?
+        qry.setorder('order', tdb.QOSTRASC)
         r = qry.search()
-        self.assertEqual(len(r), 4)
+        self.assertEqual(len(r), 8)
         qry.close()
         last = 0
         for k in r:
