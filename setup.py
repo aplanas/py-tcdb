@@ -11,7 +11,7 @@ setup(name='py-tcdb',
       author='Alberto Planas',
       author_email='aplanas@gmail.com',
       url='http://code.google.com/p/py-tcdb/',
-      download_url='http://code.google.com/p/py-tcdb/',
+      download_url='http://py-tcdb.googlecode.com/files/py-tcdb-0.1.tar.gz',
       packages=['tcdb'],
       classifiers=[
         'Development Status :: 4 - Beta',
