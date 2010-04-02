@@ -1,6 +1,6 @@
 Tokyo Cabinet (http://1978th.net/tokyocabinet/) is a modern
 implementation of DBM database. Mikio Hirabayashi (the author of Tokyo
-Cabinet) describe the project as:
+Cabinet) describe the project as::
 
   Tokyo Cabinet is a library of routines for managing a database. The
   database is a simple data file containing records, each is a pair of
@@ -19,7 +19,7 @@ Low Level API
 
 We can interface with TC library using directly the tc module. This
 module declare all functions and data types. For example, if we want
-to create a HDB (hash database object) we can write:
+to create a HDB (hash database object) we can write::
 
   from tcdb import tc
   from tcdb import hdb
@@ -56,6 +56,8 @@ methods in order to have more control over the stored data. In a hash
 database we can store serialized Python objects as a key or as a
 value, or raw data (that can be retrieved from the database using C,
 Lua, Perl or Java).
+
+::
 
   from tcdb import hdb
 
@@ -124,6 +126,8 @@ Tokyo Cabinet can use a variation of a hash database to store
 table-like object. In Python we can use a dict object to represent a
 single table. With THD we can store these tables and make queries
 using Query object.
+
+::
 
   from tcdb import tdb
 
