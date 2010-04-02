@@ -34,7 +34,8 @@ class TestFDB(unittest.TestCase):
             self.fdb.put(key+1, obj1)
             obj2 = self.fdb.get(key+1)
             self.assertEqual(obj1, obj2)
-        self.assertRaises(KeyError, self.fdb.__getitem__, 100)
+        self.assertEqual(self.fdb.get(100), None)
+        self.assertEqual(self.fdb.get(100, 'def'), 'def')
 
     def test_put_str(self):
         str1 = 'some text [áéíóú]'
@@ -46,6 +47,8 @@ class TestFDB(unittest.TestCase):
         unicode2 = unicode(self.fdb.get_str(fdb.IDMAX), 'utf8')
         self.assertEqual(unicode1, unicode2)
         self.assertRaises(AssertionError, self.fdb.put_str, 'key', 10)
+        self.assertEqual(self.fdb.get_str(100), None)
+        self.assertEqual(self.fdb.get_str(100, 'def'), 'def')
 
     def test_put_unicode(self):
         unicode1 = u'unicode text [áéíóú]'
@@ -53,6 +56,8 @@ class TestFDB(unittest.TestCase):
         unicode2 = self.fdb.get_unicode(fdb.IDMAX)
         self.assertEqual(unicode1, unicode2)
         self.assertRaises(AssertionError, self.fdb.put_unicode, 'key', 10)
+        self.assertEqual(self.fdb.get_unicode(100), None)
+        self.assertEqual(self.fdb.get_unicode(100, 'def'), 'def')
 
     def test_put_int(self):
         int1 = 10
@@ -60,6 +65,8 @@ class TestFDB(unittest.TestCase):
         int2 = self.fdb.get_int(fdb.IDMAX)
         self.assertEqual(int1, int2)
         self.assertRaises(AssertionError, self.fdb.put_int, 'key', '10')
+        self.assertEqual(self.fdb.get_int(100), None)
+        self.assertEqual(self.fdb.get_int(100, 'def'), 'def')
 
     def test_put_float(self):
         float1 = 10.10
@@ -67,6 +74,8 @@ class TestFDB(unittest.TestCase):
         float2 = self.fdb.get_float(fdb.IDMAX)
         self.assertEqual(float1, float2)
         self.assertRaises(AssertionError, self.fdb.put_float, 'key', 10)
+        self.assertEqual(self.fdb.get_float(100), None)
+        self.assertEqual(self.fdb.get_float(100, 'def'), 'def')
 
     def test_putkeep(self):
         objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
@@ -264,7 +273,7 @@ class TestFDB(unittest.TestCase):
             with self.fdb:
                 for key, obj in enumerate(objs):
                     self.fdb.put(key+1, obj)
-                self.fdb.get(100)
+                self.fdb[100]
         except KeyError:
             pass
         self.assertEquals(len(self.fdb), 0)

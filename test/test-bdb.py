@@ -39,7 +39,8 @@ class TestBDB(unittest.TestCase):
             self.bdb.put(obj1, obj1, raw_key=True)
             obj2 = self.bdb.get(obj1, raw_key=True)
             self.assertEqual(obj1, obj2)
-        self.assertRaises(KeyError, self.bdb.get, 'nonexistent key')
+        self.assertEqual(self.bdb.get('nonexistent key'), None)
+        self.assertEqual(self.bdb.get('nonexistent key', 'def'), 'def')
 
     def test_put_str(self):
         str1 = 'some text [áéíóú]'
@@ -57,7 +58,8 @@ class TestBDB(unittest.TestCase):
             unicode2 = unicode(self.bdb.get_str(obj), 'utf8')
             self.assertEqual(unicode1, unicode2)
         self.assertRaises(AssertionError, self.bdb.put_str, 'key', 10)
-        self.assertRaises(KeyError, self.bdb.get_str, 'nonexistent key')
+        self.assertEqual(self.bdb.get_str('nonexistent key'), None)
+        self.assertEqual(self.bdb.get_str('nonexistent key', 'def'), 'def')
 
     def test_put_unicode(self):
         unicode1 = u'unicode text [áéíóú]'
@@ -70,7 +72,8 @@ class TestBDB(unittest.TestCase):
             unicode2 = self.bdb.get_unicode(obj, as_raw=True)
             self.assertEqual(unicode1, unicode2)
         self.assertRaises(AssertionError, self.bdb.put_unicode, 'key', 10)
-        self.assertRaises(KeyError, self.bdb.get_unicode, 'nonexistent key')
+        self.assertEqual(self.bdb.get_unicode('nonexistent key'), None)
+        self.assertEqual(self.bdb.get_unicode('nonexistent key', 'def'), 'def')
 
     def test_put_int(self):
         int1 = 10
@@ -80,7 +83,8 @@ class TestBDB(unittest.TestCase):
             int2 = self.bdb.get_int(obj)
             self.assertEqual(int1, int2)
         self.assertRaises(AssertionError, self.bdb.put_int, 'key', '10')
-        self.assertRaises(KeyError, self.bdb.get_int, 'nonexistent key')
+        self.assertEqual(self.bdb.get_int('nonexistent key'), None)
+        self.assertEqual(self.bdb.get_int('nonexistent key', 'def'), 'def')
 
     def test_put_float(self):
         float1 = 10.10
@@ -90,7 +94,8 @@ class TestBDB(unittest.TestCase):
             float2 = self.bdb.get_float(obj)
             self.assertEqual(float1, float2)
         self.assertRaises(AssertionError, self.bdb.put_float, 'key', 10)
-        self.assertRaises(KeyError, self.bdb.get_float, 'nonexistent key')
+        self.assertEqual(self.bdb.get_float('nonexistent key'), None)
+        self.assertEqual(self.bdb.get_float('nonexistent key', 'def'), 'def')
 
     def test_putkeep(self):
         objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
@@ -179,7 +184,8 @@ class TestBDB(unittest.TestCase):
             self.assertEqual(obj1, obj2)
             allobjs = self.bdb.getdup(obj1)
             self.assertEqual(allobjs, [obj1, 'duplicate key'])
-        self.assertRaises(KeyError, self.bdb.getdup, 'nonexistent key')
+        self.assertEqual(self.bdb.getdup('nonexistent key'), None)
+        self.assertEqual(self.bdb.getdup('nonexistent key', 'def'), 'def')
 
     def test_putdup_str(self):
         str1 = 'some text [áéíóú]'
@@ -193,7 +199,8 @@ class TestBDB(unittest.TestCase):
             self.assertEqual(str1, str2)
             allstrs = self.bdb.getdup_str(obj)
             self.assertEqual(allstrs, [str1, 'duplicate key'])
-        self.assertRaises(KeyError, self.bdb.getdup_str, 'nonexistent key')
+        self.assertEqual(self.bdb.getdup_str('nonexistent key'), None)
+        self.assertEqual(self.bdb.getdup_str('nonexistent key', 'def'), 'def')
 
     def test_putdup_unicode(self):
         unicode1 = u'unicode text [áéíóú]'
@@ -207,7 +214,8 @@ class TestBDB(unittest.TestCase):
             self.assertEqual(unicode1, unicode2)
             allunicodes = self.bdb.getdup_unicode(obj)
             self.assertEqual(allunicodes, [unicode1, u'duplicate key'])
-        self.assertRaises(KeyError, self.bdb.getdup_unicode, 'nonexistent key')
+        self.assertEqual(self.bdb.getdup_unicode('nonexistent key'), None)
+        self.assertEqual(self.bdb.getdup_unicode('nonexistent key', 'def'), 'def')
 
     def test_putdup_int(self):
         int1 = 10
@@ -221,7 +229,8 @@ class TestBDB(unittest.TestCase):
             self.assertEqual(int1, int2)
             allints = self.bdb.getdup_int(obj)
             self.assertEqual(allints, [int1, 20])
-        self.assertRaises(KeyError, self.bdb.getdup_int, 'nonexistent key')
+        self.assertEqual(self.bdb.getdup_int('nonexistent key'), None)
+        self.assertEqual(self.bdb.getdup_int('nonexistent key', 'def'), 'def')
 
     def test_putdup_float(self):
         float1 = 10.10
@@ -235,7 +244,8 @@ class TestBDB(unittest.TestCase):
             self.assertEqual(float1, float2)
             allfloats = self.bdb.getdup_float(obj)
             self.assertEqual(allfloats, [float1, 20.20])
-        self.assertRaises(KeyError, self.bdb.getdup_float, 'nonexistent key')
+        self.assertEqual(self.bdb.getdup_float('nonexistent key'), None)
+        self.assertEqual(self.bdb.getdup_float('nonexistent key', 'def'), 'def')
 
     def test_putdup_iter(self):
         objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
@@ -433,7 +443,7 @@ class TestBDB(unittest.TestCase):
             with self.bdb:
                 for obj in objs:
                     self.bdb.put(obj, obj)
-                self.bdb.get('Not exist key')
+                self.bdb['Not exist key']
         except KeyError:
             pass
         self.assertEquals(len(self.bdb), 0)

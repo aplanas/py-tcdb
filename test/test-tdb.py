@@ -40,7 +40,8 @@ class TestTDB(unittest.TestCase):
             self.tdb.put(pk, self.row(pk), raw_cols=True)
             row = self.tdb.get(pk, schema=self.schema(pk))
             self.assertEqual(self.row(pk), row)
-        self.assertRaises(KeyError, self.tdb.get, 'nonexistent key')
+        self.assertEqual(self.tdb.get('nonexistent key'), None)
+        self.assertEqual(self.tdb.get('nonexistent key', 'def'), 'def')
 
     def test_putkeep(self):
         pks = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
@@ -63,7 +64,6 @@ class TestTDB(unittest.TestCase):
             self.tdb.putkeep(pk, self.row('random value'), raw_cols=True)
             row = self.tdb.get(pk, schema=self.schema(pk))
             self.assertEqual(self.row(pk), row)
-        self.assertRaises(KeyError, self.tdb.get, 'nonexistent key')
 
     def test_putcat(self):
         pks = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
@@ -96,7 +96,6 @@ class TestTDB(unittest.TestCase):
             self.tdb.putcat(pk, {'new key': 'new value'}, raw_cols=True)
             row = self.tdb.get(pk, schema=ext_schema)
             self.assertEqual(ext_row, row)
-        self.assertRaises(KeyError, self.tdb.get, 'nonexistent key')
 
     def test_out_and_contains(self):
         pks = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
@@ -120,10 +119,24 @@ class TestTDB(unittest.TestCase):
 
         self.tdb.put('pk', row, raw_cols=True)
         self.assertEqual(self.tdb.get_col('pk', 'object'), 1+1j)
+        self.assertEqual(self.tdb.get_col('n key', 'n col'), None)
+        self.assertEqual(self.tdb.get_col('n key', 'n col', 'def'), 'def')
+
         self.assertEqual(self.tdb.get_col_str('pk', 'str'), 'string')
+        self.assertEqual(self.tdb.get_col_str('n key', 'n col'), None)
+        self.assertEqual(self.tdb.get_col_str('n key', 'n col', 'def'), 'def')
+
         self.assertEqual(self.tdb.get_col_unicode('pk', 'unicode'), u'unicode')
+        self.assertEqual(self.tdb.get_col_unicode('n key', 'n col'), None)
+        self.assertEqual(self.tdb.get_col_unicode('n key', 'n col','def'), 'def')
+
         self.assertEqual(self.tdb.get_col_int('pk', 'int'), 10)
+        self.assertEqual(self.tdb.get_col_int('n key', 'n col'), None)
+        self.assertEqual(self.tdb.get_col_int('n key', 'n col', 'def'), 'def')
+
         self.assertEqual(self.tdb.get_col_float('pk', 'float'), 10.10)
+        self.assertEqual(self.tdb.get_col_float('n key', 'n col'), None)
+        self.assertEqual(self.tdb.get_col_float('n key', 'n col', 'def'), 'def')
 
     def test_vsiz(self):
         pk = 'random text'
@@ -228,7 +241,7 @@ class TestTDB(unittest.TestCase):
             with self.tdb:
                 for pk in pks:
                     self.tdb.put(pk, {'value': 'some text'})
-                self.tdb.get('Not exist key')
+                self.tdb['Not exist key']
         except KeyError:
             pass
         self.assertEquals(len(self.tdb), 0)

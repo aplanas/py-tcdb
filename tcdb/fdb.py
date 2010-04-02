@@ -194,36 +194,44 @@ class FDB(object):
         result = None
         if isinstance(key, slice):
             start, stop, step = key.indices(self.__len__()+1)
-            result = [self.get(k) for k in xrange(start, stop, step)]
+            result = [self._getitem(k) for k in xrange(start, stop, step)]
         else:
-            result = self.get(key)
+            result = self._getitem(key)
         return result
 
-    def get(self, key, as_type=None):
+    def _getitem(self, key, as_type=None):
         """Retrieve a Python object in a fixed-length database object."""
         (c_value, c_value_len) = tc.fdb_get(self.db, key)
         if not c_value:
             raise KeyError(key)
         return util.deserialize(c_value, c_value_len, as_type)
 
-    def get_str(self, key):
-        """Retrieve a string record in a fixed-length database object."""
-        return self.get(key, str)
+    def get(self, key, default=None, as_type=None):
+        """Retrieve a Python object in a fixed-length database object."""
+        try:
+            value = self._getitem(key, as_type)
+        except KeyError:
+            value = default
+        return value
 
-    def get_unicode(self, key):
+    def get_str(self, key, default=None):
+        """Retrieve a string record in a fixed-length database object."""
+        return self.get(key, default, str)
+
+    def get_unicode(self, key, default=None):
         """Retrieve an unicode string record in a fixed-length
         database object."""
-        return self.get(key, unicode)
+        return self.get(key, default, unicode)
 
-    def get_int(self, key):
+    def get_int(self, key, default=None):
         """Retrieve an integer record in a fixed-length database
         object."""
-        return self.get(key, int)
+        return self.get(key, default, int)
 
-    def get_float(self, key):
+    def get_float(self, key, default=None):
         """Retrieve a double precision record in a fixed-length
         database object."""
-        return self.get(key, float)
+        return self.get(key, default, float)
 
     def vsiz(self, key):
         """Get the size of the value of a Python object in a
@@ -492,8 +500,8 @@ class FDB(object):
 
     def __contains__(self, key):
         """Return True if fixed-length database object has the key."""
-        return self.contains(key)
+        return self.has_key(key)
 
-    def contains(self, key):
+    def has_key(self, key):
         """Return True if fixed-length database object has the key."""
         return tc.fdb_iterinit2(self.db, key)

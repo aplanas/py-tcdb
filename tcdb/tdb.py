@@ -291,9 +291,9 @@ class TDB(object):
 
     def __getitem__(self, key):
         """"Retrieve a record in a table database object."""
-        return self.get(key)
+        return self._getitem(key)
 
-    def get(self, key, raw_key=False, schema=None):
+    def _getitem(self, key, raw_key=False, schema=None):
         """"Retrieve a record in a table database object."""
         (c_key, c_key_len) = util.serialize(key, raw_key)
         cols_tcmap = tc.tdb_get(self.db, c_key, c_key_len)
@@ -301,36 +301,46 @@ class TDB(object):
             raise KeyError(key)
         return util.deserialize_tcmap(cols_tcmap, schema)
 
-    def get_col(self, key, col, raw_key=False, value_type=None):
+    def get(self, key, default=None, raw_key=False, schema=None):
+        """"Retrieve a record in a table database object."""
+        try:
+            value = self._getitem(key, raw_key, schema)
+        except KeyError:
+            value = default
+        return value
+
+    def get_col(self, key, col, default=None, raw_key=False, value_type=None):
         """Retrieve the value of a column of a record in a table
         database object."""
         (c_key, c_key_len) = util.serialize(key, raw_key)
         (c_col, c_col_len) = util.serialize(col, as_raw=True)
         (c_value, c_value_len) = tc.tdb_get4(self.db, c_key, c_key_len, c_col,
                                              c_col_len)
-        if not c_value:
-            raise KeyError(key)
-        return util.deserialize(c_value, c_value_len, value_type)
+        if c_value:
+            value = util.deserialize(c_value, c_value_len, value_type)
+        else:
+            value = default
+        return value
 
-    def get_col_str(self, key, col, raw_key=False):
+    def get_col_str(self, key, col, default=None, raw_key=False):
         """Retrieve a string column of a record in a table database
         object."""
-        return self.get_col(key, col, raw_key, str)
+        return self.get_col(key, col, default, raw_key, str)
 
-    def get_col_unicode(self, key, col, raw_key=False):
+    def get_col_unicode(self, key, col, default=None, raw_key=False):
         """Retrieve an unicode string column of a record in a table
         database object."""
-        return self.get_col(key, col, raw_key, unicode)
+        return self.get_col(key, col, default, raw_key, unicode)
 
-    def get_col_int(self, key, col, raw_key=False):
+    def get_col_int(self, key, col, default=None, raw_key=False):
         """Retrieve an integer column of a record in a table database
         object."""
-        return self.get_col(key, col, raw_key, int)
+        return self.get_col(key, col, default, raw_key, int)
 
-    def get_col_float(self, key, col, raw_key=False):
+    def get_col_float(self, key, col, default=None, raw_key=False):
         """Retrieve a double precision column of a record in a table
         database object."""
-        return self.get_col(key, col, raw_key, float)
+        return self.get_col(key, col, default, raw_key, float)
 
     def vsiz(self, key, as_raw=False):
         """Get the size of the value of a Python object in a table
@@ -679,9 +689,9 @@ class TDB(object):
 
     def __contains__(self, key):
         """Return True if table database object has the key."""
-        return self.contains(key)
+        return self.has_key(key)
 
-    def contains(self, key, raw_key=False):
+    def has_key(self, key, raw_key=False):
         """Return True if table database object has the key."""
         (c_key, c_key_len) = util.serialize(key, raw_key)
         return tc.tdb_iterinit2(self.db, c_key, c_key_len)

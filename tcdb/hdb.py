@@ -249,9 +249,9 @@ class HDB(object):
 
     def __getitem__(self, key):
         """Retrieve a Python object in a hash database object."""
-        return self.get(key)
+        return self._getitem(key)
 
-    def get(self, key, raw_key=False, value_type=None):
+    def _getitem(self, key, raw_key=False, value_type=None):
         """Retrieve a Python object in a hash database object."""
         (c_key, c_key_len) = util.serialize(key, raw_key)
         (c_value, c_value_len) = tc.hdb_get(self.db, c_key, c_key_len)
@@ -259,23 +259,31 @@ class HDB(object):
             raise KeyError(key)
         return util.deserialize(c_value, c_value_len, value_type)
 
-    def get_str(self, key, as_raw=False):
-        """Retrieve a string record in a hash database object."""
-        return self.get(key, as_raw, str)
+    def get(self, key, default=None, raw_key=False, value_type=None):
+        """Retrieve a Python object in a hash database object."""
+        try:
+            value = self._getitem(key, raw_key, value_type)
+        except KeyError:
+            value = default
+        return value
 
-    def get_unicode(self, key, as_raw=False):
+    def get_str(self, key, default=None, as_raw=False):
+        """Retrieve a string record in a hash database object."""
+        return self.get(key, default, as_raw, str)
+
+    def get_unicode(self, key, default=None, as_raw=False):
         """Retrieve an unicode string record in a hash database
         object."""
-        return self.get(key, as_raw, unicode)
+        return self.get(key, default, as_raw, unicode)
 
-    def get_int(self, key, as_raw=False):
+    def get_int(self, key, default=None, as_raw=False):
         """Retrieve an integer record in a hash database object."""
-        return self.get(key, as_raw, int)
+        return self.get(key, default, as_raw, int)
 
-    def get_float(self, key, as_raw=False):
+    def get_float(self, key, default=None, as_raw=False):
         """Retrieve a double precision record in a hash database
         object."""
-        return self.get(key, as_raw, float)
+        return self.get(key, default, as_raw, float)
 
     def vsiz(self, key, as_raw=False):
         """Get the size of the value of a Python object in a hash
@@ -598,9 +606,9 @@ class HDB(object):
 
     def __contains__(self, key):
         """Return True if hash database object has the key."""
-        return self.contains(key)
+        return self.has_key(key)
 
-    def contains(self, key, raw_key=False):
+    def has_key(self, key, raw_key=False):
         """Return True if hash database object has the key."""
         (c_key, c_key_len) = util.serialize(key, raw_key)
         return tc.hdb_iterinit2(self.db, c_key, c_key_len)

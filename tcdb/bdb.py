@@ -460,9 +460,9 @@ class BDB(object):
 
     def __getitem__(self, key):
         """Retrieve a Python object in a B+ tree database object."""
-        return self.get(key)
+        return self._getitem(key)
 
-    def get(self, key, raw_key=False, value_type=None):
+    def _getitem(self, key, raw_key=False, value_type=None):
         """Retrieve a Python object in a B+ tree database object."""
         (c_key, c_key_len) = util.serialize(key, raw_key)
         (c_value, c_value_len) = tc.bdb_get(self.db, c_key, c_key_len)
@@ -470,25 +470,33 @@ class BDB(object):
             raise KeyError(key)
         return util.deserialize(c_value, c_value_len, value_type)
 
-    def get_str(self, key, as_raw=False):
-        """Retrieve a string record in a B+ tree database object."""
-        return self.get(key, as_raw, str)
+    def get(self, key, default=None, raw_key=False, value_type=None):
+        """Retrieve a Python object in a B+ tree database object."""
+        try:
+            value = self._getitem(key, raw_key, value_type)
+        except KeyError:
+            value = default
+        return value
 
-    def get_unicode(self, key, as_raw=False):
+    def get_str(self, key, default=None, as_raw=False):
+        """Retrieve a string record in a B+ tree database object."""
+        return self.get(key, default, as_raw, str)
+
+    def get_unicode(self, key, default=None, as_raw=False):
         """Retrieve an unicode string record in a B+ tree database
         object."""
-        return self.get(key, as_raw, unicode)
+        return self.get(key, default, as_raw, unicode)
 
-    def get_int(self, key, as_raw=False):
+    def get_int(self, key, default=None, as_raw=False):
         """Retrieve an integer record in a B+ tree database object."""
-        return self.get(key, as_raw, int)
+        return self.get(key, default, as_raw, int)
 
-    def get_float(self, key, as_raw=False):
+    def get_float(self, key, default=None, as_raw=False):
         """Retrieve a double precision record in a B+ tree database
         object."""
-        return self.get(key, as_raw, float)
+        return self.get(key, default, as_raw, float)
 
-    def getdup(self, key, raw_key=False, value_type=None):
+    def _getdup(self, key, raw_key=False, value_type=None):
         """Retrieve Python objects in a B+ tree database object."""
         (c_key, c_key_len) = util.serialize(key, raw_key)
         tclist_objs = tc.bdb_get4(self.db, c_key, c_key_len)
@@ -496,23 +504,31 @@ class BDB(object):
             raise KeyError(key)
         return util.deserialize_tclist(tclist_objs, value_type)
 
-    def getdup_str(self, key, as_raw=False):
-        """Retrieve a string record in a B+ tree database object."""
-        return self.getdup(key, as_raw, str)
+    def getdup(self, key, default=None, raw_key=False, value_type=None):
+        """Retrieve Python objects in a B+ tree database object."""
+        try:
+            value = self._getdup(key, raw_key, value_type)
+        except KeyError:
+            value = default
+        return value
 
-    def getdup_unicode(self, key, as_raw=False):
+    def getdup_str(self, key, default=None, as_raw=False):
+        """Retrieve a string record in a B+ tree database object."""
+        return self.getdup(key, default, as_raw, str)
+
+    def getdup_unicode(self, key, default=None, as_raw=False):
         """Retrieve an unicode string record in a B+ tree database
         object."""
-        return self.getdup(key, as_raw, unicode)
+        return self.getdup(key, default, as_raw, unicode)
 
-    def getdup_int(self, key, as_raw=False):
+    def getdup_int(self, key, default=None, as_raw=False):
         """Retrieve an integer record in a B+ tree database object."""
-        return self.getdup(key, as_raw, int)
+        return self.getdup(key, default, as_raw, int)
 
-    def getdup_float(self, key, as_raw=False):
+    def getdup_float(self, key, default=None, as_raw=False):
         """Retrieve a double precision record in a B+ tree database
         object."""
-        return self.getdup(key, as_raw, float)
+        return self.getdup(key, default, as_raw, float)
 
     def vnum(self, key, as_raw=False):
         """Get the number of records corresponding a key in a B+ tree
@@ -907,9 +923,9 @@ class BDB(object):
 
     def __contains__(self, key):
         """Return True if B+ tree database object has the key."""
-        return self.contains(key)
+        return self.has_key(key)
 
-    def contains(self, key, raw_key=False):
+    def has_key(self, key, raw_key=False):
         """Return True if B+ tree database object has the key."""
         cursor = Cursor(self.db)
         result = False

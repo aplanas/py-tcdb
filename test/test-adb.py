@@ -36,7 +36,8 @@ class TestADB(unittest.TestCase):
             self.adb.put(obj1, obj1, raw_key=True)
             obj2 = self.adb.get(obj1, raw_key=True)
             self.assertEqual(obj1, obj2)
-        self.assertRaises(KeyError, self.adb.get, 'nonexistent key')
+        self.assertEqual(self.adb.get('nonexistent key'), None)
+        self.assertEqual(self.adb.get('nonexistent key', 'def'), 'def')
 
     def test_put_str(self):
         str1 = 'some text [áéíóú]'
@@ -54,7 +55,8 @@ class TestADB(unittest.TestCase):
             unicode2 = unicode(self.adb.get_str(obj), 'utf8')
             self.assertEqual(unicode1, unicode2)
         self.assertRaises(AssertionError, self.adb.put_str, 'key', 10)
-        self.assertRaises(KeyError, self.adb.get_str, 'nonexistent key')
+        self.assertEqual(self.adb.get_str('nonexistent key'), None)
+        self.assertEqual(self.adb.get_str('nonexistent key', 'def'), 'def')
 
     def test_put_unicode(self):
         unicode1 = u'unicode text [áéíóú]'
@@ -67,7 +69,8 @@ class TestADB(unittest.TestCase):
             unicode2 = self.adb.get_unicode(obj, as_raw=True)
             self.assertEqual(unicode1, unicode2)
         self.assertRaises(AssertionError, self.adb.put_unicode, 'key', 10)
-        self.assertRaises(KeyError, self.adb.get_unicode, 'nonexistent key')
+        self.assertEqual(self.adb.get_unicode('nonexistent key'), None)
+        self.assertEqual(self.adb.get_unicode('nonexistent key', 'def'), 'def')
 
     def test_put_int(self):
         int1 = 10
@@ -80,7 +83,8 @@ class TestADB(unittest.TestCase):
             int2 = self.adb.get_int(obj, as_raw=True)
             self.assertEqual(int1, int2)
         self.assertRaises(AssertionError, self.adb.put_int, 'key', '10')
-        self.assertRaises(KeyError, self.adb.get_int, 'nonexistent key')
+        self.assertEqual(self.adb.get_int('nonexistent key'), None)
+        self.assertEqual(self.adb.get_int('nonexistent key', 'def'), 'def')
 
     def test_put_float(self):
         float1 = 10.10
@@ -93,7 +97,8 @@ class TestADB(unittest.TestCase):
             float2 = self.adb.get_float(obj, as_raw=True)
             self.assertEqual(float1, float2)
         self.assertRaises(AssertionError, self.adb.put_float, 'key', 10)
-        self.assertRaises(KeyError, self.adb.get_float, 'nonexistent key')
+        self.assertEqual(self.adb.get_float('nonexistent key'), None)
+        self.assertEqual(self.adb.get_float('nonexistent key', 'def'), 'def')
 
     def test_putkeep(self):
         objs = [1+1j, 'some text [áéíóú]', u'unicode text [áéíóú]', 10, 10.0]
