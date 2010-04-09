@@ -5,13 +5,13 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(name='py-tcdb',
-      version='0.1',
+      version='0.2',
       description='A Python wrapper for Tokyo Cabinet database using ctypes.',
       long_description=read('README'),
       author='Alberto Planas',
       author_email='aplanas@gmail.com',
       url='http://code.google.com/p/py-tcdb/',
-      download_url='http://py-tcdb.googlecode.com/files/py-tcdb-0.1.tar.gz',
+      download_url='http://py-tcdb.googlecode.com/files/py-tcdb-0.2.tar.gz',
       packages=['tcdb'],
       classifiers=[
         'Development Status :: 4 - Beta',
