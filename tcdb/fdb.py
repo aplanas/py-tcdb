@@ -295,8 +295,7 @@ class FDB(object):
     def range(self, lower, upper, max_=-1):
         """Get range matching ID numbers in a fixed-length database
         object."""
-        (keys, num) = tc.fdb_range(self.db, lower, upper, max_)
-        return util.deserialize_tcuint64(keys, num)
+        return tc.fdb_range(self.db, lower, upper, max_)
 
     def add_int(self, key, num):
         """Add an integer to a record in a fixed-length database object."""

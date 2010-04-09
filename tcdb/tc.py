@@ -7,6 +7,7 @@ from ctypes import c_uint, c_uint8, c_uint32, c_uint64
 from ctypes import c_bool, c_size_t
 from ctypes import c_double
 from ctypes import c_char_p, c_void_p
+from ctypes import cast
 from ctypes.util import find_library
 
 
@@ -23,12 +24,6 @@ class tc_char_p(c_char_p):
 
 class tc_void_p(c_void_p):
     """Automatic garbage collectable ctypes.c_void_p type."""
-    def __del__(self):
-        if self and libtc:
-            libtc.tcfree(self)
-
-class tc_uint64_p(c_void_p):
-    """Automatic garbage collectable c_int64_p type."""
     def __del__(self):
         if self and libtc:
             libtc.tcfree(self)
@@ -50,7 +45,7 @@ class TCException(Exception):
 # Copyright (c) 2008, Minh-Tri Pham
 def cfunc(name, dll, result, *args):
     """Build and apply a ctypes prototype complete with parameter
-    flags
+    flags.
 
     e.g.
     cvMinMaxLoc = cfunc('cvMinMaxLoc', _cxDLL, None,
@@ -76,6 +71,58 @@ def cfunc(name, dll, result, *args):
         atypes.append(arg[1])
         aflags.append((arg[2], arg[0]) + arg[3:])
     return CFUNCTYPE(result, *atypes)((name, dll), tuple(aflags))
+
+
+def _ctypes(type_):
+    """Convert a Python type to a ctypes type."""
+    types = { int: c_int,
+              float: c_double,
+              str: c_char_p }
+    return types[type_]
+
+
+def cfunc_va(name, dll, result, *args):
+    """Build and apply a ctypes prototype complete with variable
+    arguments.
+
+    This functions is similar to cfunc, but use a closure to variable
+    argument ctype conversion.
+
+    """
+    def create_closure(func, fix_args):
+        def call(*args):
+            var_args = [_ctypes(type(arg)) for arg in args[len(fix_args):]]
+            func.argtypes = fix_args + var_args
+            return func(*args)
+        return call
+    fix_args = [arg[1] for arg in args]
+    func = getattr(dll, name)
+    func.restype = result
+    return create_closure(func, fix_args)
+
+
+class ListPOINTER(object):
+    """Just like a POINTER but accept a list of ctype as an
+    argument."""
+    def __init__(self, etype):
+        self.etype = etype
+
+    def from_param(self, param):
+        if isinstance(param, (list, tuple)):
+            return (self.etype * len(param))(*param)
+
+
+def py_list(data, size, type_):
+    """Convert a C array to a Python list.
+
+    data  -- is a tc_void_p data type.
+    size  -- is a c_int_p data type.
+    type_ -- a Python data type.
+
+    """
+    ptr = cast(data, POINTER(type_))
+    values = [ptr[i] for i in range(size.value)]
+    return values
 
 
 #
@@ -890,10 +937,10 @@ list -- specifies the list object.
 
 """
 
-# FIX params type
+# NOT-TO-BE-IMPLEMENTED: use TCLISTDATUM as 'cmp' param
 # tclistsortex = cfunc('tclistsortex', libtc, None,
 #                      ('list', TCLIST_P, 1),
-#                      ('cmp', c_void_p, 1))
+#                      ('cmp', <to-be-defined>, 1))
 # tclistsortex.__doc__ =\
 # """Sort elements of a list object by an arbitrary comparison function.
 
@@ -914,26 +961,25 @@ list -- specifies the list object.
 
 """
 
-# FIX params type
-# tclistprintf = cfunc('tclistprintf', libtc, None,
-#                      ('list', TCLIST_P, 1),
-#                      ('format', c_char_p, 1))
-# tclistprintf.__doc__ =\
-# """Perform formatted output into a list object.
+tclistprintf = cfunc_va('tclistprintf', libtc, None,
+                        ('list', TCLIST_P, 1),
+                        ('format', c_char_p, 1))
+tclistprintf.__doc__ =\
+"""Perform formatted output into a list object.
 
-# list   -- specifies the list object.
-# format -- specifies the printf-like format string.  The conversion
-#           character '%' can be used with such flag characters as 's',
-#           'd', 'o', 'u', 'x', 'X', 'c', 'e', 'E', 'f', 'g', 'G', '@',
-#           '?', 'b', and '%'.  '@' works as with 's' but escapes meta
-#           characters of XML.  '?' works as with 's' but escapes meta
-#           characters of URL.  'b' converts an integer to the string as
-#           binary numbers.  The other conversion character work as with
-#           each original.
+list   -- specifies the list object.
+format -- specifies the printf-like format string.  The conversion
+          character '%' can be used with such flag characters as 's',
+          'd', 'o', 'u', 'x', 'X', 'c', 'e', 'E', 'f', 'g', 'G', '@',
+          '?', 'b', and '%'.  '@' works as with 's' but escapes meta
+          characters of XML.  '?' works as with 's' but escapes meta
+          characters of URL.  'b' converts an integer to the string as
+          binary numbers.  The other conversion character work as with
+          each original.
 
-# The other arguments are used according to the format string.
+The other arguments are used according to the format string.
 
-# """
+"""
 
 # hash map
 
@@ -1637,49 +1683,49 @@ corresponding record.
 
 """
 
-# FIX look this char ** return type
-# tcmapkeys2 = cfunc('tcmapkeys2', libtc, tc_char_pp,
-#                    ('map', TCMAP_P, 1),
-#                    ('np', c_int_p, 2))
-# tcmapkeys2.errcheck = lambda result, func, arguments : (result, arguments[1])
-# tcmapkeys2.__doc__ =\
-# """Create an array of strings of all keys in a map object.
+tcmapkeys2 = cfunc('tcmapkeys2', libtc, tc_void_p,
+                   ('map', TCMAP_P, 1),
+                   ('np', c_int_p, 2))
+tcmapkeys2.errcheck = lambda result, func, arguments :\
+    py_list(result, arguments[1], c_char_p)
+tcmapkeys2.__doc__ =\
+"""Create an array of strings of all keys in a map object.
 
-# map -- specifies the map object.
-# np  -- specifies the pointer to a variable into which the number of
-#        elements of the return value is assigned.
+map -- specifies the map object.
+np  -- specifies the pointer to a variable into which the number of
+       elements of the return value is assigned.
 
-# The return value is the pointer to the array of all string keys in the
-# map object.
+The return value is the pointer to the array of all string keys in the
+map object.
 
-# Because the region of the return value is allocated with the 'malloc'
-# call, it should be released with the 'free' call if when is no longer
-# in use.  Note that elements of the array point to the inner objects,
-# whose life duration is synchronous with the map object.
+Because the region of the return value is allocated with the 'malloc'
+call, it should be released with the 'free' call if when is no longer
+in use.  Note that elements of the array point to the inner objects,
+whose life duration is synchronous with the map object.
 
-# """
+"""
 
-# FIX look this char ** return type
-# tcmapvals2 = cfunc('tcmapvals2', libtc, tc_char_pp,
-#                    ('map', TCMAP_P, 1),
-#                    ('np', c_int_p, 2))
-# tcmapvals2.errcheck = lambda result, func, arguments : (result, arguments[1])
-# tcmapvals2.__doc__ =\
-# """Create an array of strings of all values in a map object.
+tcmapvals2 = cfunc('tcmapvals2', libtc, tc_void_p,
+                   ('map', TCMAP_P, 1),
+                   ('np', c_int_p, 2))
+tcmapvals2.errcheck = lambda result, func, arguments :\
+    py_list(result, arguments[1], c_char_p)
+tcmapvals2.__doc__ =\
+"""Create an array of strings of all values in a map object.
 
-# map -- specifies the map object.
-# np  -- specifies the pointer to a variable into which the number of
-#        elements of the return value is assigned.
+map -- specifies the map object.
+np  -- specifies the pointer to a variable into which the number of
+       elements of the return value is assigned.
 
-# The return value is the pointer to the array of all string values in
-# the map object.
+The return value is the pointer to the array of all string values in
+the map object.
 
-# Because the region of the return value is allocated with the 'malloc'
-# call, it should be released with the 'free' call if when is no longer
-# in use.  Note that elements of the array point to the inner objects,
-# whose life duration is synchronous with the map object.
+Because the region of the return value is allocated with the 'malloc'
+call, it should be released with the 'free' call if when is no longer
+in use.  Note that elements of the array point to the inner objects,
+whose life duration is synchronous with the map object.
 
-# """
+"""
 
 tcmaploadone = cfunc('tcmaploadone', libtc, c_void_p,
                      ('ptr', c_void_p, 1),
@@ -1687,7 +1733,7 @@ tcmaploadone = cfunc('tcmaploadone', libtc, c_void_p,
                      ('kbuf', c_void_p, 1),
                      ('ksiz', c_int, 1),
                      ('sp', c_int_p, 2))
-tcmaploadone.errcheck = lambda result, func, arguments : (result, arguments[1])
+tcmaploadone.errcheck = lambda result, func, arguments : (result, arguments[4])
 tcmaploadone.__doc__ =\
 """Extract a map record from a serialized byte array.
 
@@ -1708,10 +1754,9 @@ string.
 
 """
 
-# FIX params type
-tcmapprintf = cfunc('tcmapprintf', libtc, None,
-                    ('map', TCMAP_P, 1),
-                    ('format', c_char_p, 1))
+tcmapprintf = cfunc_va('tcmapprintf', libtc, None,
+                       ('map', TCMAP_P, 1),
+                       ('format', c_char_p, 1))
 tcmapprintf.__doc__ =\
 """Perform formatted output into a map object.
 
@@ -2461,7 +2506,7 @@ it is no longer in use.
 
 # features for experts
 
-# # FIX params type
+# NOT-TO-BE-IMPLEMENTED: very esoteric function
 # adb_setskel = cfunc('tcadbsetskel', libtc, c_bool,
 #                     ('adb', c_void_p, 1),
 #                     ('skel', c_void_p, 1))
@@ -3691,27 +3736,28 @@ is opened and should be set every time the database is being opened.
 
 """
 
-# FIX I think that it is not implementable. Test it.
-# hdb_codecfunc = cfunc('tchdbcodecfunc', libtc, None,
-#                       ('hdb', c_void_p, 1),
-#                       ('ep', TCCODEC_P, 1),
-#                       ('eop', c_void_p, 1),
-#                       ('dp', TCCODEC_P, 1),
-#                       ('dop', c_void_p, 1))
-# hdb_codecfunc.__doc__ =\
-# """Get the custom codec functions of a hash database object.
+hdb_codecfunc = cfunc('tchdbcodecfunc', libtc, None,
+                      ('hdb', c_void_p, 1),
+                      ('ep', TCCODEC_P, 2),
+                      ('eop', c_void_p, 2),
+                      ('dp', TCCODEC_P, 2),
+                      ('dop', c_void_p, 2))
+hdb_codecfunc.errcheck = lambda result, func, arguments :\
+    (result, arguments[1], arguments[2], arguments[3], arguments[4])
+hdb_codecfunc.__doc__ =\
+"""Get the custom codec functions of a hash database object.
 
-# hdb -- specifies the hash database object.
-# ep  -- specifies the pointer to a variable into which the pointer to
-#        the custom encoding function is assigned
-# eop -- specifies the pointer to a variable into which the arbitrary
-#        pointer to be given to the encoding function is assigned.
-# dp  -- specifies the pointer to a variable into which the pointer to
-#        the custom decoding function is assigned
-# dop -- specifies the pointer to a variable into which the arbitrary
-#        pointer to be given to the decoding function is assigned.
+hdb -- specifies the hash database object.
+ep  -- specifies the pointer to a variable into which the pointer to
+       the custom encoding function is assigned
+eop -- specifies the pointer to a variable into which the arbitrary
+       pointer to be given to the encoding function is assigned.
+dp  -- specifies the pointer to a variable into which the pointer to
+       the custom decoding function is assigned
+dop -- specifies the pointer to a variable into which the arbitrary
+       pointer to be given to the decoding function is assigned.
 
-# """
+"""
 
 hdb_dfunit = cfunc('tchdbdfunit', libtc, c_uint32,
                    ('hdb', c_void_p, 1))
@@ -3798,7 +3844,7 @@ hdb_getnext = cfunc('tchdbgetnext', libtc, tc_void_p,
                     ('kbuf', c_void_p, 1),
                     ('ksiz', c_int, 1),
                     ('sp', c_int_p, 2))
-hdb_getnext.errcheck = lambda result, func, arguments : (result, arguments[2])
+hdb_getnext.errcheck = lambda result, func, arguments : (result, arguments[3])
 hdb_getnext.__doc__ =\
 """Retrieve the next record of a record in a hash database object.
 
@@ -3839,36 +3885,37 @@ in use.
 
 """
 
-# FIX look this 'vbp' char ** param
-# hdb_getnext3 = cfunc('tchdbgetnext3', libtc, tc_char_p,
-#                      ('hdb', c_void_p, 1),
-#                      ('kbuf', c_void_p, 1),
-#                      ('ksiz', c_int, 1),
-#                      ('sp', c_int_p, 2),
-#                      ('vbp', tc_char_pp, 2),
-#                      ('vsp', c_int_p, 2))
-# hdb_getnext3.__doc__ =\
-# """Retrieve the key and the value of the next record of a record in a
-# hash database object.
+hdb_getnext3 = cfunc('tchdbgetnext3', libtc, tc_char_p,
+                     ('hdb', c_void_p, 1),
+                     ('kbuf', c_void_p, 1),
+                     ('ksiz', c_int, 1),
+                     ('sp', c_int_p, 2),
+                     ('vbp', POINTER(tc_char_p), 2),
+                     ('vsp', c_int_p, 2))
+hdb_getnext3.errcheck = lambda result, func, arguments :\
+    (result, arguments[3], arguments[4], arguments[5])
+hdb_getnext3.__doc__ =\
+"""Retrieve the key and the value of the next record of a record in a
+hash database object.
 
-# hdb  -- specifies the hash database object.
-# kbuf -- specifies the pointer to the region of the key.
-# ksiz -- specifies the size of the region of the key.
-# sp   -- specifies the pointer to the variable into which the size of
-#         the region of the return value is assigned.
-# vbp  -- specifies the pointer to the variable into which the pointer
-#         to the value is assigned.
-# vsp  -- specifies the pointer to the variable into which the size of
-#         the value is assigned.
+hdb  -- specifies the hash database object.
+kbuf -- specifies the pointer to the region of the key.
+ksiz -- specifies the size of the region of the key.
+sp   -- specifies the pointer to the variable into which the size of
+        the region of the return value is assigned.
+vbp  -- specifies the pointer to the variable into which the pointer
+        to the value is assigned.
+vsp  -- specifies the pointer to the variable into which the size of
+        the value is assigned.
 
-# If successful, the return value is the pointer to the region of the
-# key of the next record.
+If successful, the return value is the pointer to the region of the
+key of the next record.
 
-# Because the region of the return value is allocated with the 'malloc'
-# call, it should be released with the 'free' call when it is no longer
-# in use.  The retion pointed to by 'vbp' should not be released.
+Because the region of the return value is allocated with the 'malloc'
+call, it should be released with the 'free' call when it is no longer
+in use.  The retion pointed to by 'vbp' should not be released.
 
-# """
+"""
 
 hdb_iterinit2 = cfunc('tchdbiterinit2', libtc, c_bool,
                       ('hdb', c_void_p, 1),
@@ -6427,13 +6474,14 @@ method is ascending of the ID number.
 
 """
 
-fdb_range = cfunc('tcfdbrange', libtc, tc_uint64_p,
+fdb_range = cfunc('tcfdbrange', libtc, tc_void_p,
                   ('fdb', c_void_p, 1),
                   ('lower', c_int64, 1),
                   ('upper', c_int64, 1),
                   ('max', c_int, 1, -1),
                   ('np', c_int_p, 2))
-fdb_range.errcheck = lambda result, func, arguments : (result, arguments[4])
+fdb_range.errcheck = lambda result, func, arguments :\
+    py_list(result, arguments[4], c_uint64)
 fdb_range.__doc__ =\
 """Get range matching ID numbers in a fixed-length database object.
 
@@ -8213,31 +8261,30 @@ overwritten when this function is called again.
 
 """
 
-# FIX param qrys (c_void_pp)
-# tdb_metasearch = cfunc('tctdbmetasearch', libtc, TCLIST_P,
-#                        ('qrys', c_void_p, 1),
-#                        ('num', c_int, 1),
-#                        ('type', c_int, 1))
-# tdb_metasearch.__doc__ =\
-# """Retrieve records with multiple query objects and get the set of the
-# result.
+tdb_metasearch = cfunc('tctdbmetasearch', libtc, TCLIST_P,
+                       ('qrys', ListPOINTER(c_void_p), 1),
+                       ('num', c_int, 1),
+                       ('type', c_int, 1))
+tdb_metasearch.__doc__ =\
+"""Retrieve records with multiple query objects and get the set of the
+result.
 
-# qrys -- specifies an array of the query objects.
-# num  -- specifies the number of elements of the array.
-# type -- specifies a set operation type: 'MSUNION' for the union set,
-#         'MSISECT' for the intersection set, 'MSDIFF' for the
-#         difference set.
+qrys -- specifies an array of the query objects.
+num  -- specifies the number of elements of the array.
+type -- specifies a set operation type: 'MSUNION' for the union set,
+        'MSISECT' for the intersection set, 'MSDIFF' for the
+        difference set.
 
-# The return value is a list object of the primary keys of the
-# corresponding records.  This function does never fail.  It returns an
-# empty list even if no record corresponds.
+The return value is a list object of the primary keys of the
+corresponding records.  This function does never fail.  It returns an
+empty list even if no record corresponds.
 
-# If the first query object has the order setting, the result array is
-# sorted by the order.  Because the object of the return value is
-# created with the function 'tclistnew', it should be deleted with the
-# function 'tclistdel' when it is no longer in use.
+If the first query object has the order setting, the result array is
+sorted by the order.  Because the object of the return value is
+created with the function 'tclistnew', it should be deleted with the
+function 'tclistdel' when it is no longer in use.
 
-# """
+"""
 
 # features for experts
 
