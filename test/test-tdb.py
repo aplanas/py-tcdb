@@ -302,6 +302,25 @@ class TestTDB(unittest.TestCase):
             self.assert_(last <= l)
             last = l
 
+    def test_metasearch(self):
+        pks = [1+1j, 'some text [áéíóú]', 10, 10.0, 't1', 't2', 't3', 't4']
+        for pk in pks:
+            cols = self.row(str(pk))
+            cols['order'] = random.choice(range(50))
+            self.tdb.put(pk, cols, raw_cols=True)
+
+        qry1 = self.tdb.query()
+        qry1.addcond('value', tdb.QCSTREQ, str(pks[0]))
+        qry2 = self.tdb.query()
+        qry2.addcond('value', tdb.QCSTREQ, str(pks[1]))
+        r = tdb.Query.metasearch([qry1, qry2], tdb.MSUNION)
+        self.assertEqual(len(r), 2)
+        self.assertEqual(str(r[0]), str(pks[0]))
+        self.assertEqual(str(r[1]), str(pks[1]))
+        qry1.close()
+        qry2.close()
+
+
     def row(self, value):
         return {
             'value': value,

@@ -184,6 +184,15 @@ class Query(object):
         object."""
         return tc.tdb_qrycount(self.qry)
 
+    @staticmethod
+    def metasearch(qrys, type_, as_type=None):
+        """Retrieve records with multiple query objects and get the
+        set of the result."""
+        qrys = [q.qry for q in qrys]
+        tclist_pkeys = tc.tdb_metasearch(qrys, len(qrys), type_)
+        pkeys = util.deserialize_tclist(tclist_pkeys, as_type=as_type)
+        return pkeys
+        
 
 class TDB(object):
     def __init__(self):
