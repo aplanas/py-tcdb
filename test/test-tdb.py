@@ -320,7 +320,6 @@ class TestTDB(unittest.TestCase):
         qry1.close()
         qry2.close()
 
-
     def row(self, value):
         return {
             'value': value,
