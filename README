@@ -24,6 +24,8 @@ to create a HDB (hash database object) we can write::
   from tcdb import tc
   from tcdb import hdb
 
+  db = tc.hdb_new()
+
   if not tc.hdb_open(db, 'example.tch', hdb.OWRITER|hdb.OCREAT):
       print tc.hdb_errmsg(tc.hdb_ecode(db))
 
@@ -33,6 +35,9 @@ to create a HDB (hash database object) we can write::
   v = tc.hdb_get2(db, 'key')
 
   print 'VALUE:', v.value
+
+  tc.hdb_close(db)
+  tc.hdb_del(db)
 
 The low level API works with ctypes types (like c_char_p or c_int).
 
