@@ -2793,7 +2793,7 @@ opened.
 
 hdb_setxmsiz = cfunc('tchdbsetxmsiz', libtc, c_bool,
                      ('hdb', c_void_p, 1),
-                     ('xmsiz', c_int64, 1, 0))
+                     ('xmsiz', c_int64, 1, 67108864))
 hdb_setxmsiz.__doc__ =\
 """Set the size of the extra mapped memory of a hash database object.
 
@@ -3266,10 +3266,10 @@ because every key in the database is scanned.
 
 """
 
-hdb_fwmkeys2 = cfunc('tchdbfwmkeys2', libtc, TCLIST_P,
-                     ('hdb', c_void_p, 1),
-                     ('pstr', c_char_p, 1),
-                     ('max', c_int, 1, -1))
+hdb_fwmkeys2 = cfunc_fast('tchdbfwmkeys2', libtc, TCLIST_P,
+                          ('hdb', c_void_p, 1),
+                          ('pstr', c_char_p, 1),
+                          ('max', c_int, 1, -1))
 hdb_fwmkeys2.__doc__ =\
 """Get forward matching string keys in a hash database object.
 
@@ -4275,10 +4275,10 @@ overwritten.
 
 """
 
-bdb_put2 = cfunc('tcbdbput2', libtc, c_bool,
-                 ('bdb', c_void_p, 1),
-                 ('kstr', c_char_p, 1),
-                 ('vstr', c_char_p, 1))
+bdb_put2 = cfunc_fast('tcbdbput2', libtc, c_bool,
+                      ('bdb', c_void_p, 1),
+                      ('kstr', c_char_p, 1),
+                      ('vstr', c_char_p, 1))
 bdb_put2.__doc__ =\
 """Store a string record into a B+ tree database object.
 
@@ -4315,10 +4315,10 @@ has no effect.
 
 """
 
-bdb_putkeep2 = cfunc('tcbdbputkeep2', libtc, c_bool,
-                     ('bdb', c_void_p, 1),
-                     ('kstr', c_char_p, 1),
-                     ('vstr', c_char_p, 1))
+bdb_putkeep2 = cfunc_fast('tcbdbputkeep2', libtc, c_bool,
+                          ('bdb', c_void_p, 1),
+                          ('kstr', c_char_p, 1),
+                          ('vstr', c_char_p, 1))
 bdb_putkeep2.__doc__ =\
 """Store a new string record into a B+ tree database object.
 
@@ -4355,10 +4355,10 @@ If there is no corresponding record, a new record is created.
 
 """
 
-bdb_putcat2 = cfunc('tcbdbputcat2', libtc, c_bool,
-                    ('bdb', c_void_p, 1),
-                    ('kstr', c_char_p, 1),
-                    ('vstr', c_char_p, 1))
+bdb_putcat2 = cfunc_fast('tcbdbputcat2', libtc, c_bool,
+                         ('bdb', c_void_p, 1),
+                         ('kstr', c_char_p, 1),
+                         ('vstr', c_char_p, 1))
 bdb_putcat2.__doc__ =\
 """Concatenate a string value at the end of the existing record in a
 B+ tree database object.
@@ -4396,10 +4396,10 @@ is placed after the existing one.
 
 """
 
-bdb_putdup2 = cfunc('tcbdbputdup2', libtc, c_bool,
-                    ('bdb', c_void_p, 1),
-                    ('kstr', c_char_p, 1),
-                    ('vstr', c_char_p, 1))
+bdb_putdup2 = cfunc_fast('tcbdbputdup2', libtc, c_bool,
+                         ('bdb', c_void_p, 1),
+                         ('kstr', c_char_p, 1),
+                         ('vstr', c_char_p, 1))
 bdb_putdup2.__doc__ =\
 """Store a string record into a B+ tree database object with allowing
 duplication of keys.
@@ -4454,9 +4454,9 @@ selected.
 
 """
 
-bdb_out2 = cfunc('tcbdbout2', libtc, c_bool,
-                 ('bdb', c_void_p, 1),
-                 ('kstr', c_char_p, 1))
+bdb_out2 = cfunc_fast('tcbdbout2', libtc, c_bool,
+                      ('bdb', c_void_p, 1),
+                      ('kstr', c_char_p, 1))
 bdb_out2.__doc__ =\
 """Remove a string record of a B+ tree database object.
 
@@ -4516,9 +4516,9 @@ when it is no longer in use.
 
 """
 
-bdb_get2 = cfunc('tcbdbget2', libtc, tc_char_p,
-                 ('bdb', c_void_p, 1),
-                 ('kstr', c_char_p, 1))
+bdb_get2 = cfunc_fast('tcbdbget2', libtc, tc_char_p,
+                      ('bdb', c_void_p, 1),
+                      ('kstr', c_char_p, 1))
 bdb_get2.__doc__ =\
 """Retrieve a string record in a B+ tree database object.
 
@@ -4601,9 +4601,9 @@ records, else, it is 0.
 
 """
 
-bdb_vnum2 = cfunc('tcbdbvnum2', libtc, int,
-                  ('bdb', c_void_p, 1),
-                  ('kstr', c_char_p, 1))
+bdb_vnum2 = cfunc_fast('tcbdbvnum2', libtc, int,
+                       ('bdb', c_void_p, 1),
+                       ('kstr', c_char_p, 1))
 bdb_vnum2.__doc__ =\
 """Get the number of records corresponding a string key in a B+ tree
 database object.
@@ -4635,9 +4635,9 @@ selected.
 
 """
 
-bdb_vsiz2 = cfunc('tcbdbvsiz2', libtc, c_int,
-                  ('bdb', c_void_p, 1),
-                  ('kstr', c_char_p, 1))
+bdb_vsiz2 = cfunc_fast('tcbdbvsiz2', libtc, c_int,
+                       ('bdb', c_void_p, 1),
+                       ('kstr', c_char_p, 1))
 bdb_vsiz2.__doc__ =\
 """Get the size of the value of a string record in a B+ tree database
 object.
@@ -4688,13 +4688,13 @@ it is no longer in use.
 
 """
 
-bdb_range2 = cfunc('tcbdbrange2', libtc, TCLIST_P,
-                   ('bdb', c_void_p, 1),
-                   ('bkstr', c_char_p, 1),
-                   ('binc', c_bool, 1),
-                   ('ekstr', c_char_p, 1),
-                   ('einc', c_bool, 1),
-                   ('max', c_int, 1, -1))
+bdb_range2 = cfunc_fast('tcbdbrange2', libtc, TCLIST_P,
+                        ('bdb', c_void_p, 1),
+                        ('bkstr', c_char_p, 1),
+                        ('binc', c_bool, 1),
+                        ('ekstr', c_char_p, 1),
+                        ('einc', c_bool, 1),
+                        ('max', c_int, 1, -1))
 bdb_range2.__doc__ =\
 """Get string keys of ranged records in a B+ tree database object.
 
@@ -4742,10 +4742,10 @@ it is no longer in use.
 
 """
 
-bdb_fwmkeys2 = cfunc('tcbdbfwmkeys2', libtc, TCLIST_P,
-                     ('bdb', c_void_p, 1),
-                     ('pstr', c_char_p, 1),
-                     ('max', c_int, 1, -1))
+bdb_fwmkeys2 = cfunc_fast('tcbdbfwmkeys2', libtc, TCLIST_P,
+                          ('bdb', c_void_p, 1),
+                          ('pstr', c_char_p, 1),
+                          ('max', c_int, 1, -1))
 bdb_fwmkeys2.__doc__ =\
 """Get forward matching string keys in a B+ tree database object.
 
@@ -5042,9 +5042,9 @@ next substitute if completely matching record does not exist.
 
 """
 
-bdb_curjump2 = cfunc('tcbdbcurjump2', libtc, c_bool,
-                     ('cur', c_void_p, 1),
-                     ('kstr', c_char_p, 1))
+bdb_curjump2 = cfunc_fast('tcbdbcurjump2', libtc, c_bool,
+                          ('cur', c_void_p, 1),
+                          ('kstr', c_char_p, 1))
 bdb_curjump2.__doc__ =\
 """Move a cursor object to the front of records corresponding a key
 string.
@@ -5110,10 +5110,10 @@ After insertion, the cursor is moved to the inserted record.
 
 """
 
-bdb_curput2 = cfunc('tcbdbcurput2', libtc, c_bool,
-                    ('cur', c_void_p, 1),
-                    ('vstr', c_char_p, 1),
-                    ('cpmode', c_int, 1))
+bdb_curput2 = cfunc_fast('tcbdbcurput2', libtc, c_bool,
+                         ('cur', c_void_p, 1),
+                         ('vstr', c_char_p, 1),
+                         ('cpmode', c_int, 1))
 bdb_curput2.__doc__ =\
 """Insert a string record around a cursor object.
 
@@ -5171,8 +5171,8 @@ no longer in use.
 
 """
 
-bdb_curkey2 = cfunc('tcbdbcurkey2', libtc, tc_char_p,
-                    ('cur', c_void_p, 1))
+bdb_curkey2 = cfunc_fast('tcbdbcurkey2', libtc, tc_char_p,
+                         ('cur', c_void_p, 1))
 bdb_curkey2.__doc__ =\
 """Get the key string of the record where the cursor object is.
 
@@ -5234,8 +5234,8 @@ no longer in use.
 
 """
 
-bdb_curval2 = cfunc('tcbdbcurval2', libtc, tc_char_p,
-                    ('cur', c_void_p, 1))
+bdb_curval2 = cfunc_fast('tcbdbcurval2', libtc, tc_char_p,
+                         ('cur', c_void_p, 1))
 bdb_curval2.__doc__ =\
 """Get the value string of the record where the cursor object is.
 
@@ -5658,10 +5658,10 @@ is placed after the existing one.
 
 """
 
-bdb_putdupback2 = cfunc('tcbdbputdupback2', libtc, c_bool,
-                        ('bdb', c_void_p, 1),
-                        ('kstr', c_char_p, 1),
-                        ('vstr', c_char_p, 1))
+bdb_putdupback2 = cfunc_fast('tcbdbputdupback2', libtc, c_bool,
+                             ('bdb', c_void_p, 1),
+                             ('kstr', c_char_p, 1),
+                             ('vstr', c_char_p, 1))
 bdb_putdupback2.__doc__ =\
 """Store a new string record into a B+ tree database object with
 backward duplication.
@@ -5738,9 +5738,9 @@ previous substitute if completely matching record does not exist.
 
 """
 
-bdb_curjumpback2 = cfunc('tcbdbcurjumpback2', libtc, c_bool,
-                         ('cur', c_void_p, 1),
-                         ('kstr', c_char_p, 1))
+bdb_curjumpback2 = cfunc_fast('tcbdbcurjumpback2', libtc, c_bool,
+                              ('cur', c_void_p, 1),
+                              ('kstr', c_char_p, 1))
 bdb_curjumpback2.__doc__ =\
 """Move a cursor object to the rear of records corresponding a key
 string.
