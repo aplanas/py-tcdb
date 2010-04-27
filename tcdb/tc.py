@@ -101,6 +101,19 @@ def cfunc_va(name, dll, result, *args):
     return create_closure(func, fix_args)
 
 
+def cfunc_fast(name, dll, result, *args):
+    """Build and apply a ctypes prototype complete without parameter
+    flags.
+
+    This functions is similar to cfunc, but the call is faster.
+
+    """
+    func = getattr(dll, name)
+    func.argtypes = [arg[1] for arg in args]
+    func.restype = result
+    return func
+
+
 class ListPOINTER(object):
     """Just like a POINTER but accept a list of ctype as an
     argument."""
@@ -2876,10 +2889,10 @@ overwritten.
 
 """
 
-hdb_put2 = cfunc('tchdbput2', libtc, c_bool,
-                 ('hdb', c_void_p, 1),
-                 ('kstr', c_char_p, 1),
-                 ('vstr', c_char_p, 1))
+hdb_put2 = cfunc_fast('tchdbput2', libtc, c_bool,
+                      ('hdb', c_void_p, 1),
+                      ('kstr', c_char_p, 1),
+                      ('vstr', c_char_p, 1))
 hdb_put2.__doc__ =\
 """Store a string record into a hash database object.
 
@@ -2916,10 +2929,10 @@ has no effect.
 
 """
 
-hdb_putkeep2 = cfunc('tchdbputkeep2', libtc, c_bool,
-                     ('hdb', c_void_p, 1),
-                     ('kstr', c_char_p, 1),
-                     ('vstr', c_char_p, 1))
+hdb_putkeep2 = cfunc_fast('tchdbputkeep2', libtc, c_bool,
+                          ('hdb', c_void_p, 1),
+                          ('kstr', c_char_p, 1),
+                          ('vstr', c_char_p, 1))
 hdb_putkeep2.__doc__ =\
 """Store a new string record into a hash database object.
 
@@ -2956,10 +2969,10 @@ If there is no corresponding record, a new record is created.
 
 """
 
-hdb_putcat2 = cfunc('tchdbputcat2', libtc, c_bool,
-                    ('hdb', c_void_p, 1),
-                    ('kstr', c_char_p, 1),
-                    ('vstr', c_char_p, 1))
+hdb_putcat2 = cfunc_fast('tchdbputcat2', libtc, c_bool,
+                         ('hdb', c_void_p, 1),
+                         ('kstr', c_char_p, 1),
+                         ('vstr', c_char_p, 1))
 hdb_putcat2.__doc__ =\
 """Concatenate a string value at the end of the existing record in a
 hash database object.
@@ -2997,10 +3010,10 @@ inner buffer and wrote into the file at a blast.
 
 """
 
-hdb_putasync2 = cfunc('tchdbputasync2', libtc, c_bool,
-                      ('hdb', c_void_p, 1),
-                      ('kstr', c_char_p, 1),
-                      ('vstr', c_char_p, 1))
+hdb_putasync2 = cfunc_fast('tchdbputasync2', libtc, c_bool,
+                           ('hdb', c_void_p, 1),
+                           ('kstr', c_char_p, 1),
+                           ('vstr', c_char_p, 1))
 hdb_putasync2.__doc__ =\
 """Store a string record into a hash database object in asynchronous
 fashion.
@@ -3032,9 +3045,9 @@ If successful, the return value is true, else, it is false.
 
 """
 
-hdb_out2 = cfunc('tchdbout2', libtc, c_bool,
-                 ('hdb', c_void_p, 1),
-                 ('kstr', c_char_p, 1))
+hdb_out2 = cfunc_fast('tchdbout2', libtc, c_bool,
+                      ('hdb', c_void_p, 1),
+                      ('kstr', c_char_p, 1))
 hdb_out2.__doc__ =\
 """Remove a string record of a hash database object.
 
@@ -3072,9 +3085,9 @@ no longer in use.
 
 """
 
-hdb_get2 = cfunc('tchdbget2', libtc, tc_char_p,
-                 ('hdb', c_void_p, 1),
-                 ('kstr', c_char_p, 1))
+hdb_get2 = cfunc_fast('tchdbget2', libtc, tc_char_p,
+                      ('hdb', c_void_p, 1),
+                      ('kstr', c_char_p, 1))
 hdb_get2.__doc__ =\
 """Retrieve a string record in a hash database object.
 
@@ -3132,9 +3145,9 @@ corresponding record, else, it is -1.
 
 """
 
-hdb_vsiz2 = cfunc('tchdbvsiz2', libtc, c_int,
-                  ('hdb', c_void_p, 1),
-                  ('kstr', c_char_p, 1))
+hdb_vsiz2 = cfunc_fast('tchdbvsiz2', libtc, c_int,
+                       ('hdb', c_void_p, 1),
+                       ('kstr', c_char_p, 1))
 hdb_vsiz2.__doc__ =\
 """Get the size of the value of a string record in a hash database
 object.
@@ -3190,8 +3203,8 @@ traversal access.
 
 """
 
-hdb_iternext2 = cfunc('tchdbiternext2', libtc, tc_char_p,
-                      ('hdb', c_void_p, 1))
+hdb_iternext2 = cfunc_fast('tchdbiternext2', libtc, tc_char_p,
+                           ('hdb', c_void_p, 1))
 hdb_iternext2.__doc__ =\
 """Get the next key string of the iterator of a hash database object.
 
