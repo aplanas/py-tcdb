@@ -9,6 +9,142 @@ from tcdb import fdb
 from tcdb import tc
 
 
+class TestFDBSimple(unittest.TestCase):
+    def setUp(self):
+        self.fdb = fdb.FDBSimple()
+        self.fdb.open('test.fdb', width=255)
+
+    def tearDown(self):
+        self.fdb.close()
+        self.fdb = None
+        os.remove('test.fdb')
+
+    def test_setgetitem(self):
+        self.fdb['next'] = 'some text'
+        self.assertEqual(self.fdb['max'], 'some text')
+        self.assertRaises(Exception, self.fdb.__getitem__, 100)
+        self.assertRaises(KeyError, self.fdb.__getitem__, '100')
+
+    def test_put(self):
+        self.fdb.put('next', 'some text')
+        self.assertEqual(self.fdb.get('max'), 'some text')
+        self.assertEqual(self.fdb.get('100'), None)
+        self.assertEqual(self.fdb.get('100', 'def'), 'def')
+
+    def test_putkeep(self):
+        self.fdb.putkeep('next', 'some text')
+        self.assertEqual(self.fdb.get('max'), 'some text')
+        self.fdb.putkeep('max', 'Never stored')
+        self.assertEqual(self.fdb.get('max'), 'some text')
+
+    def test_putcat(self):
+        self.fdb.putcat('next', 'some')
+        self.fdb.putcat('max', ' text')
+        self.assertEquals(self.fdb.get('max'), 'some text')
+
+    def test_out_and_contains(self):
+        self.assert_('1' not in self.fdb)
+        self.fdb.put('next', 'some text')
+        self.assert_('1' in self.fdb)
+        self.fdb.out('max')
+        self.assert_('1' not in self.fdb)
+        self.fdb.put('next', 'some text')
+        self.assert_('1' in self.fdb)
+        del self.fdb['max']
+        self.assert_('1' not in self.fdb)
+
+    def test_vsiz(self):
+        self.fdb.put('next', 'some text')
+        self.assertEqual(self.fdb.vsiz('max'), len('some text'))
+
+    def test_iters(self):
+        self.assertEqual(self.fdb.keys(), [])
+        self.assertEqual(self.fdb.values(), [])
+        self.assertEqual(self.fdb.items(), [])
+
+        keys = ['1', '2', '3', '4', '5']
+        values = ['value1', 'value2', 'value3', 'value4', 'value5']
+        for value in values:
+            self.fdb.put('next', value)
+
+        self.assertEqual(self.fdb.keys(), keys)
+        self.assertEqual(self.fdb.values(), values)
+        self.assertEqual(zip(keys, values), self.fdb.items())
+
+        for key in self.fdb:
+            self.assert_(key in keys)
+
+        for value in self.fdb.itervalues():
+            self.assert_(value in values)
+
+    def test_range(self):
+        keys = ['1', '2', '3', '4', '5']
+        values = ['value1', 'value2', 'value3', 'value4', 'value5']
+        for value in values:
+            self.fdb.put('next', value)
+
+        self.assertEqual(self.fdb.range('min', 'max'), keys)
+        self.assertEqual(self.fdb.range('2', '4'), keys[1:-1])
+
+    def test_admin_functions(self):
+        values = ['value1', 'value2', 'value3', 'value4', 'value5']
+        for value in values:
+            self.fdb.put('next', value)
+
+        self.assertEquals(self.fdb.path(), 'test.fdb')
+
+        self.fdb.sync()
+        self.assertEquals(len(self.fdb), 5)
+        self.assertEquals(self.fdb.fsiz(), 66048)
+
+        self.fdb.vanish()
+        self.assertEquals(self.fdb.fsiz(), 256)
+
+        self.assert_(self.fdb.memsync(True))
+        # self.assertEquals(self.fdb.min(), 0)
+        # self.assertEquals(self.fdb.max(), 0)
+        self.assertEquals(self.fdb.width(), 255)
+        self.assertEquals(self.fdb.limsiz(), 268435456)
+        self.assertEquals(self.fdb.limid(), 1048575)
+
+        self.assert_(self.fdb.inode())
+        self.assert_((datetime.datetime.now()-self.fdb.mtime()).seconds <= 1)
+        # Why OTRUNC?!?
+        self.assertEquals(self.fdb.omode(), fdb.OTRUNC|fdb.OCREAT|fdb.OWRITER)
+        self.assertEquals(self.fdb.type(), tc.TFIXED)
+        self.assertEquals(self.fdb.flags(), fdb.FOPEN)
+        self.assertEquals(self.fdb.opaque(), '')
+
+    def test_transaction(self):
+        values = ['value1', 'value2', 'value3', 'value4', 'value5']
+        with self.fdb as db:
+            for value in values:
+                db.put('next', value)
+        self.assertEquals(len(self.fdb), 5)
+        self.fdb.vanish()
+        try:
+            with self.fdb:
+                for value in values:
+                    self.fdb.put('next', value)
+                self.fdb['100']
+        except KeyError:
+            pass
+        self.assertEquals(len(self.fdb), 0)
+
+    def test_foreach(self):
+        values = ['value1', 'value2', 'value3', 'value4', 'value5']
+
+        def proc(key, value, op):
+            self.assert_(1<=key<=5)
+            self.assert_(value in values)
+            self.assertEquals(op, 'test')
+            return True
+
+        for value in values:
+            self.fdb.put('next', value)
+        self.fdb.foreach(proc, 'test')
+
+
 class TestFDB(unittest.TestCase):
     def setUp(self):
         self.fdb = fdb.FDB()

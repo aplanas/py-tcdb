@@ -53,7 +53,7 @@ IDMAX   = -3                  # maximum number
 IDNEXT  = -4                  # greater by one than the miximum
 
 
-class FDB(object):
+class FDBSimple(object):
     def __init__(self):
         """Create a fixed-length database object."""
         self.db = tc.fdb_new()
@@ -95,148 +95,63 @@ class FDB(object):
         object."""
         return self.put(key, value)
 
-    def put(self, key, value, as_raw=False):
-        """Store any Python object into a fixed-length database
-        object."""
-        (c_value, c_value_len) = util.serialize(value, as_raw)
-        result = tc.fdb_put(self.db, key, c_value, c_value_len)
+    def put(self, key, value):
+        """Store a string record into a fixed-length database object."""
+        result = tc.fdb_put3(self.db, key, value)
         if not result:
             raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
         return result
 
-    def put_str(self, key, value):
-        """Store a string record into a fixed-length database object."""
-        assert isinstance(value, str), 'Value is not a string'
-        return self.put(key, value, True)
-
-    def put_unicode(self, key, value):
-        """Store an unicode string record into a fixed-length database
-        object."""
-        assert isinstance(value, unicode), 'Value is not an unicode string'
-        return self.put(key, value, True)
-
-    def put_int(self, key, value):
-        """Store an integer record into a fixed-length database
-        object."""
-        assert isinstance(value, int), 'Value is not an integer'
-        return self.put(key, value, True)
-
-    def put_float(self, key, value):
-        """Store a double precision record into a fixed-length
-        database object."""
-        assert isinstance(value, float), 'Value is not a float'
-        return self.put(key, value, True)
-
-    def putkeep(self, key, value, as_raw=False):
-        """Store a new Python object into a fixed-length database
-        object."""
-        (c_value, c_value_len) = util.serialize(value, as_raw)
-        return tc.fdb_putkeep(self.db, key, c_value, c_value_len)
-
-    def putkeep_str(self, key, value):
+    def putkeep(self, key, value):
         """Store a new string record into a fixed-length database
         object."""
-        assert isinstance(value, str), 'Value is not a string'
-        return self.putkeep(key, value, True)
+        return tc.fdb_putkeep3(self.db, key, value)
 
-    def putkeep_unicode(self, key, value):
-        """Store a new unicode string record into a fixed-length
-        database object."""
-        assert isinstance(value, unicode), 'Value is not an unicode string'
-        return self.putkeep(key, value, True)
-
-    def putkeep_int(self, key, value):
-        """Store a new integer record into a fixed-length database
-        object."""
-        assert isinstance(value, int), 'Value is not an integer'
-        return self.putkeep(key, value, True)
-
-    def putkeep_float(self, key, value):
-        """Store a new double precision record into a fixed-length
-        database object."""
-        assert isinstance(value, float), 'Value is not a float'
-        return self.putkeep(key, value, True)
-
-    def putcat(self, key, value, as_raw=False):
-        """Concatenate a Python object value at the end of the
-        existing record in a fixed-length database object."""
-        (c_value, c_value_len) = util.serialize(value, as_raw)
-        result = tc.fdb_putcat(self.db, key, c_value, c_value_len)
+    def putcat(self, key, value):
+        """Concatenate a string value with a decimal key in a
+        fixed-length database object."""
+        result = tc.fdb_putcat3(self.db, key, value)
         if not result:
             raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
         return result
-
-    def putcat_str(self, key, value):
-        """Concatenate a string value at the end of the existing
-        record in a fixed-length database object."""
-        assert isinstance(value, str), 'Value is not a string'
-        return self.putcat(key, value, True)
-
-    def putcat_unicode(self, key, value):
-        """Concatenate an unicode string value at the end of the
-        existing record in a fixed-length database object."""
-        assert isinstance(value, unicode), 'Value is not an unicode string'
-        return self.putcat(key, value, True)
 
     def __delitem__(self, key):
         """Remove a Python object of a fixed-length database object."""
         return self.out(key)
 
     def out(self, key):
-        """Remove a Python object of a fixed-length database object."""
-        result = tc.fdb_out(self.db, key)
+        """Remove a record with a decimal key of a fixed-length
+        database object."""
+        result = tc.fdb_out3(self.db, key)
         if not result:
             raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
         return result
 
     def __getitem__(self, key):
         """Retrieve a Python object in a fixed-length database object."""
-        result = None
-        if isinstance(key, slice):
-            start, stop, step = key.indices(self.__len__()+1)
-            result = [self._getitem(k) for k in xrange(start, stop, step)]
-        else:
-            result = self._getitem(key)
-        return result
+        return self._getitem(key)
 
-    def _getitem(self, key, as_type=None):
-        """Retrieve a Python object in a fixed-length database object."""
-        (c_value, c_value_len) = tc.fdb_get(self.db, key)
-        if not c_value:
+    def _getitem(self, key):
+        """Retrieve a string record with a decimal key in a
+        fixed-length database object."""
+        value = tc.fdb_get3(self.db, key)
+        if not value:
             raise KeyError(key)
-        return util.deserialize(c_value, c_value_len, as_type)
+        return value.value
 
-    def get(self, key, default=None, as_type=None):
-        """Retrieve a Python object in a fixed-length database object."""
+    def get(self, key, default=None):
+        """Retrieve a string record with a decimal key in a
+        fixed-length database object."""
         try:
-            value = self._getitem(key, as_type)
+            value = self._getitem(key)
         except KeyError:
             value = default
         return value
 
-    def get_str(self, key, default=None):
-        """Retrieve a string record in a fixed-length database object."""
-        return self.get(key, default, str)
-
-    def get_unicode(self, key, default=None):
-        """Retrieve an unicode string record in a fixed-length
-        database object."""
-        return self.get(key, default, unicode)
-
-    def get_int(self, key, default=None):
-        """Retrieve an integer record in a fixed-length database
-        object."""
-        return self.get(key, default, int)
-
-    def get_float(self, key, default=None):
-        """Retrieve a double precision record in a fixed-length
-        database object."""
-        return self.get(key, default, float)
-
     def vsiz(self, key):
-        """Get the size of the value of a Python object in a
+        """Get the size of the string value with a decimal key in a
         fixed-length database object."""
-        result = tc.fdb_vsiz(self.db, key)
+        result = tc.fdb_vsiz3(self.db, key)
         if result == -1:
             raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
         return result
@@ -250,43 +165,41 @@ class FDB(object):
         if not tc.fdb_iterinit(self.db):
             raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
         while True:
-            key = tc.fdb_iternext(self.db)
+            key = tc.fdb_iternext3(self.db)
             if not key:
                 break
-            yield key
+            yield key.value
 
-    def values(self, as_type=None):
+    def values(self):
         """Get all the values of a fixed-length database object."""
-        return list(self.itervalues(as_type))
+        return list(self.itervalues())
 
-    def itervalues(self, as_type=None):
+    def itervalues(self):
         """Iterate for every value in a fixed-length database object."""
         if not tc.fdb_iterinit(self.db):
             raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
         while True:
-            key = tc.fdb_iternext(self.db)
+            key = tc.fdb_iternext3(self.db)
             if not key:
                 break
-            (c_value, c_value_len) = tc.fdb_get(self.db, key)
-            value = util.deserialize(c_value, c_value_len, as_type)
-            yield value
+            value = tc.fdb_get3(self.db, key)
+            yield value.value
 
-    def items(self, as_type=None):
+    def items(self):
         """Get all the items of a fixed-length database object."""
-        return list(self.iteritems(as_type))
+        return list(self.iteritems())
 
-    def iteritems(self, as_type=None):
+    def iteritems(self):
         """Iterate for every key / value in a fixed-length database
         object."""
         if not tc.fdb_iterinit(self.db):
             raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
         while True:
-            key = tc.fdb_iternext(self.db)
+            key = tc.fdb_iternext3(self.db)
             if not key:
                 break
-            (c_value, c_value_len) = tc.fdb_get(self.db, key)
-            value = util.deserialize(c_value, c_value_len, as_type)
-            yield (key, value)
+            value = tc.fdb_get3(self.db, key)
+            yield (key.value, value.value)
 
     def __iter__(self):
         """Iterate for every key in a fixed-length database object."""
@@ -295,23 +208,10 @@ class FDB(object):
     def range(self, lower, upper, max_=-1):
         """Get range matching ID numbers in a fixed-length database
         object."""
-        return tc.fdb_range(self.db, lower, upper, max_)
-
-    def add_int(self, key, num):
-        """Add an integer to a record in a fixed-length database object."""
-        assert isinstance(num, int), 'Value is not an integer'
-        result = tc.fdb_addint(self.db, key, num)
-        if not result:
+        tclist_objs = tc.fdb_range3(self.db, lower, upper, max_)
+        if not tclist_objs:
             raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
-        return result
-
-    def add_float(self, key, num):
-        """Add a real number to a record in a fixed-length database object."""
-        assert isinstance(num, float), 'Value is not a float'
-        result = tc.fdb_adddouble(self.db, key, num)
-        if not result:
-            raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
-        return result
+        return util.deserialize_tclist(tclist_objs, str)
 
     def sync(self):
         """Synchronize updated contents of a fixed-length database object with
@@ -421,16 +321,6 @@ class FDB(object):
             raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
         return result
 
-    def min(self):
-        """Get the minimum ID number of records of a fixed-length
-        database object."""
-        return tc.fdb_min(self.db)
-
-    def max(self):
-        """Get the maximum ID number of records of a fixed-length
-        database object."""
-        return tc.fdb_max(self.db)
-
     def width(self):
         """Get the width of the value of each record of a fixed-length
         database object."""
@@ -477,6 +367,251 @@ class FDB(object):
     #     duplication handler."""
     #     # See tc.fdb_putproc
 
+    def foreach(self, proc, op):
+        """Process each record atomically of a fixed-length database
+        object."""
+        def proc_wraper(c_key, c_key_len, c_value, c_value_len, op):
+            key = util.deserialize(ctypes.cast(c_key, ctypes.c_void_p),
+                                   c_key_len, str)
+            value = util.deserialize(ctypes.cast(c_value, ctypes.c_void_p),
+                                     c_value_len, str)
+            return proc(int(key), value, ctypes.cast(op, ctypes.c_char_p).value)
+
+        result = tc.fdb_foreach(self.db, tc.TCITER(proc_wraper), op)
+        if not result:
+            raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
+        return result
+
+    def __contains__(self, key):
+        """Return True if fixed-length database object has the key."""
+        return self.has_key(key)
+
+    def has_key(self, key):
+        """Return True if fixed-length database object has the key."""
+        return tc.fdb_iterinit4(self.db, key)
+
+
+class FDB(FDBSimple):
+    def __init__(self):
+        """Create a fixed-length database object."""
+        FDBSimple.__init__(self)
+
+    def put(self, key, value, as_raw=False):
+        """Store any Python object into a fixed-length database
+        object."""
+        (c_value, c_value_len) = util.serialize(value, as_raw)
+        result = tc.fdb_put(self.db, key, c_value, c_value_len)
+        if not result:
+            raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
+        return result
+
+    def put_str(self, key, value):
+        """Store a string record into a fixed-length database object."""
+        assert isinstance(value, str), 'Value is not a string'
+        return self.put(key, value, True)
+
+    def put_unicode(self, key, value):
+        """Store an unicode string record into a fixed-length database
+        object."""
+        assert isinstance(value, unicode), 'Value is not an unicode string'
+        return self.put(key, value, True)
+
+    def put_int(self, key, value):
+        """Store an integer record into a fixed-length database
+        object."""
+        assert isinstance(value, int), 'Value is not an integer'
+        return self.put(key, value, True)
+
+    def put_float(self, key, value):
+        """Store a double precision record into a fixed-length
+        database object."""
+        assert isinstance(value, float), 'Value is not a float'
+        return self.put(key, value, True)
+
+    def putkeep(self, key, value, as_raw=False):
+        """Store a new Python object into a fixed-length database
+        object."""
+        (c_value, c_value_len) = util.serialize(value, as_raw)
+        return tc.fdb_putkeep(self.db, key, c_value, c_value_len)
+
+    def putkeep_str(self, key, value):
+        """Store a new string record into a fixed-length database
+        object."""
+        assert isinstance(value, str), 'Value is not a string'
+        return self.putkeep(key, value, True)
+
+    def putkeep_unicode(self, key, value):
+        """Store a new unicode string record into a fixed-length
+        database object."""
+        assert isinstance(value, unicode), 'Value is not an unicode string'
+        return self.putkeep(key, value, True)
+
+    def putkeep_int(self, key, value):
+        """Store a new integer record into a fixed-length database
+        object."""
+        assert isinstance(value, int), 'Value is not an integer'
+        return self.putkeep(key, value, True)
+
+    def putkeep_float(self, key, value):
+        """Store a new double precision record into a fixed-length
+        database object."""
+        assert isinstance(value, float), 'Value is not a float'
+        return self.putkeep(key, value, True)
+
+    def putcat(self, key, value, as_raw=False):
+        """Concatenate a Python object value at the end of the
+        existing record in a fixed-length database object."""
+        (c_value, c_value_len) = util.serialize(value, as_raw)
+        result = tc.fdb_putcat(self.db, key, c_value, c_value_len)
+        if not result:
+            raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
+        return result
+
+    def putcat_str(self, key, value):
+        """Concatenate a string value at the end of the existing
+        record in a fixed-length database object."""
+        assert isinstance(value, str), 'Value is not a string'
+        return self.putcat(key, value, True)
+
+    def putcat_unicode(self, key, value):
+        """Concatenate an unicode string value at the end of the
+        existing record in a fixed-length database object."""
+        assert isinstance(value, unicode), 'Value is not an unicode string'
+        return self.putcat(key, value, True)
+
+    def out(self, key):
+        """Remove a Python object of a fixed-length database object."""
+        result = tc.fdb_out(self.db, key)
+        if not result:
+            raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
+        return result
+
+    def __getitem__(self, key):
+        """Retrieve a Python object in a fixed-length database object."""
+        result = None
+        if isinstance(key, slice):
+            start, stop, step = key.indices(self.__len__()+1)
+            result = [self._getitem(k) for k in xrange(start, stop, step)]
+        else:
+            result = self._getitem(key)
+        return result
+
+    def _getitem(self, key, as_type=None):
+        """Retrieve a Python object in a fixed-length database object."""
+        (c_value, c_value_len) = tc.fdb_get(self.db, key)
+        if not c_value:
+            raise KeyError(key)
+        return util.deserialize(c_value, c_value_len, as_type)
+
+    def get(self, key, default=None, as_type=None):
+        """Retrieve a Python object in a fixed-length database object."""
+        try:
+            value = self._getitem(key, as_type)
+        except KeyError:
+            value = default
+        return value
+
+    def get_str(self, key, default=None):
+        """Retrieve a string record in a fixed-length database object."""
+        return self.get(key, default, str)
+
+    def get_unicode(self, key, default=None):
+        """Retrieve an unicode string record in a fixed-length
+        database object."""
+        return self.get(key, default, unicode)
+
+    def get_int(self, key, default=None):
+        """Retrieve an integer record in a fixed-length database
+        object."""
+        return self.get(key, default, int)
+
+    def get_float(self, key, default=None):
+        """Retrieve a double precision record in a fixed-length
+        database object."""
+        return self.get(key, default, float)
+
+    def vsiz(self, key):
+        """Get the size of the value of a Python object in a
+        fixed-length database object."""
+        result = tc.fdb_vsiz(self.db, key)
+        if result == -1:
+            raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
+        return result
+
+    def iterkeys(self):
+        """Iterate for every key in a fixed-length database object."""
+        if not tc.fdb_iterinit(self.db):
+            raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
+        while True:
+            key = tc.fdb_iternext(self.db)
+            if not key:
+                break
+            yield key
+
+    def values(self, as_type=None):
+        """Get all the values of a fixed-length database object."""
+        return list(self.itervalues(as_type))
+
+    def itervalues(self, as_type=None):
+        """Iterate for every value in a fixed-length database object."""
+        if not tc.fdb_iterinit(self.db):
+            raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
+        while True:
+            key = tc.fdb_iternext(self.db)
+            if not key:
+                break
+            (c_value, c_value_len) = tc.fdb_get(self.db, key)
+            value = util.deserialize(c_value, c_value_len, as_type)
+            yield value
+
+    def items(self, as_type=None):
+        """Get all the items of a fixed-length database object."""
+        return list(self.iteritems(as_type))
+
+    def iteritems(self, as_type=None):
+        """Iterate for every key / value in a fixed-length database
+        object."""
+        if not tc.fdb_iterinit(self.db):
+            raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
+        while True:
+            key = tc.fdb_iternext(self.db)
+            if not key:
+                break
+            (c_value, c_value_len) = tc.fdb_get(self.db, key)
+            value = util.deserialize(c_value, c_value_len, as_type)
+            yield (key, value)
+
+    def range(self, lower, upper, max_=-1):
+        """Get range matching ID numbers in a fixed-length database
+        object."""
+        return tc.fdb_range(self.db, lower, upper, max_)
+
+    def add_int(self, key, num):
+        """Add an integer to a record in a fixed-length database object."""
+        assert isinstance(num, int), 'Value is not an integer'
+        result = tc.fdb_addint(self.db, key, num)
+        if not result:
+            raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
+        return result
+
+    def add_float(self, key, num):
+        """Add a real number to a record in a fixed-length database object."""
+        assert isinstance(num, float), 'Value is not a float'
+        result = tc.fdb_adddouble(self.db, key, num)
+        if not result:
+            raise tc.TCException(tc.fdb_errmsg(tc.fdb_ecode(self.db)))
+        return result
+
+    def min(self):
+        """Get the minimum ID number of records of a fixed-length
+        database object."""
+        return tc.fdb_min(self.db)
+
+    def max(self):
+        """Get the maximum ID number of records of a fixed-length
+        database object."""
+        return tc.fdb_max(self.db)
+
     def foreach(self, proc, op, as_type=None):
         """Process each record atomically of a fixed-length database
         object."""
@@ -496,10 +631,6 @@ class FDB(object):
         """Generate the ID number from arbitrary binary data."""
         (c_key, c_key_len) = util.serialize(key, True)
         return tc.fdb_keytoid(self.db, c_key, c_key_len)
-
-    def __contains__(self, key):
-        """Return True if fixed-length database object has the key."""
-        return self.has_key(key)
 
     def has_key(self, key):
         """Return True if fixed-length database object has the key."""
