@@ -5985,10 +5985,10 @@ overwritten.
 
 """
 
-fdb_put3 = cfunc('tcfdbput3', libtc, c_bool,
-                 ('fdb', c_void_p, 1),
-                 ('kstr', c_char_p, 1),
-                 ('vstr', c_char_p, 1))
+fdb_put3 = cfunc_fast('tcfdbput3', libtc, c_bool,
+                      ('fdb', c_void_p, 1),
+                      ('kstr', c_char_p, 1),
+                      ('vstr', c_char_p, 1))
 fdb_put3.__doc__ =\
 """Store a string record with a decimal key into a fixed-length
 database object.
@@ -6073,10 +6073,10 @@ has no effect.
 
 """
 
-fdb_putkeep3 = cfunc('tcfdbputkeep3', libtc, c_bool,
-                     ('fdb', c_void_p, 1),
-                     ('kstr', c_char_p, 1),
-                     ('vstr', c_char_p, 1))
+fdb_putkeep3 = cfunc_fast('tcfdbputkeep3', libtc, c_bool,
+                          ('fdb', c_void_p, 1),
+                          ('kstr', c_char_p, 1),
+                          ('vstr', c_char_p, 1))
 fdb_putkeep3.__doc__ =\
 """Store a new string record with a decimal key into a fixed-length
 database object.
@@ -6160,10 +6160,10 @@ If there is no corresponding record, a new record is created.
 
 """
 
-fdb_putcat3 = cfunc('tcfdbputcat3', libtc, c_bool,
-                    ('fdb', c_void_p, 1),
-                    ('kstr', c_char_p, 1),
-                    ('vstr', c_char_p, 1))
+fdb_putcat3 = cfunc_fast('tcfdbputcat3', libtc, c_bool,
+                         ('fdb', c_void_p, 1),
+                         ('kstr', c_char_p, 1),
+                         ('vstr', c_char_p, 1))
 fdb_putcat3.__doc__ =\
 """Concatenate a string value with a decimal key in a fixed-length
 database object.
@@ -6222,9 +6222,9 @@ If successful, the return value is true, else, it is false.
 
 """
 
-fdb_out3 = cfunc('tcfdbout3', libtc, c_bool,
-                 ('fdb', c_void_p, 1),
-                 ('kstr', c_char_p, 1))
+fdb_out3 = cfunc_fast('tcfdbout3', libtc, c_bool,
+                      ('fdb', c_void_p, 1),
+                      ('kstr', c_char_p, 1))
 fdb_out3.__doc__ =\
 """Remove a string record with a decimal key of a fixed-length
 database object.
@@ -6299,9 +6299,9 @@ no longer in use.
 
 """
 
-fdb_get3 = cfunc('tcfdbget3', libtc, tc_char_p,
-                 ('fdb', c_void_p, 1),
-                 ('kstr', c_char_p, 1))
+fdb_get3 = cfunc_fast('tcfdbget3', libtc, tc_char_p,
+                      ('fdb', c_void_p, 1),
+                      ('kstr', c_char_p, 1))
 fdb_get3.__doc__ =\
 """Retrieve a string record with a decimal key in a fixed-length
 database object.
@@ -6388,9 +6388,9 @@ corresponding record, else, it is -1.
 
 """
 
-fdb_vsiz3 = cfunc('tcfdbvsiz3', libtc, c_int,
-                  ('fdb', c_void_p, 1),
-                  ('kstr', c_char_p, 1))
+fdb_vsiz3 = cfunc_fast('tcfdbvsiz3', libtc, c_int,
+                       ('fdb', c_void_p, 1),
+                       ('kstr', c_char_p, 1))
 fdb_vsiz3.__doc__ =\
 """Get the size of the string value with a decimal key in a
 fixed-length database object.
@@ -6466,10 +6466,10 @@ traversal access method is ascending of the ID number.
 
 """
 
-fdb_iternext3 = cfunc('tcfdbiternext3', libtc, tc_char_p,
-                      ('fdb', c_void_p, 1))
+fdb_iternext3 = cfunc_fast('tcfdbiternext3', libtc, tc_char_p,
+                           ('fdb', c_void_p, 1))
 fdb_iternext3.__doc__ =\
-"""Get the next decimay key string of the iterator of a fixed-length
+"""Get the next decimal key string of the iterator of a fixed-length
 database object.
 
 fdb -- specifies the fixed-length database object.
@@ -6552,11 +6552,11 @@ because every key in the database is scanned.
 
 """
 
-fdb_range3 = cfunc('tcfdbrange3', libtc, TCLIST_P,
-                   ('fdb', c_void_p, 1),
-                   ('lstr', c_char_p, 1),
-                   ('ustr', c_char_p, 1),
-                   ('max', c_int, 1, -1))
+fdb_range3 = cfunc_fast('tcfdbrange3', libtc, TCLIST_P,
+                        ('fdb', c_void_p, 1),
+                        ('lstr', c_char_p, 1),
+                        ('ustr', c_char_p, 1),
+                        ('max', c_int, 1, -1))
 fdb_range3.__doc__ =\
 """Get range matching decimal keys with strings in a fixed-length
 database object.
@@ -7125,9 +7125,9 @@ returned if there is no record corresponding the condition.
 
 """
 
-fdb_iterinit4 = cfunc('tcfdbiterinit4', libtc, c_bool,
-                      ('fdb', c_void_p, 1),
-                      ('kstr', c_char_p, 1))
+fdb_iterinit4 = cfunc_fast('tcfdbiterinit4', libtc, c_bool,
+                           ('fdb', c_void_p, 1),
+                           ('kstr', c_char_p, 1))
 fdb_iterinit4.__doc__ =\
 """Move the iterator to the decimal string record of a fixed-length
 database object.
