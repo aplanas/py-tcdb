@@ -1980,10 +1980,10 @@ overwritten.
 
 """
 
-adb_put2 = cfunc('tcadbput2', libtc, c_bool,
-                 ('adb', c_void_p, 1),
-                 ('kstr', c_char_p, 1),
-                 ('vstr', c_char_p, 1))
+adb_put2 = cfunc_fast('tcadbput2', libtc, c_bool,
+                      ('adb', c_void_p, 1),
+                      ('kstr', c_char_p, 1),
+                      ('vstr', c_char_p, 1))
 adb_put2.__doc__ =\
 """Store a string record into an abstract object.
 
@@ -2020,10 +2020,10 @@ has no effect.
 
 """
 
-adb_putkeep2 = cfunc('tcadbputkeep2', libtc, c_bool,
-                     ('adb', c_void_p, 1),
-                     ('kstr', c_char_p, 1),
-                     ('vstr', c_char_p, 1))
+adb_putkeep2 = cfunc_fast('tcadbputkeep2', libtc, c_bool,
+                          ('adb', c_void_p, 1),
+                          ('kstr', c_char_p, 1),
+                          ('vstr', c_char_p, 1))
 adb_putkeep2.__doc__ =\
 """Store a new string record into an abstract database object.
 
@@ -2060,10 +2060,10 @@ If there is no corresponding record, a new record is created.
 
 """
 
-adb_putcat2 = cfunc('tcadbputcat2', libtc, c_bool,
-                    ('adb', c_void_p, 1),
-                    ('kstr', c_char_p, 1),
-                    ('vstr', c_char_p, 1))
+adb_putcat2 = cfunc_fast('tcadbputcat2', libtc, c_bool,
+                         ('adb', c_void_p, 1),
+                         ('kstr', c_char_p, 1),
+                         ('vstr', c_char_p, 1))
 adb_putcat2.__doc__ =\
 """Concatenate a string value at the end of the existing record in an
 abstract database object.
@@ -2093,9 +2093,9 @@ If successful, the return value is true, else, it is false.
 
 """
 
-adb_out2 = cfunc('tcadbput2', libtc, c_bool,
-                 ('adb', c_void_p, 1),
-                 ('kstr', c_char_p, 1))
+adb_out2 = cfunc_fast('tcadbout2', libtc, c_bool,
+                      ('adb', c_void_p, 1),
+                      ('kstr', c_char_p, 1))
 adb_out2.__doc__ =\
 """Remove a string record of an abstract database object.
 
@@ -2133,9 +2133,9 @@ no longer in use.
 
 """
 
-adb_get2 = cfunc('tcadbget2', libtc, tc_char_p,
-                 ('adb', c_void_p, 1),
-                 ('kstr', c_char_p, 1))
+adb_get2 = cfunc_fast('tcadbget2', libtc, tc_char_p,
+                      ('adb', c_void_p, 1),
+                      ('kstr', c_char_p, 1))
 adb_get2.__doc__ =\
 """Retrieve a string record in an abstract database object.
 
@@ -2168,9 +2168,9 @@ corresponding record, else, it is -1.
 
 """
 
-adb_vsiz2 = cfunc('tcadbvsiz2', libtc, c_int,
-                  ('adb', c_void_p, 1),
-                  ('kstr', c_char_p, 1))
+adb_vsiz2 = cfunc_fast('tcadbvsiz2', libtc, c_int,
+                       ('adb', c_void_p, 1),
+                       ('kstr', c_char_p, 1))
 adb_vsiz2.__doc__ =\
 """Get the size of the value of a string record in an abstract
 database object.
@@ -2226,8 +2226,8 @@ access.
 
 """
 
-adb_iternext2 = cfunc('tcadbiternext2', libtc, tc_char_p,
-                      ('adb', c_void_p, 1))
+adb_iternext2 = cfunc_fast('tcadbiternext2', libtc, tc_char_p,
+                           ('adb', c_void_p, 1))
 adb_iternext2.__doc__ =\
 """Get the next key string of the iterator of an abstract database
 object.
@@ -2273,10 +2273,10 @@ because every key in the database is scanned.
 
 """
 
-adb_fwmkeys2 = cfunc('tcadbfwmkeys2', libtc, TCLIST_P,
-                     ('adb', c_void_p, 1),
-                     ('pstr', c_char_p, 1),
-                     ('max', c_int, 1, -1))
+adb_fwmkeys2 = cfunc_fast('tcadbfwmkeys2', libtc, TCLIST_P,
+                          ('adb', c_void_p, 1),
+                          ('pstr', c_char_p, 1),
+                          ('max', c_int, 1, -1))
 adb_fwmkeys2.__doc__ =\
 """Get forward matching string keys in an abstract database object.
 
