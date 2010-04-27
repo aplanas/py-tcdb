@@ -8,6 +8,169 @@ import warnings
 from tcdb import bdb
 
 
+class TestBDBSimple(unittest.TestCase):
+    def setUp(self):
+        self.bdb = bdb.BDBSimple()
+        self.bdb.open('test.bdb', lmemb=128, lcnum=1024, ncnum=0, xmsiz=100)
+
+    def tearDown(self):
+        self.bdb.close()
+        self.bdb = None
+        os.remove('test.bdb')
+
+    def test_setgetitem(self):
+        self.bdb['key'] = 'some text'
+        self.assertEqual(self.bdb['key'], 'some text')
+        self.assertRaises(KeyError, self.bdb.__getitem__, 'nonexistent key')
+
+    def test_put(self):
+        self.bdb.put('key', 'some text')
+        self.assertEqual(self.bdb.get('key'), 'some text')
+        self.assertEqual(self.bdb.get('nonexistent key'), None)
+        self.assertEqual(self.bdb.get('nonexistent key', 'def'), 'def')
+
+    def test_putkeep(self):
+        self.bdb.putkeep('key', 'some text')
+        self.assertEqual(self.bdb.get('key'), 'some text')
+        self.bdb.putkeep('key', 'Never stored')
+        self.assertEqual(self.bdb.get('key'), 'some text')
+
+    def test_putcat(self):
+        self.bdb.putcat('key', 'some')
+        self.bdb.putcat('key', ' text')
+        self.assertEquals(self.bdb.get('key'), 'some text')
+
+    def test_putdup(self):
+        self.bdb.putdup('key', 'text1')
+        self.assertEquals(self.bdb.get('key'), 'text1')
+        self.bdb.putdup('key', 'text2')
+        self.assertEquals(self.bdb.get('key'), 'text1')
+        self.assertEqual(self.bdb.getdup('key'), ['text1', 'text2'])
+        self.assertEqual(self.bdb.getdup('nonexistent key'), None)
+        self.assertEqual(self.bdb.getdup('nonexistent key', 'def'), 'def')
+
+    def test_putdup_iter(self):
+        self.bdb.putdup_iter('key', ['text1', 'text2'])
+        self.assertEquals(self.bdb.get('key'), 'text1')
+        self.assertEqual(self.bdb.getdup('key'), ['text1', 'text2'])
+
+    def test_out_and_contains(self):
+        self.assert_('key' not in self.bdb)
+        self.bdb.put('key', 'some text')
+        self.assert_('key' in self.bdb)
+        self.bdb.out('key')
+        self.assert_('key' not in self.bdb)
+        self.bdb.put('key', 'some text')
+        self.assert_('key' in self.bdb)
+        del self.bdb['key']
+        self.assert_('key' not in self.bdb)
+
+    def test_vsiz(self):
+        self.bdb.put('key', 'some text')
+        self.assertEqual(self.bdb.vsiz('key'), len('some text'))
+
+    def test_iters(self):
+        self.assertEqual(self.bdb.keys(), [])
+        self.assertEqual(self.bdb.values(), [])
+        self.assertEqual(self.bdb.items(), [])
+
+        keys = ['key1', 'key2', 'key3', 'key4', 'key5']
+        for key in keys:
+            self.bdb.put(key, key)
+
+        self.assertEqual(self.bdb.keys(), keys)
+        self.assertEqual(self.bdb.values(), keys)
+        self.assertEqual(zip(keys, keys), self.bdb.items())
+
+        for key in self.bdb:
+            self.assert_(key in keys)
+
+        for value in self.bdb.itervalues():
+            self.assert_(value in keys)
+
+    def test_range(self):
+        keys = ['key1', 'key2', 'key3', 'key4', 'key5']
+        for key in keys:
+            self.bdb.put(key, key)
+
+        self.assertEqual(self.bdb.range('key1', True, 'key5', True),
+                         ['key1', 'key2', 'key3', 'key4', 'key5'])
+        self.assertEqual(self.bdb.range('key1', True, 'key5', False),
+                         ['key1', 'key2', 'key3', 'key4'])
+        self.assertEqual(self.bdb.range('key1', False, 'key5', False),
+                         ['key2', 'key3', 'key4'])
+
+    def test_fwmkeys(self):
+        objs = ['aa', 'ab', 'ac', 'xx', 'ad']
+        for obj in objs:
+            self.bdb.put(obj, 'some text')
+        self.assertEqual(self.bdb.fwmkeys('a'), ['aa', 'ab', 'ac', 'ad'])
+        self.assertEqual(self.bdb.fwmkeys('x'), ['xx'])
+        self.assertEqual(self.bdb.fwmkeys('nonexistent key'), [])
+
+    def test_admin_functions(self):
+        keys = ['key1', 'key2', 'key3', 'key4', 'key5']
+        for key in keys:
+            self.bdb.put(key, key)
+
+        self.assertEqual(self.bdb.path(), 'test.bdb')
+
+        self.bdb.sync()
+        self.assertEqual(len(self.bdb), 5)
+        self.assertEqual(self.bdb.fsiz(), 135680)
+
+        self.bdb.vanish()
+        self.assertEqual(self.bdb.fsiz(), 135680)
+
+        self.assert_(self.bdb.memsync(True))
+        self.assert_(self.bdb.cacheclear())
+        self.assertEqual(self.bdb.lmemb(), 128)
+        self.assertEqual(self.bdb.lnum(), 1)
+        self.assertEqual(self.bdb.nnum(), 0)
+        self.assertEqual(self.bdb.bnum(), 32749)
+        self.assertEqual(self.bdb.align(), 256)
+        self.assertEqual(self.bdb.fbpmax(), 1024)
+
+        self.assert_(self.bdb.inode())
+        self.assert_((datetime.datetime.now()-self.bdb.mtime()).seconds <= 1)
+        self.assertEqual(self.bdb.flags(), bdb.FOPEN)
+        self.assertEqual(self.bdb.opts(), 0)
+        self.assertEqual(self.bdb.opaque(), '')
+        self.assertEqual(self.bdb.bnumused(), 1)
+        self.assertEqual(self.bdb.dfunit(), 0)
+        self.assert_(self.bdb.defrag(5))
+        self.assert_(self.bdb.cacheclear())
+
+    def test_transaction(self):
+        keys = ['key1', 'key2', 'key3', 'key4', 'key5']
+        with self.bdb as db:
+            for key in keys:
+                db.put(key, key)
+        self.assertEquals(len(self.bdb), 5)
+        self.bdb.vanish()
+        try:
+            with self.bdb:
+                for key in keys:
+                    self.bdb.put(key, key)
+                self.bdb['bad key']
+        except KeyError:
+            pass
+        self.assertEquals(len(self.bdb), 0)
+
+    def test_foreach(self):
+        keys = ['key1', 'key2', 'key3', 'key4', 'key5']
+
+        def proc(key, value, op):
+            self.assertEquals(key, value)
+            self.assert_(key in keys)
+            self.assertEquals(op, 'test')
+            return True
+
+        for key in keys:
+            self.bdb.put(key, key)
+        self.bdb.foreach(proc, 'test')
+
+
 class TestBDB(unittest.TestCase):
     def setUp(self):
         self.bdb = bdb.BDB()

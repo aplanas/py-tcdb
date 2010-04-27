@@ -59,7 +59,7 @@ CPBEFORE  = 1                 # before
 CPAFTER   = 2                 # after
 
 
-class Cursor(object):
+class CursorSimple(object):
     def __init__(self, db):
         """Create a cursor from a B+ tree database object."""
         self.db = db
@@ -83,11 +83,10 @@ class Cursor(object):
         """Move a cursor object to the last record."""
         return tc.bdb_curlast(self.cur)
 
-    def jump(self, key, as_raw=False):
+    def jump(self, key):
         """Move a cursor object to the front of records corresponding
         a key."""
-        (c_key, c_key_len) = util.serialize(key, as_raw)
-        result = tc.bdb_curjump(self.cur, c_key, c_key_len)
+        result = tc.bdb_curjump2(self.cur, key)
         if not result:
             raise KeyError(key)
         return result
@@ -104,6 +103,62 @@ class Cursor(object):
         result = tc.bdb_curnext(self.cur)
         if not result:
             raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        return result
+
+    def put(self, value, cpmode=CPCURRENT):
+        """Insert a record around a cursor object."""
+        result = tc.bdb_curput(self.cur, value, cpmode)
+        if not result:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        return result
+
+    def key(self):
+        """Get the key of the record where the cursor object is."""
+        key = tc.bdb_curkey2(self.cur)
+        if not key:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        return key.value
+
+    def value(self):
+        """Get the value of the record where the cursor object is."""
+        value = tc.bdb_curval2(self.cur)
+        if not value:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        return value.value
+
+    def record(self):
+        """Get the key and the value of the record where the cursor
+        object is."""
+        xstr_key = tc.tcxstrnew()
+        xstr_value = tc.tcxstrnew()
+        result = tc.bdb_currec(self.cur, xstr_key, xstr_value)
+        if not result:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        key = util.deserialize_xstr(xstr_key, str)
+        value = util.deserialize_xstr(xstr_value, str)
+        return (key, value)
+
+    def jumpback(self, key):
+        """Move a cursor object to the rear of records corresponding a
+        key string."""
+        result = tc.bdb_curjumpback2(self.cur, key)
+        if not result:
+            raise KeyError(key)
+        return result
+
+
+class Cursor(CursorSimple):
+    def __init__(self, db):
+        """Create a cursor from a B+ tree database object."""
+        CursorSimple.__init__(self, db)
+
+    def jump(self, key, as_raw=False):
+        """Move a cursor object to the front of records corresponding
+        a key."""
+        (c_key, c_key_len) = util.serialize(key, as_raw)
+        result = tc.bdb_curjump(self.cur, c_key, c_key_len)
+        if not result:
+            raise KeyError(key)
         return result
 
     def put(self, value, cpmode=CPCURRENT, as_raw=False):
@@ -192,7 +247,7 @@ class Cursor(object):
         return result
 
 
-class BDB(object):
+class BDBSimple(object):
     def __init__(self):
         """Create a B+ tree database object."""
         self.db = tc.bdb_new()
@@ -206,14 +261,14 @@ class BDB(object):
         for threading."""
         return tc.bdb_setmutex(self.db)
 
-    def setcmpfunc(self, cmp_, cmpop, raw_key=False, value_type=None):
+    def setcmpfunc(self, cmp_, cmpop):
         """Set the custom comparison function of a B+ tree database
         object."""
         def cmp_wraper(c_keya, c_keya_len, c_keyb, c_keyb_len, op):
             keya = util.deserialize(ctypes.cast(c_keya, ctypes.c_void_p),
-                                    c_keya_len, raw_key)
+                                    c_keya_len, str)
             keyb = util.deserialize(ctypes.cast(c_keyb, ctypes.c_void_p),
-                                    c_keyb_len, value_type)
+                                    c_keyb_len, str)
             return cmp_(keya, keyb, ctypes.cast(op, ctypes.c_char_p).value)
 
         # If cmp_ is a string, it indicate a native tccmpxxx funcion.
@@ -266,10 +321,14 @@ class BDB(object):
     def open(self, path, omode=OWRITER|OCREAT, lmemb=0, nmemb=0, bnum=0,
              apow=-1, fpow=-1, opts=0, lcnum=0, ncnum=0, xmsiz=0, dfunit=0):
         """Open a database file and connect a B+ tree database object."""
-        self.setcache(lcnum, ncnum)
-        self.setxmsiz(xmsiz)
-        self.setdfunit(dfunit)
-        self.tune(lmemb, nmemb, bnum, apow, fpow, opts)
+        if lmemb or nmemb or bnum or apow >= 0 or fpow >= 0 or opts:
+            self.tune(lmemb, nmemb, bnum, apow, fpow, opts)
+        if lcnum or ncnum:
+            self.setcache(lcnum, ncnum)
+        if xmsiz:
+            self.setxmsiz(xmsiz)
+        if dfunit:
+            self.setdfunit(dfunit)
 
         if not tc.bdb_open(self.db, path, omode):
             raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
@@ -285,174 +344,57 @@ class BDB(object):
         """Store any Python object into a B+ tree database object."""
         return self.put(key, value)
 
-    def put(self, key, value, raw_key=False, raw_value=False):
-        """Store any Python object into a B+ tree database object."""
-        (c_key, c_key_len) = util.serialize(key, raw_key)
-        (c_value, c_value_len) = util.serialize(value, raw_value)
-        result = tc.bdb_put(self.db, c_key, c_key_len, c_value, c_value_len)
-        if not result:
-            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
-        return result
-
-    def put_str(self, key, value, as_raw=False):
+    def put(self, key, value):
         """Store a string record into a B+ tree database object."""
-        assert isinstance(value, str), 'Value is not a string'
-        return self.put(key, value, as_raw, True)
-
-    def put_unicode(self, key, value, as_raw=False):
-        """Store an unicode string record into a B+ tree database
-        object."""
-        assert isinstance(value, unicode), 'Value is not an unicode string'
-        return self.put(key, value, as_raw, True)
-
-    def put_int(self, key, value, as_raw=False):
-        """Store an integer record into a B+ tree database object."""
-        assert isinstance(value, int), 'Value is not an integer'
-        return self.put(key, value, as_raw, True)
-
-    def put_float(self, key, value, as_raw=False):
-        """Store a double precision record into a B+ tree database
-        object."""
-        assert isinstance(value, float), 'Value is not a float'
-        return self.put(key, value, as_raw, True)
-
-    def putkeep(self, key, value, raw_key=False, raw_value=False):
-        """Store a new Python object into a B+ tree database object."""
-        (c_key, c_key_len) = util.serialize(key, raw_key)
-        (c_value, c_value_len) = util.serialize(value, raw_value)
-        return tc.bdb_putkeep(self.db, c_key, c_key_len, c_value, c_value_len)
-
-    def putkeep_str(self, key, value, as_raw=False):
-        """Store a new string record into a B+ tree database object."""
-        assert isinstance(value, str), 'Value is not a string'
-        return self.putkeep(key, value, as_raw, True)
-
-    def putkeep_unicode(self, key, value, as_raw=False):
-        """Store a new unicode string record into a B+ tree database
-        object."""
-        assert isinstance(value, unicode), 'Value is not an unicode string'
-        return self.putkeep(key, value, as_raw, True)
-
-    def putkeep_int(self, key, value, as_raw=False):
-        """Store a new integer record into a B+ tree database object."""
-        assert isinstance(value, int), 'Value is not an integer'
-        return self.putkeep(key, value, as_raw, True)
-
-    def putkeep_float(self, key, value, as_raw=False):
-        """Store a new double precision record into a B+ tree database
-        object."""
-        assert isinstance(value, float), 'Value is not a float'
-        return self.putkeep(key, value, as_raw, True)
-
-    def putcat(self, key, value, raw_key=False, raw_value=False):
-        """Concatenate an object value at the end of the existing
-        record in a B+ tree database object."""
-        (c_key, c_key_len) = util.serialize(key, raw_key)
-        (c_value, c_value_len) = util.serialize(value, raw_value)
-        result = tc.bdb_putcat(self.db, c_key, c_key_len, c_value, c_value_len)
+        result = tc.bdb_put2(self.db, key, value)
         if not result:
             raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
         return result
 
-    def putcat_str(self, key, value, as_raw=False):
+    def putkeep(self, key, value):
+        """Store a new string record into a B+ tree database object."""
+        return tc.bdb_putkeep2(self.db, key, value)
+
+    def putcat(self, key, value):
         """Concatenate a string value at the end of the existing
         record in a B+ tree database object."""
-        assert isinstance(value, str), 'Value is not a string'
-        return self.putcat(key, value, as_raw, True)
-
-    def putcat_unicode(self, key, value, as_raw=False):
-        """Concatenate an unicode string value at the end of the
-        existing record in a B+ tree database object."""
-        assert isinstance(value, unicode), 'Value is not an unicode string'
-        return self.putcat(key, value, as_raw, True)
-
-    def putdup(self, key, value, raw_key=False, raw_value=False):
-        """Store a Python object into a B+ tree database object with
-        allowing duplication of keys."""
-        (c_key, c_key_len) = util.serialize(key, raw_key)
-        (c_value, c_value_len) = util.serialize(value, raw_value)
-        result = tc.bdb_putdup(self.db, c_key, c_key_len, c_value, c_value_len)
+        result = tc.bdb_putcat2(self.db, key, value)
         if not result:
             raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
         return result
 
-    def putdup_str(self, key, value, as_raw=False):
+    def putdup(self, key, value):
         """Store a string record into a B+ tree database object with
         allowing duplication of keys."""
-        assert isinstance(value, str), 'Value is not a string'
-        return self.putdup(key, value, as_raw, True)
+        result = tc.bdb_putdup2(self.db, key, value)
+        if not result:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        return result
 
-    def putdup_unicode(self, key, value, as_raw=False):
-        """Store an unicode string record into a B+ tree database
-        object with allowing duplication of keys."""
-        assert isinstance(value, unicode), 'Value is not an unicode string'
-        return self.putdup(key, value, as_raw, True)
-
-    def putdup_int(self, key, value, as_raw=False):
-        """Store an integer record into a B+ tree database object with
-        allowing duplication of keys."""
-        assert isinstance(value, int), 'Value is not an integer'
-        return self.putdup(key, value, as_raw, True)
-
-    def putdup_float(self, key, value, as_raw=False):
-        """Store a double precision record into a B+ tree database
-        object with allowing duplication of keys."""
-        assert isinstance(value, float), 'Value is not a float'
-        return self.putdup(key, value, as_raw, True)
-
-    def putdup_iter(self, key, values, raw_key=False, raw_value=False):
-        """Store Python records into a B+ tree database object with
-        allowing duplication of keys."""
-        (c_key, c_key_len) = util.serialize(key, raw_key)
-        tclist_vals = util.serialize_tclist(values, raw_value)
+    def putdup_iter(self, key, values):
+        """Store records into a B+ tree database object with allowing
+        duplication of keys."""
+        (c_key, c_key_len) = util.serialize(key, str)
+        tclist_vals = util.serialize_tclist(values, str)
         result = tc.bdb_putdup3(self.db, c_key, c_key_len, tclist_vals)
         if not result:
             raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
         return result
 
-    def putdup_iter_str(self, key, values, as_raw=False):
-        """Store string records into a B+ tree database object with
-        allowing duplication of keys."""
-        assert all([isinstance(v, str) for v in values]), \
-            'Value is not a string'
-        return self.putdup_iter(key, values, as_raw, True)
-
-    def putdup_iter_unicode(self, key, values, as_raw=False):
-        """Store unicode string records into a B+ tree database object
-        with allowing duplication of keys."""
-        assert all([isinstance(v, unicode) for v in values]), \
-            'Value is not an unicode string'
-        return self.putdup_iter(key, values, as_raw, True)
-
-    def putdup_iter_int(self, key, values, as_raw=False):
-        """Store integer records into a B+ tree database object with
-        allowing duplication of keys."""
-        assert all([isinstance(v, int) for v in values]), \
-            'Value is not an integer'
-        return self.putdup_iter(key, values, as_raw, True)
-
-    def putdup_iter_float(self, key, values, as_raw=False):
-        """Store double precision records into a B+ tree database
-        object with allowing duplication of keys."""
-        assert all([isinstance(v, float) for v in values]), \
-            'Value is not a float'
-        return self.putdup_iter(key, values, as_raw, True)
-
     def __delitem__(self, key):
-        """Remove a Python object of a B+ tree database object."""
+        """Remove a string record of a B+ tree database object."""
         return self.out(key)
 
-    def out(self, key, as_raw=False):
-        """Remove a Python object of a B+ tree database object."""
-        (c_key, c_key_len) = util.serialize(key, as_raw)
-        result = tc.bdb_out(self.db, c_key, c_key_len)
+    def out(self, key):
+        """Remove a string record of a B+ tree database object."""
+        result = tc.bdb_out2(self.db, key)
         if not result:
             raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
         return result
 
-    def outdup(self, key, as_raw=False):
-        """Remove Python objects of a B+ tree database object."""
-        (c_key, c_key_len) = util.serialize(key, as_raw)
+    def outdup(self, key):
+        """Remove records of a B+ tree database object."""
+        (c_key, c_key_len) = util.serialize(key, str)
         result = tc.bdb_out3(self.db, c_key, c_key_len)
         if not result:
             raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
@@ -462,102 +404,57 @@ class BDB(object):
         """Retrieve a Python object in a B+ tree database object."""
         return self._getitem(key)
 
-    def _getitem(self, key, raw_key=False, value_type=None):
+    def _getitem(self, key):
         """Retrieve a Python object in a B+ tree database object."""
-        (c_key, c_key_len) = util.serialize(key, raw_key)
-        (c_value, c_value_len) = tc.bdb_get(self.db, c_key, c_key_len)
-        if not c_value:
+        value = tc.bdb_get2(self.db, key)
+        if not value:
             raise KeyError(key)
-        return util.deserialize(c_value, c_value_len, value_type)
+        return value.value
 
-    def get(self, key, default=None, raw_key=False, value_type=None):
+    def get(self, key, default=None):
         """Retrieve a Python object in a B+ tree database object."""
         try:
-            value = self._getitem(key, raw_key, value_type)
+            value = self._getitem(key)
         except KeyError:
             value = default
         return value
 
-    def get_str(self, key, default=None, as_raw=False):
-        """Retrieve a string record in a B+ tree database object."""
-        return self.get(key, default, as_raw, str)
-
-    def get_unicode(self, key, default=None, as_raw=False):
-        """Retrieve an unicode string record in a B+ tree database
-        object."""
-        return self.get(key, default, as_raw, unicode)
-
-    def get_int(self, key, default=None, as_raw=False):
-        """Retrieve an integer record in a B+ tree database object."""
-        return self.get(key, default, as_raw, int)
-
-    def get_float(self, key, default=None, as_raw=False):
-        """Retrieve a double precision record in a B+ tree database
-        object."""
-        return self.get(key, default, as_raw, float)
-
-    def _getdup(self, key, raw_key=False, value_type=None):
+    def getdup(self, key, default=None):
         """Retrieve Python objects in a B+ tree database object."""
-        (c_key, c_key_len) = util.serialize(key, raw_key)
+        (c_key, c_key_len) = util.serialize(key, True)
         tclist_objs = tc.bdb_get4(self.db, c_key, c_key_len)
-        if not tclist_objs:
-            raise KeyError(key)
-        return util.deserialize_tclist(tclist_objs, value_type)
-
-    def getdup(self, key, default=None, raw_key=False, value_type=None):
-        """Retrieve Python objects in a B+ tree database object."""
-        try:
-            value = self._getdup(key, raw_key, value_type)
-        except KeyError:
+        if tclist_objs:
+            value = util.deserialize_tclist(tclist_objs, str)
+        else:
             value = default
         return value
 
-    def getdup_str(self, key, default=None, as_raw=False):
-        """Retrieve a string record in a B+ tree database object."""
-        return self.getdup(key, default, as_raw, str)
-
-    def getdup_unicode(self, key, default=None, as_raw=False):
-        """Retrieve an unicode string record in a B+ tree database
-        object."""
-        return self.getdup(key, default, as_raw, unicode)
-
-    def getdup_int(self, key, default=None, as_raw=False):
-        """Retrieve an integer record in a B+ tree database object."""
-        return self.getdup(key, default, as_raw, int)
-
-    def getdup_float(self, key, default=None, as_raw=False):
-        """Retrieve a double precision record in a B+ tree database
-        object."""
-        return self.getdup(key, default, as_raw, float)
-
-    def vnum(self, key, as_raw=False):
+    def vnum(self, key):
         """Get the number of records corresponding a key in a B+ tree
         database object."""
-        (c_key, c_key_len) = util.serialize(key, as_raw)
-        result = tc.bdb_vnum(self.db, c_key, c_key_len)
+        result = tc.bdb_vnum2(self.db, key)
         if not result:
             raise KeyError(key)
         return result
 
-    def vsiz(self, key, as_raw=False):
-        """Get the size of the value of a record in a B+ tree database
-        object."""
-        (c_key, c_key_len) = util.serialize(key, as_raw)
-        result = tc.bdb_vsiz(self.db, c_key, c_key_len)
+    def vsiz(self, key):
+        """Get the size of the value of a string record in a B+ tree
+        database object."""
+        result = tc.bdb_vsiz2(self.db, key)
         if result == -1:
             raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
         return result
 
-    def keys(self, as_type=None):
+    def keys(self):
         """Get all the keys of a B+ tree database object."""
-        return list(self.iterkeys(as_type))
+        return list(self.iterkeys())
 
-    def iterkeys(self, as_type=None):
+    def iterkeys(self):
         """Iterate for every key in a B+ tree database object."""
-        cursor = Cursor(self.db)
+        cursor = CursorSimple(self.db)
         if cursor.first():
             while True:
-                key = cursor.key(as_type)
+                key = cursor.key()
                 yield key
                 try:
                     cursor.next()
@@ -565,16 +462,16 @@ class BDB(object):
                     break
         cursor.close()
 
-    def values(self, as_type=None):
+    def values(self):
         """Get all the values of a B+ tree database object."""
-        return list(self.itervalues(as_type))
+        return list(self.itervalues())
 
-    def itervalues(self, as_type=None):
+    def itervalues(self):
         """Iterate for every value in a B+ tree database object."""
-        cursor = Cursor(self.db)
+        cursor = CursorSimple(self.db)
         if cursor.first():
             while True:
-                value = cursor.value(as_type)
+                value = cursor.value()
                 yield value
                 try:
                     cursor.next()
@@ -582,16 +479,16 @@ class BDB(object):
                     break
         cursor.close()
 
-    def items(self, key_type=None, value_type=None):
+    def items(self):
         """Get all the items of a B+ tree database object."""
-        return list(self.iteritems(key_type, value_type))
+        return list(self.iteritems())
 
-    def iteritems(self, key_type=None, value_type=None):
+    def iteritems(self):
         """Iterate for every key / value in a B+ tree database object."""
-        cursor = Cursor(self.db)
+        cursor = CursorSimple(self.db)
         if cursor.first():
             while True:
-                key, value = cursor.record(key_type, value_type)
+                key, value = cursor.record()
                 yield (key, value)
                 try:
                     cursor.next()
@@ -603,45 +500,20 @@ class BDB(object):
         """Iterate for every key in a B+ tree database object."""
         return self.iterkeys()
 
-    def range(self, keya=None, inca=True, keyb=None, incb=True, max_=-1,
-              as_raw=True):
+    def range(self, keya=None, inca=True, keyb=None, incb=True, max_=-1):
         """Get keys of ranged records in a B+ tree database object."""
-        (c_keya, c_keya_len) = util.serialize(keya, as_raw)
-        (c_keyb, c_keyb_len) = util.serialize(keyb, as_raw)
-        tclist_objs = tc.bdb_range(self.db, c_keya, c_keya_len, inca,
-                                   c_keyb, c_keyb_len, incb, max_)
+        tclist_objs = tc.bdb_range2(self.db, keya, inca, keyb, incb, max_)
         if not tclist_objs:
             raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
-        as_type = util.get_type(keya, as_raw)
-        return util.deserialize_tclist(tclist_objs, as_type)
+        return util.deserialize_tclist(tclist_objs, str)
 
-    def fwmkeys(self, prefix, as_raw=True):
+    def fwmkeys(self, prefix, max_=-1):
         """Get forward matching string keys in a B+ tree database
         object."""
-        (c_prefix, c_prefix_len) = util.serialize(prefix, as_raw)
-        tclist_objs = tc.bdb_fwmkeys(self.db, c_prefix, c_prefix_len)
+        tclist_objs = tc.bdb_fwmkeys2(self.db, prefix, max_)
         if not tclist_objs:
             raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
-        as_type = util.get_type(prefix, as_raw)
-        return util.deserialize_tclist(tclist_objs, as_type)
-
-    def add_int(self, key, num, as_raw=False):
-        """Add an integer to a record in a B+ tree database object."""
-        assert isinstance(num, int), 'Value is not an integer'
-        (c_key, c_key_len) = util.serialize(key, as_raw)
-        result = tc.bdb_addint(self.db, c_key, c_key_len, num)
-        if not result:
-            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
-        return result
-
-    def add_float(self, key, num, as_raw=False):
-        """Add a real number to a record in a B+ tree database object."""
-        assert isinstance(num, float), 'Value is not a float'
-        (c_key, c_key_len) = util.serialize(key, as_raw)
-        result = tc.bdb_adddouble(self.db, c_key, c_key_len, num)
-        if not result:
-            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
-        return result
+        return util.deserialize_tclist(tclist_objs, str)
 
     def sync(self):
         """Synchronize updated contents of a B+ tree database object
@@ -866,6 +738,434 @@ class BDB(object):
             raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
         return result
 
+    def putdupback(self, key, value):
+        """Store a new string record into a B+ tree database object
+        with backward duplication."""
+        result = tc.bdb_putdupback2(self.db, key, value)
+        if not result:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        return result
+
+    # def putproc(self, key, value, proc, op):
+    #     """Store a record into a B+ tree database object with a
+    #     duplication handler."""
+    #     # See tc.bdb_putproc
+
+    def foreach(self, proc, op):
+        """Process each record atomically of a B+ tree database
+        object."""
+        def proc_wraper(c_key, c_key_len, c_value, c_value_len, op):
+            key = util.deserialize(ctypes.cast(c_key, ctypes.c_void_p),
+                                   c_key_len, str)
+            value = util.deserialize(ctypes.cast(c_value, ctypes.c_void_p),
+                                     c_value_len, str)
+            return proc(key, value, ctypes.cast(op, ctypes.c_char_p).value)
+
+        result = tc.bdb_foreach(self.db, tc.TCITER(proc_wraper), op)
+        if not result:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        return result
+
+    def __contains__(self, key):
+        """Return True if B+ tree database object has the key."""
+        return self.has_key(key)
+
+    def has_key(self, key):
+        """Return True if B+ tree database object has the key."""
+        cursor = CursorSimple(self.db)
+        result = False
+        try:
+            result = cursor.jump(key)
+        except KeyError:
+            pass
+        finally:
+            cursor.close()
+        return result
+
+    def cursor(self):
+        """Create a cursor object associated with the B+ tree database
+        object."""
+        return CursorSimple(self.db)
+
+
+class BDB(BDBSimple):
+    def __init__(self):
+        """Create a B+ tree database object."""
+        BDBSimple.__init__(self)
+
+    def setcmpfunc(self, cmp_, cmpop, raw_key=False, value_type=None):
+        """Set the custom comparison function of a B+ tree database
+        object."""
+        def cmp_wraper(c_keya, c_keya_len, c_keyb, c_keyb_len, op):
+            keya = util.deserialize(ctypes.cast(c_keya, ctypes.c_void_p),
+                                    c_keya_len, raw_key)
+            keyb = util.deserialize(ctypes.cast(c_keyb, ctypes.c_void_p),
+                                    c_keyb_len, value_type)
+            return cmp_(keya, keyb, ctypes.cast(op, ctypes.c_char_p).value)
+
+        # If cmp_ is a string, it indicate a native tccmpxxx funcion.
+        native = {
+            None: tc.tccmplexical,
+            'default': tc.tccmplexical,
+            'tccmplexical': tc.tccmplexical,
+            'tccmpdecimal': tc.tccmpdecimal,
+            'tccmpint32': tc.tccmpint32,
+            'tccmpint64': tc.tccmpint64
+            }
+        if cmp_ in native:
+            result = tc.bdb_setcmpfunc(self.db, native[cmp_], cmpop)
+        else:
+            result = tc.bdb_setcmpfunc(self.db, tc.TCCMP(cmp_wraper), cmpop)
+        if not result:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        return result
+
+    def put(self, key, value, raw_key=False, raw_value=False):
+        """Store any Python object into a B+ tree database object."""
+        (c_key, c_key_len) = util.serialize(key, raw_key)
+        (c_value, c_value_len) = util.serialize(value, raw_value)
+        result = tc.bdb_put(self.db, c_key, c_key_len, c_value, c_value_len)
+        if not result:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        return result
+
+    def put_str(self, key, value, as_raw=False):
+        """Store a string record into a B+ tree database object."""
+        assert isinstance(value, str), 'Value is not a string'
+        return self.put(key, value, as_raw, True)
+
+    def put_unicode(self, key, value, as_raw=False):
+        """Store an unicode string record into a B+ tree database
+        object."""
+        assert isinstance(value, unicode), 'Value is not an unicode string'
+        return self.put(key, value, as_raw, True)
+
+    def put_int(self, key, value, as_raw=False):
+        """Store an integer record into a B+ tree database object."""
+        assert isinstance(value, int), 'Value is not an integer'
+        return self.put(key, value, as_raw, True)
+
+    def put_float(self, key, value, as_raw=False):
+        """Store a double precision record into a B+ tree database
+        object."""
+        assert isinstance(value, float), 'Value is not a float'
+        return self.put(key, value, as_raw, True)
+
+    def putkeep(self, key, value, raw_key=False, raw_value=False):
+        """Store a new Python object into a B+ tree database object."""
+        (c_key, c_key_len) = util.serialize(key, raw_key)
+        (c_value, c_value_len) = util.serialize(value, raw_value)
+        return tc.bdb_putkeep(self.db, c_key, c_key_len, c_value, c_value_len)
+
+    def putkeep_str(self, key, value, as_raw=False):
+        """Store a new string record into a B+ tree database object."""
+        assert isinstance(value, str), 'Value is not a string'
+        return self.putkeep(key, value, as_raw, True)
+
+    def putkeep_unicode(self, key, value, as_raw=False):
+        """Store a new unicode string record into a B+ tree database
+        object."""
+        assert isinstance(value, unicode), 'Value is not an unicode string'
+        return self.putkeep(key, value, as_raw, True)
+
+    def putkeep_int(self, key, value, as_raw=False):
+        """Store a new integer record into a B+ tree database object."""
+        assert isinstance(value, int), 'Value is not an integer'
+        return self.putkeep(key, value, as_raw, True)
+
+    def putkeep_float(self, key, value, as_raw=False):
+        """Store a new double precision record into a B+ tree database
+        object."""
+        assert isinstance(value, float), 'Value is not a float'
+        return self.putkeep(key, value, as_raw, True)
+
+    def putcat(self, key, value, raw_key=False, raw_value=False):
+        """Concatenate an object value at the end of the existing
+        record in a B+ tree database object."""
+        (c_key, c_key_len) = util.serialize(key, raw_key)
+        (c_value, c_value_len) = util.serialize(value, raw_value)
+        result = tc.bdb_putcat(self.db, c_key, c_key_len, c_value, c_value_len)
+        if not result:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        return result
+
+    def putcat_str(self, key, value, as_raw=False):
+        """Concatenate a string value at the end of the existing
+        record in a B+ tree database object."""
+        assert isinstance(value, str), 'Value is not a string'
+        return self.putcat(key, value, as_raw, True)
+
+    def putcat_unicode(self, key, value, as_raw=False):
+        """Concatenate an unicode string value at the end of the
+        existing record in a B+ tree database object."""
+        assert isinstance(value, unicode), 'Value is not an unicode string'
+        return self.putcat(key, value, as_raw, True)
+
+    def putdup(self, key, value, raw_key=False, raw_value=False):
+        """Store a Python object into a B+ tree database object with
+        allowing duplication of keys."""
+        (c_key, c_key_len) = util.serialize(key, raw_key)
+        (c_value, c_value_len) = util.serialize(value, raw_value)
+        result = tc.bdb_putdup(self.db, c_key, c_key_len, c_value, c_value_len)
+        if not result:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        return result
+
+    def putdup_str(self, key, value, as_raw=False):
+        """Store a string record into a B+ tree database object with
+        allowing duplication of keys."""
+        assert isinstance(value, str), 'Value is not a string'
+        return self.putdup(key, value, as_raw, True)
+
+    def putdup_unicode(self, key, value, as_raw=False):
+        """Store an unicode string record into a B+ tree database
+        object with allowing duplication of keys."""
+        assert isinstance(value, unicode), 'Value is not an unicode string'
+        return self.putdup(key, value, as_raw, True)
+
+    def putdup_int(self, key, value, as_raw=False):
+        """Store an integer record into a B+ tree database object with
+        allowing duplication of keys."""
+        assert isinstance(value, int), 'Value is not an integer'
+        return self.putdup(key, value, as_raw, True)
+
+    def putdup_float(self, key, value, as_raw=False):
+        """Store a double precision record into a B+ tree database
+        object with allowing duplication of keys."""
+        assert isinstance(value, float), 'Value is not a float'
+        return self.putdup(key, value, as_raw, True)
+
+    def putdup_iter(self, key, values, raw_key=False, raw_value=False):
+        """Store Python records into a B+ tree database object with
+        allowing duplication of keys."""
+        (c_key, c_key_len) = util.serialize(key, raw_key)
+        tclist_vals = util.serialize_tclist(values, raw_value)
+        result = tc.bdb_putdup3(self.db, c_key, c_key_len, tclist_vals)
+        if not result:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        return result
+
+    def putdup_iter_str(self, key, values, as_raw=False):
+        """Store string records into a B+ tree database object with
+        allowing duplication of keys."""
+        assert all([isinstance(v, str) for v in values]), \
+            'Value is not a string'
+        return self.putdup_iter(key, values, as_raw, True)
+
+    def putdup_iter_unicode(self, key, values, as_raw=False):
+        """Store unicode string records into a B+ tree database object
+        with allowing duplication of keys."""
+        assert all([isinstance(v, unicode) for v in values]), \
+            'Value is not an unicode string'
+        return self.putdup_iter(key, values, as_raw, True)
+
+    def putdup_iter_int(self, key, values, as_raw=False):
+        """Store integer records into a B+ tree database object with
+        allowing duplication of keys."""
+        assert all([isinstance(v, int) for v in values]), \
+            'Value is not an integer'
+        return self.putdup_iter(key, values, as_raw, True)
+
+    def putdup_iter_float(self, key, values, as_raw=False):
+        """Store double precision records into a B+ tree database
+        object with allowing duplication of keys."""
+        assert all([isinstance(v, float) for v in values]), \
+            'Value is not a float'
+        return self.putdup_iter(key, values, as_raw, True)
+
+    def out(self, key, as_raw=False):
+        """Remove a Python object of a B+ tree database object."""
+        (c_key, c_key_len) = util.serialize(key, as_raw)
+        result = tc.bdb_out(self.db, c_key, c_key_len)
+        if not result:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        return result
+
+    def outdup(self, key, as_raw=False):
+        """Remove Python objects of a B+ tree database object."""
+        (c_key, c_key_len) = util.serialize(key, as_raw)
+        result = tc.bdb_out3(self.db, c_key, c_key_len)
+        if not result:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        return result
+
+    def _getitem(self, key, raw_key=False, value_type=None):
+        """Retrieve a Python object in a B+ tree database object."""
+        (c_key, c_key_len) = util.serialize(key, raw_key)
+        (c_value, c_value_len) = tc.bdb_get(self.db, c_key, c_key_len)
+        if not c_value:
+            raise KeyError(key)
+        return util.deserialize(c_value, c_value_len, value_type)
+
+    def get(self, key, default=None, raw_key=False, value_type=None):
+        """Retrieve a Python object in a B+ tree database object."""
+        try:
+            value = self._getitem(key, raw_key, value_type)
+        except KeyError:
+            value = default
+        return value
+
+    def get_str(self, key, default=None, as_raw=False):
+        """Retrieve a string record in a B+ tree database object."""
+        return self.get(key, default, as_raw, str)
+
+    def get_unicode(self, key, default=None, as_raw=False):
+        """Retrieve an unicode string record in a B+ tree database
+        object."""
+        return self.get(key, default, as_raw, unicode)
+
+    def get_int(self, key, default=None, as_raw=False):
+        """Retrieve an integer record in a B+ tree database object."""
+        return self.get(key, default, as_raw, int)
+
+    def get_float(self, key, default=None, as_raw=False):
+        """Retrieve a double precision record in a B+ tree database
+        object."""
+        return self.get(key, default, as_raw, float)
+
+    def _getdup(self, key, raw_key=False, value_type=None):
+        """Retrieve Python objects in a B+ tree database object."""
+        (c_key, c_key_len) = util.serialize(key, raw_key)
+        tclist_objs = tc.bdb_get4(self.db, c_key, c_key_len)
+        if not tclist_objs:
+            raise KeyError(key)
+        return util.deserialize_tclist(tclist_objs, value_type)
+
+    def getdup(self, key, default=None, raw_key=False, value_type=None):
+        """Retrieve Python objects in a B+ tree database object."""
+        try:
+            value = self._getdup(key, raw_key, value_type)
+        except KeyError:
+            value = default
+        return value
+
+    def getdup_str(self, key, default=None, as_raw=False):
+        """Retrieve a string record in a B+ tree database object."""
+        return self.getdup(key, default, as_raw, str)
+
+    def getdup_unicode(self, key, default=None, as_raw=False):
+        """Retrieve an unicode string record in a B+ tree database
+        object."""
+        return self.getdup(key, default, as_raw, unicode)
+
+    def getdup_int(self, key, default=None, as_raw=False):
+        """Retrieve an integer record in a B+ tree database object."""
+        return self.getdup(key, default, as_raw, int)
+
+    def getdup_float(self, key, default=None, as_raw=False):
+        """Retrieve a double precision record in a B+ tree database
+        object."""
+        return self.getdup(key, default, as_raw, float)
+
+    def vnum(self, key, as_raw=False):
+        """Get the number of records corresponding a key in a B+ tree
+        database object."""
+        (c_key, c_key_len) = util.serialize(key, as_raw)
+        result = tc.bdb_vnum(self.db, c_key, c_key_len)
+        if not result:
+            raise KeyError(key)
+        return result
+
+    def vsiz(self, key, as_raw=False):
+        """Get the size of the value of a record in a B+ tree database
+        object."""
+        (c_key, c_key_len) = util.serialize(key, as_raw)
+        result = tc.bdb_vsiz(self.db, c_key, c_key_len)
+        if result == -1:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        return result
+
+    def keys(self, as_type=None):
+        """Get all the keys of a B+ tree database object."""
+        return list(self.iterkeys(as_type))
+
+    def iterkeys(self, as_type=None):
+        """Iterate for every key in a B+ tree database object."""
+        cursor = Cursor(self.db)
+        if cursor.first():
+            while True:
+                key = cursor.key(as_type)
+                yield key
+                try:
+                    cursor.next()
+                except tc.TCException:
+                    break
+        cursor.close()
+
+    def values(self, as_type=None):
+        """Get all the values of a B+ tree database object."""
+        return list(self.itervalues(as_type))
+
+    def itervalues(self, as_type=None):
+        """Iterate for every value in a B+ tree database object."""
+        cursor = Cursor(self.db)
+        if cursor.first():
+            while True:
+                value = cursor.value(as_type)
+                yield value
+                try:
+                    cursor.next()
+                except tc.TCException:
+                    break
+        cursor.close()
+
+    def items(self, key_type=None, value_type=None):
+        """Get all the items of a B+ tree database object."""
+        return list(self.iteritems(key_type, value_type))
+
+    def iteritems(self, key_type=None, value_type=None):
+        """Iterate for every key / value in a B+ tree database object."""
+        cursor = Cursor(self.db)
+        if cursor.first():
+            while True:
+                key, value = cursor.record(key_type, value_type)
+                yield (key, value)
+                try:
+                    cursor.next()
+                except tc.TCException:
+                    break
+        cursor.close()
+
+    def range(self, keya=None, inca=True, keyb=None, incb=True, max_=-1,
+              as_raw=True):
+        """Get keys of ranged records in a B+ tree database object."""
+        (c_keya, c_keya_len) = util.serialize(keya, as_raw)
+        (c_keyb, c_keyb_len) = util.serialize(keyb, as_raw)
+        tclist_objs = tc.bdb_range(self.db, c_keya, c_keya_len, inca,
+                                   c_keyb, c_keyb_len, incb, max_)
+        if not tclist_objs:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        as_type = util.get_type(keya, as_raw)
+        return util.deserialize_tclist(tclist_objs, as_type)
+
+    def fwmkeys(self, prefix, max_=-1, as_raw=True):
+        """Get forward matching string keys in a B+ tree database
+        object."""
+        (c_prefix, c_prefix_len) = util.serialize(prefix, as_raw)
+        tclist_objs = tc.bdb_fwmkeys(self.db, c_prefix, c_prefix_len, max_)
+        if not tclist_objs:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        as_type = util.get_type(prefix, as_raw)
+        return util.deserialize_tclist(tclist_objs, as_type)
+
+    def add_int(self, key, num, as_raw=False):
+        """Add an integer to a record in a B+ tree database object."""
+        assert isinstance(num, int), 'Value is not an integer'
+        (c_key, c_key_len) = util.serialize(key, as_raw)
+        result = tc.bdb_addint(self.db, c_key, c_key_len, num)
+        if not result:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        return result
+
+    def add_float(self, key, num, as_raw=False):
+        """Add a real number to a record in a B+ tree database object."""
+        assert isinstance(num, float), 'Value is not a float'
+        (c_key, c_key_len) = util.serialize(key, as_raw)
+        result = tc.bdb_adddouble(self.db, c_key, c_key_len, num)
+        if not result:
+            raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
+        return result
+
     def putdupback(self, key, value, raw_key=False, raw_value=False):
         """Store a new Python object into a B+ tree database object
         with backward duplication."""
@@ -901,11 +1201,6 @@ class BDB(object):
         assert isinstance(value, float), 'Value is not a float'
         return self.putdupback(key, value, as_raw, True)
 
-    # def putproc(self, key, value, proc, op):
-    #     """Store a record into a B+ tree database object with a
-    #     duplication handler."""
-    #     # See tc.bdb_putproc
-
     def foreach(self, proc, op, key_type=None, value_type=None):
         """Process each record atomically of a B+ tree database
         object."""
@@ -920,10 +1215,6 @@ class BDB(object):
         if not result:
             raise tc.TCException(tc.bdb_errmsg(tc.bdb_ecode(self.db)))
         return result
-
-    def __contains__(self, key):
-        """Return True if B+ tree database object has the key."""
-        return self.has_key(key)
 
     def has_key(self, key, raw_key=False):
         """Return True if B+ tree database object has the key."""
