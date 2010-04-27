@@ -6,6 +6,121 @@ import warnings
 from tcdb import adb
 
 
+class TestADBSimple(unittest.TestCase):
+    def setUp(self):
+        self.adb = adb.ADBSimple()
+        self.adb.open('*')
+
+    def tearDown(self):
+        self.adb.close()
+        self.adb = None
+
+    def test_setgetitem(self):
+        self.adb['key'] = 'some string'
+        self.assertEqual(self.adb['key'], 'some string')
+        self.assertRaises(KeyError, self.adb.__getitem__, 'nonexistent key')
+
+    def test_put(self):
+        self.adb.put('key', 'some string')
+        self.assertEqual(self.adb.get('key'), 'some string')
+        self.assertEqual(self.adb.get('nonexistent key'), None)
+        self.assertEqual(self.adb.get('nonexistent key', 'def'), 'def')
+
+    def test_putkeep(self):
+        self.adb.putkeep('key', 'some string')
+        self.assertEqual(self.adb.get('key'), 'some string')
+        self.adb.putkeep('key', 'Never stored')
+        self.assertEqual(self.adb.get('key'), 'some string')
+
+    def test_putcat(self):
+        self.adb.putcat('key', 'some')
+        self.adb.putcat('key', ' text')
+        self.assertEquals(self.adb.get('key'), 'some text')
+
+    def test_out_and_contains(self):
+        self.assert_('key' not in self.adb)
+        self.adb.put('key', 'some text')
+        self.assert_('key' in self.adb)
+        self.adb.out('key')
+        self.assert_('key' not in self.adb)
+        self.adb.put('key', 'some text')
+        self.assert_('key' in self.adb)
+        del self.adb['key']
+        self.assert_('key' not in self.adb)
+
+    def test_vsiz(self):
+        self.adb.put('key', 'some text')
+        self.assertEqual(self.adb.vsiz('key'), len('some text'))
+
+    def test_iters(self):
+        keys = ['key1', 'key2', 'key3', 'key4', 'key5']
+        for key in keys:
+            self.adb.put(key, key)
+
+        self.assertEqual(len(self.adb.keys()), len(keys))
+        self.assertEqual(len(self.adb.values()), len(keys))
+        self.assertEqual(len(zip(keys, keys)), len(self.adb.items()))
+
+        for key in self.adb:
+            self.assert_(key in keys)
+
+        for value in self.adb.itervalues():
+            self.assert_(value in keys)
+
+    def test_fwmkeys(self):
+        objs = ['aa', 'ab', 'ac', 'xx', 'ad']
+        for obj in objs:
+            self.adb.put(obj, 'same value')
+        self.assertEqual(len(self.adb.fwmkeys('a')),
+                         len(['aa', 'ab', 'ac', 'ad']))
+        self.assertEqual(self.adb.fwmkeys('x'), ['xx'])
+        self.assertEqual(self.adb.fwmkeys('nonexistent key'), [])
+
+
+    def test_admin_functions(self):
+        keys = ['key1', 'key2', 'key3', 'key4', 'key5']
+        for key in keys:
+            self.adb.put(key, key)
+
+        self.assertEquals(self.adb.path(), '*')
+
+        self.adb.sync()
+        self.assertEquals(len(self.adb), 5)
+        self.assertEquals(self.adb.size(), 525656)
+
+        self.adb.vanish()
+        self.assertEquals(self.adb.size(), 525376)
+
+    # def test_transaction(self):
+    #     keys = ['key1', 'key2', 'key3', 'key4', 'key5']
+    #     with self.adb as db:
+    #         for key in keys:
+    #             db.put(key, key)
+    #     self.assertEquals(len(self.adb), 5)
+    #     self.adb.vanish()
+    #     try:
+    #         with self.adb:
+    #             for key in keys:
+    #                 self.adb.put(key, key)
+    #             self.adb['bad key']
+    #     except KeyError:
+    #         pass
+    #     self.assertEquals(len(self.adb), 0)
+
+    def test_foreach(self):
+        keys = ['key1', 'key2', 'key3', 'key4', 'key5']
+
+        def proc(key, value, op):
+            self.assertEquals(key, value)
+            self.assert_(key in keys)
+            self.assertEquals(op, 'test')
+            return True
+
+        for key in keys:
+            self.adb.put(key, key)
+        self.adb.foreach(proc, 'test')
+
+
 class TestADB(unittest.TestCase):
     def setUp(self):
         self.adb = adb.ADB()
