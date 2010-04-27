@@ -99,16 +99,16 @@ class HDBSimple(object):
         return result
 
     def open(self, path, omode=OWRITER|OCREAT, bnum=0, apow=-1, fpow=-1,
-             opts=0, rcnum=0, xmsiz=0, dfunit=0):
+             opts=0, rcnum=0, xmsiz=67108864, dfunit=0):
         """Open a database file and connect a hash database object."""
+        if bnum or apow >= 0 or fpow >= 0 or opts:
+            self.tune(bnum, apow, fpow, opts)
         if rcnum:
             self.setcache(rcnum)
-        if xmsiz:
+        if xmsiz != 67108864:
             self.setxmsiz(xmsiz)
         if dfunit:
             self.setdfunit(dfunit)
-        if bnum or apow >= 0 or fpow >= 0 or opts:
-            self.tune(bnum, apow, fpow, opts)
 
         if not tc.hdb_open(self.db, path, omode):
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
@@ -247,9 +247,9 @@ class HDBSimple(object):
         """Iterate for every key in a hash database object."""
         return self.iterkeys()
 
-    def fwmkeys(self, prefix):
+    def fwmkeys(self, prefix, max_=-1):
         """Get forward matching string keys in a hash database object."""
-        tclist_objs = tc.hdb_fwmkeys2(self.db, prefix)
+        tclist_objs = tc.hdb_fwmkeys2(self.db, prefix, max_)
         if not tclist_objs:
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
         return util.deserialize_tclist(tclist_objs, str)
@@ -713,10 +713,10 @@ class HDB(HDBSimple):
             value = util.deserialize_xstr(xstr_value, value_type)
             yield (key, value)
 
-    def fwmkeys(self, prefix, as_raw=True):
+    def fwmkeys(self, prefix, max_=-1, as_raw=True):
         """Get forward matching string keys in a hash database object."""
         (c_prefix, c_prefix_len) = util.serialize(prefix, as_raw)
-        tclist_objs = tc.hdb_fwmkeys(self.db, c_prefix, c_prefix_len)
+        tclist_objs = tc.hdb_fwmkeys(self.db, c_prefix, c_prefix_len, max_)
         if not tclist_objs:
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
         as_type = util.get_type(prefix, as_raw)
