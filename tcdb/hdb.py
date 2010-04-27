@@ -54,7 +54,7 @@ OLCKNB   = 1 << 5             # lock without blocking
 OTSYNC   = 1 << 6             # synchronize every transaction
 
 
-class HDB(object):
+class HDBSimple(object):
     def __init__(self):
         """Create a hash database object."""
         self.db = tc.hdb_new()
@@ -101,10 +101,14 @@ class HDB(object):
     def open(self, path, omode=OWRITER|OCREAT, bnum=0, apow=-1, fpow=-1,
              opts=0, rcnum=0, xmsiz=0, dfunit=0):
         """Open a database file and connect a hash database object."""
-        self.setcache(rcnum)
-        self.setxmsiz(xmsiz)
-        self.setdfunit(dfunit)
-        self.tune(bnum, apow, fpow, opts)
+        if rcnum:
+            self.setcache(rcnum)
+        if xmsiz:
+            self.setxmsiz(xmsiz)
+        if dfunit:
+            self.setdfunit(dfunit)
+        if bnum or apow >= 0 or fpow >= 0 or opts:
+            self.tune(bnum, apow, fpow, opts)
 
         if not tc.hdb_open(self.db, path, omode):
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
@@ -120,129 +124,49 @@ class HDB(object):
         """Store any Python object into a hash database object."""
         return self.put(key, value)
 
-    def put(self, key, value, raw_key=False, raw_value=False):
-        """Store any Python object into a hash database object."""
-        (c_key, c_key_len) = util.serialize(key, raw_key)
-        (c_value, c_value_len) = util.serialize(value, raw_value)
-        result = tc.hdb_put(self.db, c_key, c_key_len, c_value, c_value_len)
-        if not result:
-            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
-        return result
-
-    def put_str(self, key, value, as_raw=False):
+    def put(self, key, value):
         """Store a string record into a hash database object."""
-        assert isinstance(value, str), 'Value is not a string'
-        return self.put(key, value, as_raw, True)
-
-    def put_unicode(self, key, value, as_raw=False):
-        """Store an unicode string record into a hash database object."""
-        assert isinstance(value, unicode), 'Value is not an unicode string'
-        return self.put(key, value, as_raw, True)
-
-    def put_int(self, key, value, as_raw=False):
-        """Store an integer record into a hash database object."""
-        assert isinstance(value, int), 'Value is not an integer'
-        return self.put(key, value, as_raw, True)
-
-    def put_float(self, key, value, as_raw=False):
-        """Store a double precision record into a hash database
-        object."""
-        assert isinstance(value, float), 'Value is not a float'
-        return self.put(key, value, as_raw, True)
-
-    def putkeep(self, key, value, raw_key=False, raw_value=False):
-        """Store a new Python object into a hash database object."""
-        (c_key, c_key_len) = util.serialize(key, raw_key)
-        (c_value, c_value_len) = util.serialize(value, raw_value)
-        return tc.hdb_putkeep(self.db, c_key, c_key_len, c_value, c_value_len)
-
-    def putkeep_str(self, key, value, as_raw=False):
-        """Store a new string record into a hash database object."""
-        assert isinstance(value, str), 'Value is not a string'
-        return self.putkeep(key, value, as_raw, True)
-
-    def putkeep_unicode(self, key, value, as_raw=False):
-        """Store a new unicode string record into a hash database
-        object."""
-        assert isinstance(value, unicode), 'Value is not an unicode string'
-        return self.putkeep(key, value, as_raw, True)
-
-    def putkeep_int(self, key, value, as_raw=False):
-        """Store a new integer record into a hash database object."""
-        assert isinstance(value, int), 'Value is not an integer'
-        return self.putkeep(key, value, as_raw, True)
-
-    def putkeep_float(self, key, value, as_raw=False):
-        """Store a new double precision record into a hash database
-        object."""
-        assert isinstance(value, float), 'Value is not a float'
-        return self.putkeep(key, value, as_raw, True)
-
-    def putcat(self, key, value, raw_key=False, raw_value=False):
-        """Concatenate an object value at the end of the existing
-        record in a hash database object."""
-        (c_key, c_key_len) = util.serialize(key, raw_key)
-        (c_value, c_value_len) = util.serialize(value, raw_value)
-        result = tc.hdb_putcat(self.db, c_key, c_key_len, c_value, c_value_len)
+        # assert isinstance(key, str), 'Key is not a string'
+        # assert isinstance(value, str), 'Value is not a string'
+        result = tc.hdb_put2(self.db, key, value)
         if not result:
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
         return result
 
-    def putcat_str(self, key, value, as_raw=False):
+    def putkeep(self, key, value):
+        """Store a new string record into a hash database object."""
+        # assert isinstance(key, str), 'Key is not a string'
+        # assert isinstance(value, str), 'Value is not a string'
+        return tc.hdb_putkeep2(self.db, key, value)
+
+    def putcat(self, key, value):
         """Concatenate a string value at the end of the existing
         record in a hash database object."""
-        assert isinstance(value, str), 'Value is not a string'
-        return self.putcat(key, value, as_raw, True)
-
-    def putcat_unicode(self, key, value, as_raw=False):
-        """Concatenate an unicode string value at the end of the
-        existing record in a hash database object."""
-        assert isinstance(value, unicode), 'Value is not an unicode string'
-        return self.putcat(key, value, as_raw, True)
-
-    def putasync(self, key, value, raw_key=False, raw_value=False):
-        """Store a Python object into a hash database object in
-        asynchronous fashion."""
-        (c_key, c_key_len) = util.serialize(key, raw_key)
-        (c_value, c_value_len) = util.serialize(value, raw_value)
-        result = tc.hdb_putasync(self.db, c_key, c_key_len, c_value,
-                                 c_value_len)
+        # assert isinstance(key, str), 'Key is not a string'
+        # assert isinstance(value, str), 'Value is not a string'
+        result = tc.hdb_putcat2(self.db, key, value)
         if not result:
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
         return result
 
-    def putasync_str(self, key, value, as_raw=False):
+    def putasync(self, key, value):
         """Store a string record into a hash database object in
         asynchronous fashion."""
-        assert isinstance(value, str), 'Value is not a string'
-        return self.putasync(key, value, as_raw, True)
-
-    def putasync_unicode(self, key, value, as_raw=False):
-        """Store an unicode string record into a hash database object
-        in asynchronous fashion."""
-        assert isinstance(value, unicode), 'Value is not an unicode string'
-        return self.putasync(key, value, as_raw, True)
-
-    def putasync_int(self, key, value, as_raw=False):
-        """Store an integer record into a hash database object in
-        asynchronous fashion."""
-        assert isinstance(value, int), 'Value is not an integer'
-        return self.putasync(key, value, as_raw, True)
-
-    def putasync_float(self, key, value, as_raw=False):
-        """Store a double precision record into a hash database object
-        in asynchronous fashion."""
-        assert isinstance(value, float), 'Value is not a float'
-        return self.putasync(key, value, as_raw, True)
+        # assert isinstance(key, str), 'Key is not a string'
+        # assert isinstance(value, str), 'Value is not a string'
+        result = tc.hdb_putasync2(self.db, key, value)
+        if not result:
+            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        return result
 
     def __delitem__(self, key):
-        """Remove a Python object of a hash database object."""
+        """Remove a string record of a hash database object."""
         return self.out(key)
 
-    def out(self, key, as_raw=False):
-        """Remove a Python object of a hash database object."""
-        (c_key, c_key_len) = util.serialize(key, as_raw)
-        result = tc.hdb_out(self.db, c_key, c_key_len)
+    def out(self, key):
+        """Remove a string record of a hash database object."""
+        # assert isinstance(key, str), 'Key is not a string'
+        result = tc.hdb_out2(self.db, key)
         if not result:
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
         return result
@@ -251,128 +175,84 @@ class HDB(object):
         """Retrieve a Python object in a hash database object."""
         return self._getitem(key)
 
-    def _getitem(self, key, raw_key=False, value_type=None):
+    def _getitem(self, key):
         """Retrieve a Python object in a hash database object."""
-        (c_key, c_key_len) = util.serialize(key, raw_key)
-        (c_value, c_value_len) = tc.hdb_get(self.db, c_key, c_key_len)
-        if not c_value:
+        value = tc.hdb_get2(self.db, key)
+        if not value:
             raise KeyError(key)
-        return util.deserialize(c_value, c_value_len, value_type)
+        return value.value
 
-    def get(self, key, default=None, raw_key=False, value_type=None):
+    def get(self, key, default=None):
         """Retrieve a Python object in a hash database object."""
+        # assert isinstance(key, str), 'Key is not a string'
         try:
-            value = self._getitem(key, raw_key, value_type)
+            value = self._getitem(key)
         except KeyError:
             value = default
         return value
 
-    def get_str(self, key, default=None, as_raw=False):
-        """Retrieve a string record in a hash database object."""
-        return self.get(key, default, as_raw, str)
-
-    def get_unicode(self, key, default=None, as_raw=False):
-        """Retrieve an unicode string record in a hash database
-        object."""
-        return self.get(key, default, as_raw, unicode)
-
-    def get_int(self, key, default=None, as_raw=False):
-        """Retrieve an integer record in a hash database object."""
-        return self.get(key, default, as_raw, int)
-
-    def get_float(self, key, default=None, as_raw=False):
-        """Retrieve a double precision record in a hash database
-        object."""
-        return self.get(key, default, as_raw, float)
-
-    def vsiz(self, key, as_raw=False):
+    def vsiz(self, key):
         """Get the size of the value of a Python object in a hash
         database object."""
-        (c_key, c_key_len) = util.serialize(key, as_raw)
-        result = tc.hdb_vsiz(self.db, c_key, c_key_len)
+        result = tc.hdb_vsiz2(self.db, key)
         if result == -1:
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
         return result
 
-    def keys(self, as_type=None):
+    def keys(self):
         """Get all the keys of a hash database object."""
-        return list(self.iterkeys(as_type))
+        return list(self.iterkeys())
 
-    def iterkeys(self, as_type=None):
+    def iterkeys(self):
         """Iterate for every key in a hash database object."""
         if not tc.hdb_iterinit(self.db):
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
         while True:
-            c_key, c_key_len = tc.hdb_iternext(self.db)
-            if not c_key:
+            key = tc.hdb_iternext2(self.db)
+            if not key:
                 break
-            key = util.deserialize(c_key, c_key_len, as_type)
-            yield key
+            yield key.value
 
-    def values(self, as_type=None):
+    def values(self):
         """Get all the values of a hash database object."""
-        return list(self.itervalues(as_type))
+        return list(self.itervalues())
 
-    def itervalues(self, as_type=None):
+    def itervalues(self):
         """Iterate for every value in a hash database object."""
         if not tc.hdb_iterinit(self.db):
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
         while True:
-            c_key, c_key_len = tc.hdb_iternext(self.db)
-            if not c_key:
+            key = tc.hdb_iternext2(self.db)
+            if not key:
                 break
-            (c_value, c_value_len) = tc.hdb_get(self.db, c_key, c_key_len)
-            value = util.deserialize(c_value, c_value_len, as_type)
-            yield value
+            value = tc.hdb_get2(self.db, key)
+            yield value.value
 
-    def items(self, key_type=None, value_type=None):
+    def items(self):
         """Get all the items of a hash database object."""
-        return list(self.iteritems(key_type, value_type))
+        return list(self.iteritems())
 
-    def iteritems(self, key_type=None, value_type=None):
+    def iteritems(self):
         """Iterate for every key / value in a hash database object."""
         if not tc.hdb_iterinit(self.db):
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
         while True:
-            xstr_key = tc.tcxstrnew()
-            xstr_value = tc.tcxstrnew()
-            result = tc.hdb_iternext3(self.db, xstr_key, xstr_value)
-            if not result:
+            key = tc.hdb_iternext2(self.db)
+            if not key:
                 break
-            key = util.deserialize_xstr(xstr_key, key_type)
-            value = util.deserialize_xstr(xstr_value, value_type)
-            yield (key, value)
+            value = tc.hdb_get2(self.db, key)
+            yield key.value, value.value
 
     def __iter__(self):
         """Iterate for every key in a hash database object."""
         return self.iterkeys()
 
-    def fwmkeys(self, prefix, as_raw=True):
+    def fwmkeys(self, prefix):
         """Get forward matching string keys in a hash database object."""
-        (c_prefix, c_prefix_len) = util.serialize(prefix, as_raw)
-        tclist_objs = tc.hdb_fwmkeys(self.db, c_prefix, c_prefix_len)
+        tclist_objs = tc.hdb_fwmkeys2(self.db, prefix)
         if not tclist_objs:
             raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
-        as_type = util.get_type(prefix, as_raw)
-        return util.deserialize_tclist(tclist_objs, as_type)
-
-    def add_int(self, key, num, as_raw=False):
-        """Add an integer to a record in a hash database object."""
-        assert isinstance(num, int), 'Value is not an integer'
-        (c_key, c_key_len) = util.serialize(key, as_raw)
-        result = tc.hdb_addint(self.db, c_key, c_key_len, num)
-        if not result:
-            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
-        return result
-
-    def add_float(self, key, num, as_raw=False):
-        """Add a real number to a record in a hash database object."""
-        assert isinstance(num, float), 'Value is not a float'
-        (c_key, c_key_len) = util.serialize(key, as_raw)
-        result = tc.hdb_adddouble(self.db, c_key, c_key_len, num)
-        if not result:
-            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
-        return result
+        return util.deserialize_tclist(tclist_objs, str)
 
     def sync(self):
         """Synchronize updated contents of a hash database object with
@@ -582,14 +462,14 @@ class HDB(object):
     #     duplication handler."""
     #     # See tc.hdb_putproc
 
-    def foreach(self, proc, op, key_type=None, value_type=None):
+    def foreach(self, proc, op):
         """Process each record atomically of a hash database
         object."""
         def proc_wraper(c_key, c_key_len, c_value, c_value_len, op):
             key = util.deserialize(ctypes.cast(c_key, ctypes.c_void_p),
-                                   c_key_len, key_type)
+                                   c_key_len, str)
             value = util.deserialize(ctypes.cast(c_value, ctypes.c_void_p),
-                                     c_value_len, value_type)
+                                     c_value_len, str)
             return proc(key, value, ctypes.cast(op, ctypes.c_char_p).value)
 
         result = tc.hdb_foreach(self.db, tc.TCITER(proc_wraper), op)
@@ -607,6 +487,273 @@ class HDB(object):
     def __contains__(self, key):
         """Return True if hash database object has the key."""
         return self.has_key(key)
+
+    def has_key(self, key):
+        """Return True if hash database object has the key."""
+        return tc.hdb_iterinit3(self.db, key)
+
+
+class HDB(HDBSimple):
+    def __init__(self):
+        """Create a hash database object."""
+        HDBSimple.__init__(self)
+
+    def put(self, key, value, raw_key=False, raw_value=False):
+        """Store any Python object into a hash database object."""
+        (c_key, c_key_len) = util.serialize(key, raw_key)
+        (c_value, c_value_len) = util.serialize(value, raw_value)
+        result = tc.hdb_put(self.db, c_key, c_key_len, c_value, c_value_len)
+        if not result:
+            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        return result
+
+    def put_str(self, key, value, as_raw=False):
+        """Store a string record into a hash database object."""
+        assert isinstance(value, str), 'Value is not a string'
+        return self.put(key, value, as_raw, True)
+
+    def put_unicode(self, key, value, as_raw=False):
+        """Store an unicode string record into a hash database object."""
+        assert isinstance(value, unicode), 'Value is not an unicode string'
+        return self.put(key, value, as_raw, True)
+
+    def put_int(self, key, value, as_raw=False):
+        """Store an integer record into a hash database object."""
+        assert isinstance(value, int), 'Value is not an integer'
+        return self.put(key, value, as_raw, True)
+
+    def put_float(self, key, value, as_raw=False):
+        """Store a double precision record into a hash database
+        object."""
+        assert isinstance(value, float), 'Value is not a float'
+        return self.put(key, value, as_raw, True)
+
+    def putkeep(self, key, value, raw_key=False, raw_value=False):
+        """Store a new Python object into a hash database object."""
+        (c_key, c_key_len) = util.serialize(key, raw_key)
+        (c_value, c_value_len) = util.serialize(value, raw_value)
+        return tc.hdb_putkeep(self.db, c_key, c_key_len, c_value, c_value_len)
+
+    def putkeep_str(self, key, value, as_raw=False):
+        """Store a new string record into a hash database object."""
+        assert isinstance(value, str), 'Value is not a string'
+        return self.putkeep(key, value, as_raw, True)
+
+    def putkeep_unicode(self, key, value, as_raw=False):
+        """Store a new unicode string record into a hash database
+        object."""
+        assert isinstance(value, unicode), 'Value is not an unicode string'
+        return self.putkeep(key, value, as_raw, True)
+
+    def putkeep_int(self, key, value, as_raw=False):
+        """Store a new integer record into a hash database object."""
+        assert isinstance(value, int), 'Value is not an integer'
+        return self.putkeep(key, value, as_raw, True)
+
+    def putkeep_float(self, key, value, as_raw=False):
+        """Store a new double precision record into a hash database
+        object."""
+        assert isinstance(value, float), 'Value is not a float'
+        return self.putkeep(key, value, as_raw, True)
+
+    def putcat(self, key, value, raw_key=False, raw_value=False):
+        """Concatenate an object value at the end of the existing
+        record in a hash database object."""
+        (c_key, c_key_len) = util.serialize(key, raw_key)
+        (c_value, c_value_len) = util.serialize(value, raw_value)
+        result = tc.hdb_putcat(self.db, c_key, c_key_len, c_value, c_value_len)
+        if not result:
+            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        return result
+
+    def putcat_str(self, key, value, as_raw=False):
+        """Concatenate a string value at the end of the existing
+        record in a hash database object."""
+        assert isinstance(value, str), 'Value is not a string'
+        return self.putcat(key, value, as_raw, True)
+
+    def putcat_unicode(self, key, value, as_raw=False):
+        """Concatenate an unicode string value at the end of the
+        existing record in a hash database object."""
+        assert isinstance(value, unicode), 'Value is not an unicode string'
+        return self.putcat(key, value, as_raw, True)
+
+    def putasync(self, key, value, raw_key=False, raw_value=False):
+        """Store a Python object into a hash database object in
+        asynchronous fashion."""
+        (c_key, c_key_len) = util.serialize(key, raw_key)
+        (c_value, c_value_len) = util.serialize(value, raw_value)
+        result = tc.hdb_putasync(self.db, c_key, c_key_len, c_value,
+                                 c_value_len)
+        if not result:
+            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        return result
+
+    def putasync_str(self, key, value, as_raw=False):
+        """Store a string record into a hash database object in
+        asynchronous fashion."""
+        assert isinstance(value, str), 'Value is not a string'
+        return self.putasync(key, value, as_raw, True)
+
+    def putasync_unicode(self, key, value, as_raw=False):
+        """Store an unicode string record into a hash database object
+        in asynchronous fashion."""
+        assert isinstance(value, unicode), 'Value is not an unicode string'
+        return self.putasync(key, value, as_raw, True)
+
+    def putasync_int(self, key, value, as_raw=False):
+        """Store an integer record into a hash database object in
+        asynchronous fashion."""
+        assert isinstance(value, int), 'Value is not an integer'
+        return self.putasync(key, value, as_raw, True)
+
+    def putasync_float(self, key, value, as_raw=False):
+        """Store a double precision record into a hash database object
+        in asynchronous fashion."""
+        assert isinstance(value, float), 'Value is not a float'
+        return self.putasync(key, value, as_raw, True)
+
+    def out(self, key, as_raw=False):
+        """Remove a Python object of a hash database object."""
+        (c_key, c_key_len) = util.serialize(key, as_raw)
+        result = tc.hdb_out(self.db, c_key, c_key_len)
+        if not result:
+            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        return result
+
+    def _getitem(self, key, raw_key=False, value_type=None):
+        """Retrieve a Python object in a hash database object."""
+        (c_key, c_key_len) = util.serialize(key, raw_key)
+        (c_value, c_value_len) = tc.hdb_get(self.db, c_key, c_key_len)
+        if not c_value:
+            raise KeyError(key)
+        return util.deserialize(c_value, c_value_len, value_type)
+
+    def get(self, key, default=None, raw_key=False, value_type=None):
+        """Retrieve a Python object in a hash database object."""
+        try:
+            value = self._getitem(key, raw_key, value_type)
+        except KeyError:
+            value = default
+        return value
+
+    def get_str(self, key, default=None, as_raw=False):
+        """Retrieve a string record in a hash database object."""
+        return self.get(key, default, as_raw, str)
+
+    def get_unicode(self, key, default=None, as_raw=False):
+        """Retrieve an unicode string record in a hash database
+        object."""
+        return self.get(key, default, as_raw, unicode)
+
+    def get_int(self, key, default=None, as_raw=False):
+        """Retrieve an integer record in a hash database object."""
+        return self.get(key, default, as_raw, int)
+
+    def get_float(self, key, default=None, as_raw=False):
+        """Retrieve a double precision record in a hash database
+        object."""
+        return self.get(key, default, as_raw, float)
+
+    def vsiz(self, key, as_raw=False):
+        """Get the size of the value of a Python object in a hash
+        database object."""
+        (c_key, c_key_len) = util.serialize(key, as_raw)
+        result = tc.hdb_vsiz(self.db, c_key, c_key_len)
+        if result == -1:
+            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        return result
+
+    def keys(self, as_type=None):
+        """Get all the keys of a hash database object."""
+        return list(self.iterkeys(as_type))
+
+    def iterkeys(self, as_type=None):
+        """Iterate for every key in a hash database object."""
+        if not tc.hdb_iterinit(self.db):
+            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        while True:
+            c_key, c_key_len = tc.hdb_iternext(self.db)
+            if not c_key:
+                break
+            key = util.deserialize(c_key, c_key_len, as_type)
+            yield key
+
+    def values(self, as_type=None):
+        """Get all the values of a hash database object."""
+        return list(self.itervalues(as_type))
+
+    def itervalues(self, as_type=None):
+        """Iterate for every value in a hash database object."""
+        if not tc.hdb_iterinit(self.db):
+            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        while True:
+            c_key, c_key_len = tc.hdb_iternext(self.db)
+            if not c_key:
+                break
+            (c_value, c_value_len) = tc.hdb_get(self.db, c_key, c_key_len)
+            value = util.deserialize(c_value, c_value_len, as_type)
+            yield value
+
+    def items(self, key_type=None, value_type=None):
+        """Get all the items of a hash database object."""
+        return list(self.iteritems(key_type, value_type))
+
+    def iteritems(self, key_type=None, value_type=None):
+        """Iterate for every key / value in a hash database object."""
+        if not tc.hdb_iterinit(self.db):
+            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        while True:
+            xstr_key = tc.tcxstrnew()
+            xstr_value = tc.tcxstrnew()
+            result = tc.hdb_iternext3(self.db, xstr_key, xstr_value)
+            if not result:
+                break
+            key = util.deserialize_xstr(xstr_key, key_type)
+            value = util.deserialize_xstr(xstr_value, value_type)
+            yield (key, value)
+
+    def fwmkeys(self, prefix, as_raw=True):
+        """Get forward matching string keys in a hash database object."""
+        (c_prefix, c_prefix_len) = util.serialize(prefix, as_raw)
+        tclist_objs = tc.hdb_fwmkeys(self.db, c_prefix, c_prefix_len)
+        if not tclist_objs:
+            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        as_type = util.get_type(prefix, as_raw)
+        return util.deserialize_tclist(tclist_objs, as_type)
+
+    def add_int(self, key, num, as_raw=False):
+        """Add an integer to a record in a hash database object."""
+        assert isinstance(num, int), 'Value is not an integer'
+        (c_key, c_key_len) = util.serialize(key, as_raw)
+        result = tc.hdb_addint(self.db, c_key, c_key_len, num)
+        if not result:
+            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        return result
+
+    def add_float(self, key, num, as_raw=False):
+        """Add a real number to a record in a hash database object."""
+        assert isinstance(num, float), 'Value is not a float'
+        (c_key, c_key_len) = util.serialize(key, as_raw)
+        result = tc.hdb_adddouble(self.db, c_key, c_key_len, num)
+        if not result:
+            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        return result
+
+    def foreach(self, proc, op, key_type=None, value_type=None):
+        """Process each record atomically of a hash database
+        object."""
+        def proc_wraper(c_key, c_key_len, c_value, c_value_len, op):
+            key = util.deserialize(ctypes.cast(c_key, ctypes.c_void_p),
+                                   c_key_len, key_type)
+            value = util.deserialize(ctypes.cast(c_value, ctypes.c_void_p),
+                                     c_value_len, value_type)
+            return proc(key, value, ctypes.cast(op, ctypes.c_char_p).value)
+
+        result = tc.hdb_foreach(self.db, tc.TCITER(proc_wraper), op)
+        if not result:
+            raise tc.TCException(tc.hdb_errmsg(tc.hdb_ecode(self.db)))
+        return result
 
     def has_key(self, key, raw_key=False):
         """Return True if hash database object has the key."""

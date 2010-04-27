@@ -9,6 +9,149 @@ from tcdb import hdb
 from tcdb import tc
 
 
+class TestHDBSimple(unittest.TestCase):
+    def setUp(self):
+        self.hdb = hdb.HDBSimple()
+        self.hdb.open('test.hdb', bnum=131071, rcnum=1024, xmsiz=67108864)
+
+    def tearDown(self):
+        self.hdb.close()
+        self.hdb = None
+        os.remove('test.hdb')
+
+    def test_setgetitem(self):
+        self.hdb['key'] = 'some string'
+        self.assertEqual(self.hdb['key'], 'some string')
+        self.assertRaises(KeyError, self.hdb.__getitem__, 'nonexistent key')
+
+    def test_put(self):
+        self.hdb.put('key', 'some string')
+        self.assertEqual(self.hdb.get('key'), 'some string')
+        self.assertEqual(self.hdb.get('nonexistent key'), None)
+        self.assertEqual(self.hdb.get('nonexistent key', 'def'), 'def')
+
+    def test_putkeep(self):
+        self.hdb.putkeep('key', 'some string')
+        self.assertEqual(self.hdb.get('key'), 'some string')
+        self.hdb.putkeep('key', 'Never stored')
+        self.assertEqual(self.hdb.get('key'), 'some string')
+
+    def test_putcat(self):
+        self.hdb.putcat('key', 'some')
+        self.hdb.putcat('key', ' text')
+        self.assertEquals(self.hdb.get('key'), 'some text')
+
+    def test_putasync(self):
+        self.hdb.putasync('key', 'some string')
+        self.assertEqual(self.hdb.get('key'), 'some string')
+
+    def test_out_and_contains(self):
+        self.assert_('key' not in self.hdb)
+        self.hdb.put('key', 'some text')
+        self.assert_('key' in self.hdb)
+        self.hdb.out('key')
+        self.assert_('key' not in self.hdb)
+        self.hdb.put('key', 'some text')
+        self.assert_('key' in self.hdb)
+        del self.hdb['key']
+        self.assert_('key' not in self.hdb)
+
+    def test_vsiz(self):
+        self.hdb.put('key', 'some text')
+        self.assertEqual(self.hdb.vsiz('key'), len('some text'))
+
+    def test_iters(self):
+        keys = ['key1', 'key2', 'key3', 'key4', 'key5']
+        for key in keys:
+            self.hdb.put(key, key)
+
+        self.assertEqual(self.hdb.keys(), keys)
+        self.assertEqual(self.hdb.values(), keys)
+        self.assertEqual(zip(keys, keys), self.hdb.items())
+
+        for key in self.hdb:
+            self.assert_(key in keys)
+
+        for value in self.hdb.itervalues():
+            self.assert_(value in keys)
+
+    def test_fwmkeys(self):
+        objs = ['aa', 'ab', 'ac', 'xx', 'ad']
+        for obj in objs:
+            self.hdb.put(obj, 'some text')
+        self.assertEqual(self.hdb.fwmkeys('a'), ['aa', 'ab', 'ac', 'ad'])
+        self.assertEqual(self.hdb.fwmkeys('x'), ['xx'])
+        self.assertEqual(self.hdb.fwmkeys('nonexistent key'), [])
+
+    def test_admin_functions(self):
+        keys = ['key1', 'key2', 'key3', 'key4', 'key5']
+        for key in keys:
+            self.hdb.put(key, key)
+
+        self.assertEquals(self.hdb.path(), 'test.hdb')
+
+        self.hdb.sync()
+        self.assertEquals(len(self.hdb), 5)
+        self.assertEquals(self.hdb.fsiz(), 528864)
+
+        self.hdb.vanish()
+        self.assertEquals(self.hdb.fsiz(), 528704)
+
+        self.assert_(self.hdb.memsync(True))
+        self.assert_(self.hdb.cacheclear())
+        self.assertEquals(self.hdb.bnum(), 131071)
+        self.assertEquals(self.hdb.align(), 16)
+        self.assertEquals(self.hdb.fbpmax(), 1024)
+        self.assertEquals(self.hdb.xmsiz(), 67108864)
+
+        self.assert_(self.hdb.optimize(bnum=147451))
+        self.assertEquals(self.hdb.bnum(), 147451)
+        self.assertEquals(self.hdb.align(), 16)
+        self.assertEquals(self.hdb.fbpmax(), 1024)
+        self.assertEquals(self.hdb.xmsiz(), 67108864)
+
+        self.assert_(self.hdb.inode())
+        self.assert_((datetime.datetime.now()-self.hdb.mtime()).seconds <= 1)
+        # Why only OWRITER?!?
+        self.assertEquals(self.hdb.omode(), hdb.OWRITER)
+        self.assertEquals(self.hdb.type(), tc.THASH)
+        self.assertEquals(self.hdb.flags(), hdb.FOPEN)
+        self.assertEquals(self.hdb.opts(), 0)
+        self.assertEquals(self.hdb.opaque(), '')
+        self.assertEquals(self.hdb.bnumused(), 0)
+        self.assertEquals(self.hdb.dfunit(), 0)
+        self.assert_(self.hdb.defrag(5))
+
+    def test_transaction(self):
+        keys = ['key1', 'key2', 'key3', 'key4', 'key5']
+        with self.hdb as db:
+            for key in keys:
+                db.put(key, key)
+        self.assertEquals(len(self.hdb), 5)
+        self.hdb.vanish()
+        try:
+            with self.hdb:
+                for key in keys:
+                    self.hdb.put(key, key)
+                self.hdb['bad key']
+        except KeyError:
+            pass
+        self.assertEquals(len(self.hdb), 0)
+
+    def test_foreach(self):
+        keys = ['key1', 'key2', 'key3', 'key4', 'key5']
+
+        def proc(key, value, op):
+            self.assertEquals(key, value)
+            self.assert_(key in keys)
+            self.assertEquals(op, 'test')
+            return True
+
+        for key in keys:
+            self.hdb.put(key, key)
+        self.hdb.foreach(proc, 'test')
+
+
 class TestHDB(unittest.TestCase):
     def setUp(self):
         self.hdb = hdb.HDB()
