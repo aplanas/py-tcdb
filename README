@@ -49,6 +49,12 @@ that encapsulate all the functionality. For every class we try to
 emulate the bsddb Python module interface. This interface is quite
 similar to a dict data type with persistence.
 
+Also, for HDB, DBD and FDB databases we have a simple version,
+designed to work only with strings. This version is faster than
+no-simple ones: it avoids serialization, data conversions (in Python
+arena) and use a different way for call C functions. Use the 'simple'
+class if you want speed and only need string management.
+
 We also try to improve this API. For example, we can work with
 transactions using the with Python keyword.
 
