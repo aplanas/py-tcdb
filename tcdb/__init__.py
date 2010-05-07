@@ -36,32 +36,56 @@ ENOREC   = 22                   # no record found
 EMISC    = 9999                 # miscellaneous error
 
 
+def adbopen(path, **kwargs):
+    """Simple ADB class constructor."""
+    db = adb.ADB()
+    db.open(path, **kwargs)
+    return db
+
+def adbsimpleopen(path, **kwargs):
+    """Simple ADBSimple class constructor."""
+    db = adb.ADBSimple()
+    db.open(path, **kwargs)
+    return db
+
 def hdbopen(path, **kwargs):
-    """Simple hdb class constructor."""
+    """Simple HDB class constructor."""
     db = hdb.HDB()
     db.open(path, **kwargs)
     return db
 
+def hdbsimpleopen(path, **kwargs):
+    """Simple HDBSimple class constructor."""
+    db = hdb.HDBSimple()
+    db.open(path, **kwargs)
+    return db
+
 def bdbopen(path, **kwargs):
-    """Simple bdb class constructor."""
+    """Simple BDB class constructor."""
     db = bdb.BDB()
     db.open(path, **kwargs)
     return db
 
+def bdbsimpleopen(path, **kwargs):
+    """Simple BDBSimple class constructor."""
+    db = bdb.BDBSimple()
+    db.open(path, **kwargs)
+    return db
+
 def fdbopen(path, **kwargs):
-    """Simple fdb class constructor."""
+    """Simple FDB class constructor."""
     db = fdb.FDB()
     db.open(path, **kwargs)
     return db
 
-def tdbopen(path, **kwargs):
-    """Simple tdb class constructor."""
-    db = tdb.TDB()
+def fdbsimpleopen(path, **kwargs):
+    """Simple FDB class constructor."""
+    db = fdb.FDBSimple()
     db.open(path, **kwargs)
     return db
 
-def adbopen(path, **kwargs):
-    """Simple adb class constructor."""
-    db = adb.ADB()
+def tdbopen(path, **kwargs):
+    """Simple TDB class constructor."""
+    db = tdb.TDB()
     db.open(path, **kwargs)
     return db
