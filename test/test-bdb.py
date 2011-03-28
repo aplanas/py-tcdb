@@ -65,6 +65,15 @@ class TestBDBSimple(unittest.TestCase):
         del self.bdb['key']
         self.assert_('key' not in self.bdb)
 
+    def test_contains(self):
+        # Issue 5 [by <bpederse@gmail.com>]
+        self.assert_('KEY' not in self.bdb)
+        self.bdb.put('key', 'some text')
+        self.assert_('key' in self.bdb)
+        self.assert_('KEY' not in self.bdb)
+        self.assert_('K' not in self.bdb)
+        self.assert_('k' not in self.bdb)
+
     def test_vsiz(self):
         self.bdb.put('key', 'some text')
         self.assertEqual(self.bdb.vsiz('key'), len('some text'))
@@ -475,6 +484,40 @@ class TestBDB(unittest.TestCase):
             self.assertEqual(allobjs, objs[1:])
             self.bdb.outdup(obj)
             self.assert_(obj not in self.bdb)
+
+    def test_contains(self):
+        # Issue 5 [by <bpederse@gmail.com>]
+        self.assert_('KEY' not in self.bdb)
+        self.bdb.put('key', 'some text')
+        self.assert_('key' in self.bdb)
+        self.assert_('KEY' not in self.bdb)
+        self.assert_('K' not in self.bdb)
+        self.assert_('k' not in self.bdb)
+
+        obj = 1+1j
+        self.bdb.put(obj, obj)
+        self.assert_(obj in self.bdb)
+        self.assert_(obj + 1 not in self.bdb)
+
+        obj = 'some text [áéíóú]'
+        self.bdb.put_str(obj, obj)
+        self.assert_(obj in self.bdb)
+        self.assert_(obj.upper() not in self.bdb)
+
+        obj = u'unicode text [áéíóú]'
+        self.bdb.put_str(obj, obj.encode('utf8'))
+        self.assert_(obj in self.bdb)
+        self.assert_(obj.upper() not in self.bdb)
+
+        obj = 10
+        self.bdb.put_int(obj, obj)
+        self.assert_(obj in self.bdb)
+        self.assert_(obj + 1 not in self.bdb)
+
+        obj = 10.10
+        self.bdb.put_float(obj, obj)
+        self.assert_(obj in self.bdb)
+        self.assert_(obj + 1 not in self.bdb)
 
     def test_vsiz(self):
         obj = 1+1j

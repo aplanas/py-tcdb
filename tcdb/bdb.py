@@ -775,9 +775,12 @@ class BDBSimple(object):
         cursor = CursorSimple(self.db)
         result = False
         try:
-            result = cursor.jump(key)
+            cursor.jump(key)
         except KeyError:
             pass
+        else:
+            if cursor.key() == key:
+                result = True
         finally:
             cursor.close()
         return result
@@ -1221,9 +1224,12 @@ class BDB(BDBSimple):
         cursor = Cursor(self.db)
         result = False
         try:
-            result = cursor.jump(key, raw_key)
+            cursor.jump(key, raw_key)
         except KeyError:
             pass
+        else:
+            if cursor.key(util.get_type(key, raw_key)) == key:
+                result = True
         finally:
             cursor.close()
         return result
